@@ -1,0 +1,22 @@
+{
+  "chroma": {
+    "persist_directory": "./.chroma",
+    "collection_name": "tvshows"
+  },
+    "data": {
+    "shows_json": "input/shoko_tvshows.json"
+  },
+  "openai": {
+    "model": "gpt-5-nano",
+    "embedding_model": "text-embedding-3-small",
+    "reasoning_effort": "medium",
+    "output_verbosity": "medium",
+    "max_output_tokens": 8192
+  },
+  "ingest": {
+    "batch_size": 100
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}
