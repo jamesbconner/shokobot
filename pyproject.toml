@@ -108,6 +108,7 @@ addopts = [
     "--cov=services",
     "--cov=models",
     "--cov=utils",
+    "--cov=prompts",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
