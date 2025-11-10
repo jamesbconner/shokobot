@@ -1,9 +1,9 @@
 #!/bin/bash
-# Setup script for Shokobot
+# Setup script for ShokoBot
 
 set -e
 
-echo "🤖 Shokobot Setup"
+echo "🤖 ShokoBot Setup"
 echo "================="
 echo ""
 
@@ -30,11 +30,12 @@ elif command -v uv &> /dev/null; then
 else
     echo "❌ Neither Poetry nor uv found."
     echo ""
-    echo "Install Poetry:"
+    echo "Install Poetry (for build system):"
     echo "  curl -sSL https://install.python-poetry.org | python3 -"
     echo ""
-    echo "Or install uv:"
+    echo "Or install uv (for dependency management):"
     echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+    echo "  # Or via pip: pip install uv"
     exit 1
 fi
 echo ""
@@ -68,18 +69,67 @@ if [ "$PKG_MANAGER" = "poetry" ]; then
     poetry run pre-commit install
     echo "✓ Pre-commit hooks installed"
     echo ""
+elif [ "$PKG_MANAGER" = "uv" ]; then
+    echo "Installing pre-commit hooks..."
+    uv run pre-commit install
+    echo "✓ Pre-commit hooks installed"
+    echo ""
 fi
 
 # Create necessary directories
 echo "Creating directories..."
-mkdir -p .chroma logs
+mkdir -p .chroma logs input
 echo "✓ Directories created"
+echo ""
+
+# Verify configuration
+echo "Verifying configuration..."
+if [ -f "resources/config.json" ]; then
+    echo "✓ Configuration file found"
+else
+    echo "⚠️  Configuration file not found at resources/config.json"
+fi
+
+if [ -f "input/shoko_tvshows.json" ]; then
+    echo "✓ Anime data file found"
+else
+    echo "⚠️  Anime data file not found at input/shoko_tvshows.json"
+    echo "   Place your Shoko export file there before ingesting"
+fi
 echo ""
 
 echo "✅ Setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Edit .env and add your OPENAI_API_KEY"
-echo "2. Place your anime data in resources/tvshows.json"
-echo "3. Run ingestion: poetry run shokobot-ingest"
-echo "4. Start querying: poetry run shokobot-rag --repl"
+echo "   export OPENAI_API_KEY='your-key-here'"
+echo ""
+echo "2. Verify configuration:"
+if [ "$PKG_MANAGER" = "poetry" ]; then
+    echo "   poetry run shokobot info"
+elif [ "$PKG_MANAGER" = "uv" ]; then
+    echo "   uv run shokobot info"
+fi
+echo ""
+echo "3. Place your anime data in input/shoko_tvshows.json (if not already present)"
+echo ""
+echo "4. Run ingestion:"
+if [ "$PKG_MANAGER" = "poetry" ]; then
+    echo "   poetry run shokobot ingest"
+elif [ "$PKG_MANAGER" = "uv" ]; then
+    echo "   uv run shokobot ingest"
+fi
+echo ""
+echo "5. Start querying:"
+if [ "$PKG_MANAGER" = "poetry" ]; then
+    echo "   poetry run shokobot repl          # Interactive REPL mode"
+    echo "   poetry run shokobot query -q \"...\" # Single question"
+elif [ "$PKG_MANAGER" = "uv" ]; then
+    echo "   uv run shokobot repl              # Interactive REPL mode"
+    echo "   uv run shokobot query -q \"...\"     # Single question"
+fi
+echo ""
+echo "For more information, see:"
+echo "  - README.md for project overview"
+echo "  - SETUP_GUIDE.md for detailed setup instructions"
+echo "  - QUICK_REFERENCE.md for command reference"

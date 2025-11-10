@@ -13,7 +13,6 @@ from utils.text_utils import clean_description, split_pipe
 
 logger = logging.getLogger(__name__)
 
-_cfg = ConfigService()
 IdField = Literal["AnimeID", "AniDB_AnimeID"]
 
 
@@ -131,13 +130,16 @@ def _safe_str(value: any) -> str | None:
     s = str(value).strip()
     return s if s else None
 
+
 def iter_showdocs_from_json(
+    config: ConfigService,
     path: str | Path | None = None,
     id_field: IdField = "AnimeID",
 ) -> Iterator[ShowDoc]:
     """Load and iterate over anime show documents from JSON file.
 
     Args:
+        config: Configuration service instance.
         path: Path to JSON file containing anime data. If None, uses config default.
         id_field: Field name to use as primary anime ID.
 
@@ -149,7 +151,7 @@ def iter_showdocs_from_json(
         json.JSONDecodeError: If the JSON file is malformed.
         ValueError: If a record is missing required ID fields.
     """
-    path = Path(path or _cfg.get("data.shows_json"))
+    path = Path(path or config.get("data.shows_json"))
 
     if not path.exists():
         raise FileNotFoundError(f"Shows JSON file not found: {path}")
@@ -208,14 +210,17 @@ def iter_showdocs_from_json(
             logger.error(f"Failed to process record {idx}: {e}")
             continue
 
+
 def ingest_showdocs_streaming(
     docs_iter: Iterable[ShowDoc],
+    config: ConfigService,
     batch_size: int | None = None,
 ) -> int:
     """Ingest show documents into vector store in batches.
 
     Args:
         docs_iter: Iterable of ShowDoc instances to ingest.
+        config: Configuration service instance.
         batch_size: Number of documents per batch. If None, uses config default.
 
     Returns:
@@ -224,7 +229,7 @@ def ingest_showdocs_streaming(
     Raises:
         ValueError: If batch_size is invalid.
     """
-    batch_size = batch_size or int(_cfg.get("ingest.batch_size", 256))
+    batch_size = batch_size or int(config.get("ingest.batch_size", 256))
 
     if batch_size <= 0:
         raise ValueError(f"batch_size must be positive, got {batch_size}")
@@ -236,7 +241,7 @@ def ingest_showdocs_streaming(
     try:
         for batch in chunked((d.to_langchain_doc() for d in docs_iter), batch_size):
             batch_list = list(batch)
-            upsert_documents(batch_list)
+            upsert_documents(batch_list, config)
             total += len(batch_list)
             batch_count += 1
             logger.debug(f"Ingested batch {batch_count} ({len(batch_list)} docs)")

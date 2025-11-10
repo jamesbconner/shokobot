@@ -1,20 +1,46 @@
-# Shokobot
+# ShokoBot
 
-RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI.
+RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI GPT-5.
 
 ## Features
 
-- Vector-based semantic search for anime shows
-- Support for exact title and alias matching
-- Streaming ingestion with batch processing
-- Interactive REPL and CLI query modes
-- Comprehensive error handling and logging
+- 🔍 **Vector-based semantic search** - Find anime using natural language queries
+- 🎯 **Comprehensive metadata** - 21 fields per anime including ratings, episodes, dates, and relationships
+- 📊 **Efficient ingestion** - Batch processing with progress indicators (1,458 anime records)
+- 💬 **Multiple query modes** - Interactive REPL, single questions, file input, or stdin
+- 🎨 **Beautiful CLI** - Rich formatting with tables, colors, and progress bars
+- ⚙️ **Flexible configuration** - JSON config with environment variable overrides
+- 🤖 **GPT-5 integration** - Responses API with configurable reasoning effort
+- 🏗️ **Modular architecture** - Auto-loading CLI commands with dependency injection
+- ✅ **Type-safe** - Full Pydantic validation and mypy strict mode
+- 📝 **Well-documented** - Comprehensive guides and architecture documentation
 
 ## Requirements
 
 - Python 3.12+
-- Poetry or uv for dependency management
+- Poetry (for build system) or uv (for dependency management)
 - OpenAI API key
+
+## Quick Start
+
+### Automated Setup
+
+```bash
+# Run the setup script
+./setup.sh
+
+# Edit .env and add your OpenAI API key
+export OPENAI_API_KEY='your-key-here'
+
+# Verify configuration
+poetry run shokobot info
+
+# Ingest anime data
+poetry run shokobot ingest
+
+# Start querying
+poetry run shokobot repl
+```
 
 ## Installation
 
@@ -27,7 +53,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 # Install dependencies
 poetry install
 
-# Activate virtual environment
+# Activate virtual environment (optional)
 poetry shell
 ```
 
@@ -40,10 +66,12 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Create virtual environment and install dependencies
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
+uv pip install -e ".[dev]"
 ```
 
 ## Configuration
+
+### Environment Setup
 
 1. Copy the example environment file:
 ```bash
@@ -55,63 +83,128 @@ cp .env.example .env
 OPENAI_API_KEY='your-api-key-here'
 ```
 
-3. (Optional) Customize `resources/config.json` for:
-   - Model selection
-   - Embedding model
-   - ChromaDB settings
-   - Batch sizes
-   - Logging levels
+3. (Optional) Override config.json settings via environment variables:
+```bash
+# Pattern: SECTION_KEY (e.g., OPENAI_MODEL overrides openai.model)
+OPENAI_MODEL='gpt-5-nano'
+OPENAI_REASONING_EFFORT='high'
+CHROMA_COLLECTION_NAME='my_anime'
+```
+
+### Configuration File
+
+Edit `resources/config.json` to customize:
+
+```json
+{
+  "chroma": {
+    "persist_directory": "./.chroma",
+    "collection_name": "tvshows"
+  },
+  "data": {
+    "shows_json": "input/shoko_tvshows.json"
+  },
+  "openai": {
+    "model": "gpt-5-nano",
+    "embedding_model": "text-embedding-3-small",
+    "reasoning_effort": "medium",
+    "output_verbosity": "medium",
+    "max_output_tokens": 8192
+  },
+  "ingest": {
+    "batch_size": 100
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}
+```
 
 ## Usage
 
-### Ingestion
+### CLI Commands
 
-Load anime data into the vector store:
-
+#### View Configuration
 ```bash
-# Using poetry
-poetry run shokobot-ingest
-
-# Or directly
-python main_ingest.py
+poetry run shokobot info
 ```
 
-### Querying
+Displays current configuration, including ChromaDB settings, OpenAI model, and data paths.
+
+#### Ingest Data
+```bash
+# Use default settings (1,458 anime records)
+poetry run shokobot ingest
+
+# Custom input file and batch size
+poetry run shokobot ingest -i custom.json -b 200
+
+# Use AniDB_AnimeID as primary identifier
+poetry run shokobot ingest --id-field AniDB_AnimeID
+```
+
+**Options:**
+- `-i, --input PATH` - Path to JSON file (overrides config)
+- `-b, --batch-size INTEGER` - Documents per batch (overrides config)
+- `--id-field [AnimeID|AniDB_AnimeID]` - Primary ID field
+
+#### Query Database
+```bash
+# Single question
+poetry run shokobot query -q "What anime are similar to Cowboy Bebop?"
+
+# With context display
+poetry run shokobot query -q "Best mecha anime?" -c
+
+# From file (batch processing)
+poetry run shokobot query -f questions.txt
+
+# From stdin
+echo "What is Steins;Gate about?" | poetry run shokobot query --stdin
+
+# Interactive mode
+poetry run shokobot query -i
+```
+
+**Options:**
+- `-q, --question TEXT` - Single question to ask
+- `-f, --file PATH` - File with questions (one per line)
+- `--stdin` - Read questions from stdin
+- `-i, --interactive` - Start interactive REPL mode
+- `-c, --show-context` - Display retrieved context documents
+- `--k INTEGER` - Number of documents to retrieve (default: 10)
 
 #### Interactive REPL
 ```bash
-poetry run shokobot-rag --repl
+# Start REPL mode (recommended for multiple queries)
+poetry run shokobot repl
+
+# With context display
+poetry run shokobot repl -c
+
+# With custom retrieval count
+poetry run shokobot repl --k 15
 ```
 
-#### Single Question
+**Options:**
+- `-c, --show-context` - Display retrieved context documents
+- `--k INTEGER` - Number of documents to retrieve
+
+**REPL Commands:**
+- Type your question and press Enter
+- `exit`, `quit`, or `q` to leave
+- Questions are processed with cached RAG chain for efficiency
+
+### Using with uv
+
+Replace `poetry run` with `uv run`:
+
 ```bash
-poetry run shokobot-rag -q "What anime are similar to Cowboy Bebop?"
+uv run shokobot info
+uv run shokobot ingest
+uv run shokobot repl
+uv run shokobot query -q "..."
 ```
-
-#### From File
-```bash
-poetry run shokobot-rag -f questions.txt --show-context
-```
-
-#### From Stdin
-```bash
-echo "What are the best mecha anime?" | poetry run shokobot-rag --stdin
-```
-
-### Query Options
-
-- `-q, --question`: Ask a single question
-- `-f, --file`: Read questions from file (one per line)
-- `--stdin`: Read questions from stdin
-- `--repl`: Start interactive mode
-- `--show-context`: Display retrieved anime titles and IDs
-- `--k`: Number of documents to retrieve (default: 10)
-
-### Special Query Patterns
-
-- **Exact title match**: `"Cowboy Bebop"` (use quotes)
-- **Alias search**: `alias:bebop`
-- **Content search**: Regular text queries
 
 ## Development
 
@@ -128,102 +221,357 @@ pre-commit install
 ### Code Quality Tools
 
 ```bash
-# Format code
-ruff format .
+# Format code with ruff
+poetry run ruff format .
 
-# Lint code
-ruff check . --fix
+# Lint code with ruff
+poetry run ruff check .
+poetry run ruff check . --fix  # Auto-fix issues
 
-# Type checking
-mypy .
+# Type checking with mypy (strict mode)
+poetry run mypy . --strict
 
-# Security scanning
-bandit -r services models utils
+# Security scanning with bandit
+poetry run bandit -r services models utils cli
 
 # Run all pre-commit hooks
-pre-commit run --all-files
+poetry run pre-commit run --all-files
 ```
 
 ### Testing
 
 ```bash
-# Run tests with coverage
-pytest
+# Run all tests
+poetry run pytest
+
+# Run with coverage
+poetry run pytest --cov
 
 # Run specific test file
-pytest tests/config/test_config_service.py
+poetry run pytest tests/config/test_config_service.py
+
+# Verbose output
+poetry run pytest -v
 
 # Generate HTML coverage report
-pytest --cov-report=html
+poetry run pytest --cov-report=html
 open htmlcov/index.html
+```
+
+### Pre-commit Hooks
+
+The project uses pre-commit hooks for automated quality checks:
+
+- **ruff** - Code formatting and linting
+- **mypy** - Type checking
+- **trailing-whitespace** - Remove trailing whitespace
+- **end-of-file-fixer** - Ensure files end with newline
+- **check-yaml** - Validate YAML files
+- **check-json** - Validate JSON files
+
+Hooks run automatically on `git commit`. To run manually:
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Project Structure
 
 ```
 shokobot/
-├── services/           # Core business logic
-│   ├── config_service.py
-│   ├── ingest_service.py
-│   ├── rag_service.py
-│   └── vectorstore_service.py
-├── models/            # Data models
-│   └── show_doc.py
-├── utils/             # Utility functions
-│   ├── batch_utils.py
-│   └── text_utils.py
-├── resources/         # Configuration and metadata
-│   └── config.json
-├── input/             # Input files for RAG
-│   └── tvshows.json
-├── tests/             # Test suite
-├── main_ingest.py     # Ingestion entry point
-├── main_rag.py        # Query entry point
-└── pyproject.toml     # Project configuration
+├── cli/                         # Modular CLI commands (auto-loaded)
+│   ├── __init__.py             # Main CLI group with auto-loader
+│   ├── info.py                 # Configuration display
+│   ├── ingest.py               # Data ingestion
+│   ├── query.py                # Natural language queries
+│   └── repl.py                 # Interactive REPL mode
+├── services/                    # Business logic (dependency injection)
+│   ├── config_service.py       # Configuration management
+│   ├── context.py              # Application context
+│   ├── ingest_service.py       # Data ingestion logic
+│   ├── rag_service.py          # RAG chain with GPT-5
+│   └── vectorstore_service.py  # ChromaDB operations
+├── models/                      # Pydantic data models
+│   └── show_doc.py             # ShowDoc model (21 fields)
+├── utils/                       # Utility functions
+│   ├── batch_utils.py          # Batch processing helpers
+│   └── text_utils.py           # Text cleaning utilities
+├── docs/                        # Documentation
+│   ├── README.md               # Documentation index
+│   ├── MODULAR_CLI_ARCHITECTURE.md
+│   ├── DEPENDENCY_INJECTION_ANALYSIS.md
+│   ├── ASYNC_OPPORTUNITIES_ANALYSIS.md
+│   └── APPCONTEXT_VALUE_ANALYSIS.md
+├── resources/                   # Configuration files
+│   └── config.json             # Main configuration
+├── input/                       # Data files
+│   └── shoko_tvshows.json      # Anime data (1,458 records)
+├── tests/                       # Test suite
+│   ├── config/                 # Config service tests
+│   ├── ingest/                 # Ingestion tests
+│   └── models/                 # Model tests
+├── .env.example                 # Environment template
+├── pyproject.toml              # Poetry configuration
+├── setup.sh                    # Automated setup script
+├── README.md                   # This file
+├── SETUP_GUIDE.md              # Detailed setup instructions
+└── QUICK_REFERENCE.md          # Command reference
 ```
+
+## Data Model
+
+The `ShowDoc` Pydantic model includes 21 comprehensive fields:
+
+**Identifiers:**
+- `anime_id` - Unique Shoko anime identifier
+- `anidb_anime_id` - AniDB anime identifier
+
+**Titles:**
+- `title_main` - Primary anime title
+- `title_alts` - Alternate titles (auto-cleaned)
+
+**Content:**
+- `description` - Anime description
+- `tags` - Tags and genres (auto-cleaned)
+
+**Episodes:**
+- `episode_count_normal` - Number of regular episodes
+- `episode_count_special` - Number of special episodes
+
+**Dates:**
+- `air_date` - Initial air date
+- `end_date` - Final air date
+- `begin_year` - Year began airing
+- `end_year` - Year finished airing
+
+**Ratings:**
+- `rating` - AniDB rating score (0-1000)
+- `vote_count` - Number of votes
+- `avg_review_rating` - Average review rating
+- `review_count` - Number of reviews
+
+**External IDs:**
+- `ann_id` - Anime News Network ID
+- `crunchyroll_id` - Crunchyroll ID
+- `wikipedia_id` - Wikipedia page identifier
+
+**Relationships:**
+- `relations` - JSON string of related anime
+- `similar` - JSON string of similar anime
 
 ## Environment Variables
 
-All config.json settings can be overridden via environment variables:
+All `config.json` settings can be overridden via environment variables using the pattern `SECTION_KEY`:
 
 ```bash
+# ChromaDB
 CHROMA_PERSIST_DIRECTORY='./.chroma'
 CHROMA_COLLECTION_NAME='tvshows'
+
+# Data
+DATA_SHOWS_JSON='input/shoko_tvshows.json'
+
+# OpenAI
 OPENAI_MODEL='gpt-5-nano'
 OPENAI_EMBEDDING_MODEL='text-embedding-3-small'
-OPENAI_MODEL_TYPE='reasoning'
-OPENAI_MAX_OUTPUT_TOKENS='4096'
+OPENAI_REASONING_EFFORT='medium'      # low/medium/high
+OPENAI_OUTPUT_VERBOSITY='medium'      # low/medium/high
+OPENAI_MAX_OUTPUT_TOKENS='8192'
+
+# Ingestion
 INGEST_BATCH_SIZE='100'
-LOGGING_LEVEL='INFO'
+
+# Logging
+LOGGING_LEVEL='INFO'                  # DEBUG/INFO/WARNING/ERROR/CRITICAL
 ```
 
-### Model Configuration
+## GPT-5 Configuration
 
-The system supports two types of OpenAI models:
+ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
 
-**Reasoning Models** (GPT-5):
-- Set `model_type: "reasoning"` in config
-- Use `max_output_tokens` instead of `max_tokens`
-- Do not support `temperature`, `top_p`, or `logprobs` parameters
-- Examples: `gpt-5-nano`, `gpt-5`, `gpt-5-mini`
+**Supported Models:**
+- `gpt-5-nano` (default)
+- `gpt-5-mini`
+- `gpt-5`
 
-**Standard Models** (GPT-4, GPT-3.5 family):
-- Set `model_type: "standard"` in config (or omit, it's the default)
-- Support `temperature`, `top_p`, `logprobs` parameters
-- Examples: `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`
+**Reasoning Effort:**
+- `low` - Faster responses, less reasoning
+- `medium` - Balanced (default)
+- `high` - More thorough reasoning, slower
 
-## Logging
+**Output Verbosity:**
+- `low` - Concise responses
+- `medium` - Balanced (default)
+- `high` - Detailed explanations
 
-Logs are written to stdout with configurable levels:
+**Note:** GPT-5 models use `max_output_tokens` instead of `max_tokens` and do not support `temperature`, `top_p`, or `logprobs` parameters.
 
-- `DEBUG`: Detailed diagnostic information
-- `INFO`: General informational messages (default)
-- `WARNING`: Warning messages
-- `ERROR`: Error messages
-- `CRITICAL`: Critical errors
+## Architecture
 
-Set via `LOGGING_LEVEL` environment variable or `logging.level` in config.json.
+### System Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         CLI Layer                           │
+│  ┌──────┐  ┌────────┐  ┌───────┐  ┌──────┐                  │
+│  │ info │  │ ingest │  │ query │  │ repl │                  │
+│  └──┬───┘  └───┬────┘  └───┬───┘  └───┬──┘                  │
+└─────┼─────────┼───────────┼──────────┼──────────────────────┘
+      │         │           │          │
+      └─────────┴───────────┴──────────┘
+                     │
+      ┌──────────────▼──────────────────────────────────────┐
+      │           Application Context                       │
+      │  ┌────────────────┐  ┌────────────────────┐         │
+      │  │ ConfigService  │  │ VectorStoreService │         │
+      │  └────────────────┘  └────────────────────┘         │
+      └─────────────────────────────────────────────────────┘
+                     │
+      ┌──────────────┴──────────────────────────────────────┐
+      │              Service Layer                          │
+      │  ┌────────────────┐  ┌──────────────────┐           │
+      │  │ IngestService  │  │   RAGService     │           │
+      │  └────────────────┘  └──────────────────┘           │
+      └─────────────────────────────────────────────────────┘
+                     │
+      ┌──────────────┴──────────────────────────────────────┐
+      │            Data & External                          │
+      │  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+      │  │ ChromaDB │  │ OpenAI   │  │ ShowDoc  │           │
+      │  └──────────┘  └──────────┘  └──────────┘           │
+      └─────────────────────────────────────────────────────┘
+```
+
+### Design Patterns
+
+- **Modular CLI** - Auto-loading command discovery from `cli/` directory
+- **Dependency Injection** - Services injected via `AppContext`
+- **Rich Formatting** - Professional CLI with Rich-Click
+- **Pydantic Validation** - Type-safe data models with automatic validation
+- **Batch Processing** - Efficient chunked operations for large datasets
+
+### Key Components
+
+1. **CLI Layer** - Rich-Click commands with auto-loading
+2. **Application Context** - Centralized service management
+3. **Service Layer** - Business logic with dependency injection
+4. **Data Layer** - ChromaDB vector store and OpenAI embeddings
+5. **Model Layer** - Pydantic models with validation
+
+## Documentation
+
+### User Guides
+- [README.md](README.md) - This file (project overview)
+- [SETUP_GUIDE.md](SETUP_GUIDE.md) - Detailed setup instructions
+- [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Command reference and examples
+
+### Architecture Documentation
+- [docs/README.md](docs/README.md) - Documentation index
+- [docs/MODULAR_CLI_ARCHITECTURE.md](docs/MODULAR_CLI_ARCHITECTURE.md) - CLI design patterns
+- [docs/DEPENDENCY_INJECTION_ANALYSIS.md](docs/DEPENDENCY_INJECTION_ANALYSIS.md) - DI implementation
+- [docs/APPCONTEXT_VALUE_ANALYSIS.md](docs/APPCONTEXT_VALUE_ANALYSIS.md) - Context management
+- [docs/ASYNC_OPPORTUNITIES_ANALYSIS.md](docs/ASYNC_OPPORTUNITIES_ANALYSIS.md) - Performance analysis
+
+## Troubleshooting
+
+### Common Issues
+
+**OpenAI API Key not set:**
+```bash
+export OPENAI_API_KEY='your-key-here'
+# Or add to .env file
+```
+
+**ChromaDB permission issues:**
+```bash
+rm -rf ./.chroma
+poetry run shokobot ingest
+```
+
+**Import errors:**
+```bash
+poetry install
+poetry run shokobot --help
+```
+
+**Module not found:**
+```bash
+# Ensure you're using poetry run or uv run
+poetry run shokobot info
+
+# Or activate the virtual environment
+poetry shell
+shokobot info
+```
+
+## Performance
+
+- **Ingestion**: ~40-50 seconds for 1,458 anime records
+- **Query Response**: ~3-6 seconds (including LLM processing)
+- **Interactive Mode**: Cached RAG chain for efficiency
+- **Batch Size**: 100 documents per batch (configurable)
+
+## Tips & Best Practices
+
+### Performance
+- Use `repl` mode for multiple queries (avoids reloading RAG chain)
+- Adjust `--k` parameter to control context size (default: 10)
+- Increase batch size for faster ingestion on powerful machines
+- Use environment variables for quick configuration changes
+
+### Data Quality
+- Ensure `input/shoko_tvshows.json` is properly formatted JSON
+- Check logs for validation errors during ingestion
+- Use `--id-field` to control primary identifier selection
+
+### Querying
+- Be specific in questions for better results
+- Use natural language (e.g., "romance anime with strong characters")
+- Try different phrasings if results aren't satisfactory
+- Use context display (`-c`) to understand retrieval quality
+
+### Development
+- Run `poetry run shokobot info` to verify configuration
+- Use `--show-context` to debug RAG retrieval
+- Check `docs/` for architecture details before modifying
+- Follow Python 3.12+ type hints and Pydantic patterns
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run quality checks: `pre-commit run --all-files`
+5. Run tests: `pytest`
+6. Submit a pull request
 
 ## License
 
 MIT
+
+## Resources
+
+### Python & Tools
+- [Python 3.12 Docs](https://docs.python.org/3.12/)
+- [Poetry Documentation](https://python-poetry.org/docs/)
+- [uv Documentation](https://docs.astral.sh/uv/)
+- [Ruff Documentation](https://docs.astral.sh/ruff/)
+- [MyPy Documentation](https://mypy.readthedocs.io/)
+- [Pytest Documentation](https://docs.pytest.org/)
+- [Bandit Documentation](https://bandit.readthedocs.io/)
+- [Pre-commit Documentation](https://pre-commit.com/)
+
+### Frameworks & Libraries
+- [Pydantic Documentation](https://docs.pydantic.dev/)
+- [Click Documentation](https://click.palletsprojects.com/)
+- [Rich Documentation](https://rich.readthedocs.io/)
+- [Rich-Click Documentation](https://github.com/ewels/rich-click)
+
+### AI & Vector Databases
+- [LangChain Documentation](https://python.langchain.com/)
+- [LangChain ChatOpenAI](https://python.langchain.com/docs/integrations/chat/openai)
+- [LangChain API Reference](https://api.python.langchain.com/)
+- [ChromaDB Documentation](https://docs.trychroma.com/)
+- [OpenAI API Documentation](https://platform.openai.com/docs/)
+- [OpenAI Responses API](https://platform.openai.com/docs/guides/responses-vs-chat-completions)
+- [OpenAI Reasoning Models](https://platform.openai.com/docs/guides/reasoning)

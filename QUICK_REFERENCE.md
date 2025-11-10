@@ -1,218 +1,285 @@
-# Shokobot Quick Reference
+# ShokoBot Quick Reference
 
-## Setup (First Time)
+Quick command reference for daily use. See [README.md](README.md) for full documentation.
+
+## Quick Start
+
 ```bash
-./setup.sh                    # Automated setup
-# or manually:
-poetry install --with dev     # Install dependencies
-cp .env.example .env          # Create environment file
-# Edit .env with your OPENAI_API_KEY
+# Setup
+./setup.sh
+export OPENAI_API_KEY='your-key-here'
+
+# Verify
+poetry run shokobot info
+
+# Ingest
+poetry run shokobot ingest
+
+# Query
+poetry run shokobot repl
 ```
 
-## Common Commands
+## CLI Commands
 
-### Development
+### info - View Configuration
 ```bash
-make format          # Format code with ruff
-make lint            # Lint code with ruff
-make type-check      # Type check with mypy
-make security        # Security scan with bandit
-make test            # Run tests
-make test-cov        # Run tests with coverage
-make check           # Run all quality checks
+poetry run shokobot info
 ```
 
-### Application
+### ingest - Load Data
 ```bash
-make ingest          # Ingest anime data
-make rag             # Start interactive REPL
-make rag Q="..."     # Ask single question
+# Default settings
+poetry run shokobot ingest
+
+# Custom options
+poetry run shokobot ingest -i custom.json -b 200 --id-field AniDB_AnimeID
 ```
 
-### Poetry Commands
+**Options:**
+- `-i, --input PATH` - Custom JSON file
+- `-b, --batch-size INTEGER` - Batch size (default: 100)
+- `--id-field [AnimeID|AniDB_AnimeID]` - Primary ID field
+
+### query - Ask Questions
 ```bash
-poetry install                # Install dependencies
-poetry install --with dev     # Install with dev tools
-poetry run shokobot-ingest    # Run ingestion
-poetry run shokobot-rag       # Run RAG interface
-poetry shell                  # Activate virtual environment
-poetry update                 # Update dependencies
+# Single question
+poetry run shokobot query -q "What anime are similar to Cowboy Bebop?"
+
+# With context
+poetry run shokobot query -q "Best mecha anime?" -c
+
+# From file
+poetry run shokobot query -f questions.txt
+
+# From stdin
+echo "What is Steins;Gate about?" | poetry run shokobot query --stdin
+
+# Interactive mode
+poetry run shokobot query -i
 ```
 
-## File Structure
+**Options:**
+- `-q, --question TEXT` - Single question
+- `-f, --file PATH` - Read from file
+- `--stdin` - Read from stdin
+- `-i, --interactive` - Interactive mode
+- `-c, --show-context` - Show retrieved docs
+- `--k INTEGER` - Number of docs (default: 10)
+
+### repl - Interactive Mode (Recommended)
+```bash
+# Start REPL
+poetry run shokobot repl
+
+# With context display
+poetry run shokobot repl -c
+
+# Custom retrieval count
+poetry run shokobot repl --k 15
 ```
-shokobot/
-├── services/              # Core business logic
-│   ├── config_service.py
-│   ├── ingest_service.py
-│   ├── rag_service.py
-│   └── vectorstore_service.py
-├── models/               # Data models
-│   └── show_doc.py
-├── utils/                # Utilities
-│   ├── batch_utils.py
-│   └── text_utils.py
-├── resources/            # Config and data
-│   ├── config.json
-│   └── tvshows.json
-├── tests/                # Test suite
-├── main_ingest.py        # Ingestion entry point
-├── main_rag.py           # Query entry point
-├── pyproject.toml        # Project config
-├── .env                  # Environment variables (not in git)
-└── .env.example          # Environment template
-```
+
+**Options:**
+- `-c, --show-context` - Show retrieved docs
+- `--k INTEGER` - Number of docs
+
+**REPL Commands:**
+- Type question and press Enter
+- `exit`, `quit`, or `q` to leave
 
 ## Configuration
 
-### Environment Variables (.env)
+### Environment Variables
+
 ```bash
-OPENAI_API_KEY='sk-...'                              # Required
-CHROMA_PERSIST_DIRECTORY='./.chroma'                 # Optional
-CHROMA_COLLECTION_NAME='tvshows'                     # Optional
-OPENAI_MODEL='gpt-5-nano'                            # Required: Must be a gpt-5 model
-OPENAI_EMBEDDING_MODEL='text-embedding-3-small'      # Optional
-OPENAI_REASONING_EFFORT='medium'                     # Optional: low/medium/high
-OPENAI_OUTPUT_VERBOSITY='medium'                     # Optional: low/medium/high
-OPENAI_MAX_OUTPUT_TOKENS='4096'                      # Optional
-INGEST_BATCH_SIZE='100'                              # Optional
-LOGGING_LEVEL='INFO'                                 # Optional
+# Required
+OPENAI_API_KEY='your-key-here'
+
+# Optional overrides (pattern: SECTION_KEY)
+CHROMA_PERSIST_DIRECTORY='./.chroma'
+CHROMA_COLLECTION_NAME='tvshows'
+OPENAI_MODEL='gpt-5-nano'
+OPENAI_REASONING_EFFORT='medium'    # low/medium/high
+OPENAI_OUTPUT_VERBOSITY='medium'    # low/medium/high
+OPENAI_MAX_OUTPUT_TOKENS='8192'
+INGEST_BATCH_SIZE='100'
+LOGGING_LEVEL='INFO'
 ```
 
-**Note:** Shokobot is configured specifically for GPT-5 models. The service will validate that the configured model starts with "gpt-5" and raise an error otherwise.
+### Config File Location
 
-### Config File (resources/config.json)
-```json
-{
-  "chroma": {
-    "persist_directory": "./.chroma",
-    "collection_name": "tvshows"
-  },
-  "data": {
-    "shows_json": "input/shoko_tvshows.json"
-  },
-  "openai": {
-    "model": "gpt-5-nano",
-    "embedding_model": "text-embedding-3-small",
-    "model_type": "reasoning",
-    "max_output_tokens": 4096
-  },
-  "ingest": {
-    "batch_size": 100
-  },
-  "logging": {
-    "level": "INFO"
-  }
-}
+`resources/config.json` - Edit for persistent settings
+
+## Common Workflows
+
+### First Time Setup
+```bash
+./setup.sh
+# Edit .env with your OPENAI_API_KEY
+poetry run shokobot info
+poetry run shokobot ingest
+poetry run shokobot repl
 ```
 
-**Model Types:**
-- `"reasoning"` - For GPT-5 and o1 models (no temperature, uses max_output_tokens)
-- `"standard"` - For GPT-4, GPT-3.5 models (supports temperature, top_p, etc.)
-
-## Query Modes
-
-### Interactive REPL
+### Daily Usage
 ```bash
-poetry run shokobot-rag --repl
-> What anime are similar to Cowboy Bebop?
+# Quick question
+poetry run shokobot query -q "recommend sci-fi anime"
+
+# Multiple questions
+poetry run shokobot repl
 ```
 
-### Single Question
+### Batch Processing
 ```bash
-poetry run shokobot-rag -q "What are the best mecha anime?"
+# Create questions file
+cat > questions.txt << EOF
+What is Cowboy Bebop about?
+What are some good mecha anime?
+Recommend romance anime from 2010s
+EOF
+
+# Process all questions
+poetry run shokobot query -f questions.txt -c
 ```
 
-### From File
+### Custom Data Ingestion
 ```bash
-poetry run shokobot-rag -f questions.txt --show-context
+# Use custom data file
+poetry run shokobot ingest -i /path/to/anime.json -b 200
+
+# Use different ID field
+poetry run shokobot ingest --id-field AniDB_AnimeID
 ```
 
-### From Stdin
+## Using with uv
+
+Replace `poetry run` with `uv run`:
+
 ```bash
-echo "What anime have great soundtracks?" | poetry run shokobot-rag --stdin
-```
-
-### Special Query Patterns
-- Exact title: `"Cowboy Bebop"` (use quotes)
-- Alias search: `alias:bebop`
-- Content search: Regular text
-
-## Quality Checks
-
-### Before Committing
-```bash
-make format          # Format code
-make check           # Run all checks
-git add .
-git commit -m "..."  # Pre-commit hooks run automatically
-```
-
-### Manual Pre-commit
-```bash
-pre-commit run --all-files
-```
-
-### Skip Hooks (Emergency Only)
-```bash
-git commit --no-verify
-```
-
-## Testing
-
-### Run Tests
-```bash
-make test            # Basic test run
-make test-cov        # With coverage report
-pytest -v            # Verbose output
-pytest tests/config/ # Specific directory
-```
-
-### Coverage Report
-```bash
-make test-cov
-open htmlcov/index.html  # View HTML report
+uv run shokobot info
+uv run shokobot ingest
+uv run shokobot repl
+uv run shokobot query -q "..."
 ```
 
 ## Troubleshooting
 
-### Import Errors
+### API Key Issues
 ```bash
-poetry shell         # Activate environment
-# or
-poetry run python your_script.py
+# Check if set
+echo $OPENAI_API_KEY
+
+# Set temporarily
+export OPENAI_API_KEY='your-key-here'
+
+# Set permanently (add to .env)
+echo "OPENAI_API_KEY='your-key-here'" >> .env
 ```
 
-### Dependency Issues
+### ChromaDB Issues
 ```bash
-poetry lock --no-update
+# Reset database
+rm -rf ./.chroma
+poetry run shokobot ingest
+```
+
+### Import/Module Errors
+```bash
+# Reinstall dependencies
 poetry install
+
+# Verify installation
+poetry run shokobot --help
+
+# Or activate shell
+poetry shell
+shokobot --help
 ```
 
-### Type Check Errors
+### Configuration Check
 ```bash
-mypy . --show-error-codes  # See detailed errors
+# View current settings
+poetry run shokobot info
+
+# Test with single query
+poetry run shokobot query -q "test" -c
 ```
 
-### Pre-commit Failures
+## Tips & Best Practices
+
+### Performance
+- Use `repl` for multiple queries (faster, cached)
+- Adjust `--k` for more/fewer context documents
+- Increase batch size on powerful machines
+- Use env vars for quick config changes
+
+### Querying
+- Be specific: "romance anime with strong female leads"
+- Try different phrasings if unsatisfied
+- Use `-c` to see what context was retrieved
+- REPL mode is fastest for multiple questions
+
+### Data Quality
+- Validate JSON before ingesting
+- Check logs for validation errors
+- Use `--id-field` if needed
+
+### Development
+- Run `shokobot info` to verify config
+- Use `--show-context` to debug retrieval
+- Check `docs/` for architecture details
+
+## Command Cheat Sheet
+
 ```bash
-pre-commit run --all-files  # See what failed
-make format                 # Fix formatting
-make lint                   # Fix linting
+# View config
+poetry run shokobot info
+
+# Ingest data
+poetry run shokobot ingest
+
+# Quick question
+poetry run shokobot query -q "..."
+
+# Interactive (best for multiple questions)
+poetry run shokobot repl
+
+# Show context
+poetry run shokobot query -q "..." -c
+poetry run shokobot repl -c
+
+# Batch from file
+poetry run shokobot query -f questions.txt
+
+# Custom ingestion
+poetry run shokobot ingest -i file.json -b 200
+
+# Check version
+poetry run shokobot --version
+
+# Get help
+poetry run shokobot --help
+poetry run shokobot query --help
 ```
+
+## Statistics
+
+- **Anime Records**: 1,458
+- **Fields per Record**: 21
+- **Ingestion Time**: ~40-50 seconds
+- **Query Response**: ~3-6 seconds
+- **Default Batch Size**: 100
+- **Default Context Docs**: 10
 
 ## Documentation
 
-- `README.md` - Project overview and usage
-- `SETUP_GUIDE.md` - Detailed setup and development guide
-- `MIGRATION_SUMMARY.md` - Dependency management migration
-- `IMPROVEMENTS.md` - All improvements made
-- `QUICK_REFERENCE.md` - This file
+- [README.md](README.md) - Full documentation
+- [SETUP_GUIDE.md](SETUP_GUIDE.md) - Detailed setup
+- [docs/](docs/) - Architecture documentation
 
 ## Resources
 
-- [Poetry Docs](https://python-poetry.org/docs/)
-- [Ruff Docs](https://docs.astral.sh/ruff/)
-- [MyPy Docs](https://mypy.readthedocs.io/)
+- [OpenAI API Docs](https://platform.openai.com/docs/)
 - [LangChain Docs](https://python.langchain.com/)
 - [ChromaDB Docs](https://docs.trychroma.com/)
+- [Poetry Docs](https://python-poetry.org/docs/)

@@ -10,60 +10,60 @@ from services.vectorstore_service import get_chroma_vectorstore
 
 logger = logging.getLogger(__name__)
 
-_cfg = ConfigService()
 
-
-def build_retriever(k: int = 10, score_threshold: float | None = None):
+def build_retriever(config: ConfigService, k: int = 10, score_threshold: float | None = None):
     """Build a vector store retriever with specified parameters.
-    
+
     Args:
+        config: Configuration service instance.
         k: Number of documents to retrieve.
         score_threshold: Optional minimum similarity score threshold.
-        
+
     Returns:
         Configured retriever instance.
-        
+
     Raises:
         ValueError: If k is invalid.
     """
     if k <= 0:
         raise ValueError(f"k must be positive, got {k}")
-    
-    vs = get_chroma_vectorstore()
+
+    vs = get_chroma_vectorstore(config)
     kwargs = {"k": k}
     if score_threshold is not None:
         if not 0 <= score_threshold <= 1:
             raise ValueError(f"score_threshold must be between 0 and 1, got {score_threshold}")
         kwargs["score_threshold"] = score_threshold
-    
+
     logger.debug(f"Building retriever with k={k}, score_threshold={score_threshold}")
     return vs.as_retriever(search_kwargs=kwargs)
 
 
-def alias_prefilter(query: str, limit: int = 12) -> Sequence[Document]:
+def alias_prefilter(query: str, config: ConfigService, limit: int = 12) -> Sequence[Document]:
     """Pre-filter documents based on query patterns for exact matches.
-    
+
     Supports special query patterns:
     - Quoted phrases: "exact title" searches for exact title_main match
     - Alias prefix: "alias:name" searches for exact alias match
     - Default: searches document content
-    
+
     Args:
         query: User query string with optional special patterns.
+        config: Configuration service instance.
         limit: Maximum number of documents to return.
-        
+
     Returns:
         Sequence of matching documents.
-        
+
     Raises:
         Exception: If vector store search fails.
     """
     if limit <= 0:
         raise ValueError(f"limit must be positive, got {limit}")
-    
+
     try:
-        vs = get_chroma_vectorstore()
-        
+        vs = get_chroma_vectorstore(config)
+
         # Exact title match using quotes
         if '"' in query:
             parts = query.split('"')
@@ -71,39 +71,44 @@ def alias_prefilter(query: str, limit: int = 12) -> Sequence[Document]:
                 phrase = parts[1].strip()
                 logger.debug(f"Exact title search for: {phrase}")
                 return vs.similarity_search(query, k=limit, where={"title_main": {"$eq": phrase}})
-        
+
         # Alias-based search
         if "alias:" in query:
             alias_parts = query.split("alias:")[-1].split()
             if alias_parts:
                 alias = alias_parts[0].strip()
                 logger.debug(f"Alias search for: {alias}")
-                return vs.similarity_search(query, k=limit, where={"title_alts": {"$contains": alias}})
-        
+                return vs.similarity_search(
+                    query, k=limit, where={"title_alts": {"$contains": alias}}
+                )
+
         # Default content search
         logger.debug(f"Content search for: {query}")
         return vs.similarity_search(query, k=limit, where_document={"$contains": query})
-    
+
     except Exception as e:
         logger.error(f"Prefilter search failed for query '{query}': {e}")
         return []
 
 
-def build_rag_chain() -> Callable[[str], tuple[str, list[Document]]]:
+def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Document]]]:
     """Build RAG chain for answering anime-related questions.
-    
+
     Uses LangChain's ChatOpenAI with native Responses API support for GPT-5 models.
-    
+
+    Args:
+        config: Configuration service instance.
+
     Returns:
         Callable that takes a question string and returns (answer_text, context_docs).
-        
+
     Raises:
         ValueError: If required configuration is missing.
     """
-    model_name = _cfg.get("openai.model")
+    model_name = config.get("openai.model")
     if not model_name:
         raise ValueError("openai.model not configured")
-    
+
     # Validate that a GPT-5 model is configured
     # GPT-5 models use the Responses API exclusively
     if not model_name.startswith("gpt-5"):
@@ -112,18 +117,18 @@ def build_rag_chain() -> Callable[[str], tuple[str, list[Document]]]:
             f"Configured model '{model_name}' is not supported. "
             f"GPT-5 models use the Responses API with reasoning capabilities."
         )
-    
+
     # Get configuration for GPT-5 Responses API
-    reasoning_effort = _cfg.get("openai.reasoning_effort", "medium")
-    output_verbosity = _cfg.get("openai.output_verbosity", "medium")
-    max_output_tokens = _cfg.get("openai.max_output_tokens", 4096)
-    
+    reasoning_effort = config.get("openai.reasoning_effort", "medium")
+    output_verbosity = config.get("openai.output_verbosity", "medium")
+    max_output_tokens = config.get("openai.max_output_tokens", 4096)
+
     logger.info(
         f"Building RAG chain with model={model_name}, "
         f"reasoning_effort={reasoning_effort}, "
         f"text_verbosity={output_verbosity}"
     )
-    
+
     # Initialize ChatOpenAI with Responses API parameters
     # GPT-5 models automatically use the Responses API
     # Note: reasoning and text parameters are passed at invocation time, not initialization
@@ -131,45 +136,44 @@ def build_rag_chain() -> Callable[[str], tuple[str, list[Document]]]:
         model=model_name,
         max_tokens=max_output_tokens,
     )
-    
+
     system = (
         "You answer questions about anime TV shows using only the provided context. "
         "Map aliases and alternate titles to the same show when present. "
         "If no data is available, say what's missing."
     )
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system),
-        ("human", "{question}\n\nContext:\n{context}")
-    ])
-    
-    retriever = build_retriever()
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", system), ("human", "{question}\n\nContext:\n{context}")]
+    )
+
+    retriever = build_retriever(config)
 
     def chain_fn(question: str) -> tuple[str, list[Document]]:
         """Execute RAG chain for a given question.
-        
+
         Args:
             question: User question about anime.
-            
+
         Returns:
             Tuple of (answer_text, list of context documents used).
-            
+
         Raises:
             Exception: If retrieval or LLM invocation fails.
         """
         if not question or not question.strip():
             raise ValueError("Question cannot be empty")
-        
+
         logger.info(f"Processing question: {question[:100]}...")
-        
+
         try:
             # Get pre-filtered documents for exact matches
-            pre_docs = alias_prefilter(question) or []
+            pre_docs = alias_prefilter(question, config) or []
             logger.debug(f"Prefilter returned {len(pre_docs)} documents")
-            
+
             # Get semantic search results
             docs = retriever.invoke(question)
             logger.debug(f"Retriever returned {len(docs)} documents")
-            
+
             # Merge and deduplicate by anime_id
             seen, merged = set(), []
             for d in list(pre_docs) + list(docs):
@@ -177,20 +181,20 @@ def build_rag_chain() -> Callable[[str], tuple[str, list[Document]]]:
                 if key and key not in seen:
                     seen.add(key)
                     merged.append(d)
-            
+
             logger.debug(f"Using {len(merged)} unique documents for context")
-            
+
             # Build context and invoke LLM
             context = "\n\n".join(d.page_content for d in merged)
             messages = prompt.format_messages(question=question, context=context)
-            
+
             # Invoke LLM with GPT-5 Responses API parameters
             response = llm.invoke(
                 messages,
                 reasoning={"effort": reasoning_effort},
                 text={"verbosity": output_verbosity},
             )
-            
+
             # GPT-5 Responses API returns content as a list of content blocks
             # Extract text from the response, filtering out reasoning metadata
             if isinstance(response.content, list):
@@ -209,11 +213,11 @@ def build_rag_chain() -> Callable[[str], tuple[str, list[Document]]]:
             else:
                 # Handle simple string response (fallback)
                 answer_text = str(response.content)
-            
+
             logger.debug(f"Received answer: {answer_text[:100]}...")
-            
+
             return answer_text, merged
-        
+
         except Exception as e:
             logger.error(f"RAG chain execution failed: {e}")
             raise
