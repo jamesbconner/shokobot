@@ -4,7 +4,7 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-def chunked[T](iterable: Iterable[T], size: int) -> Iterator[Sequence[T]]:
+def chunked(iterable: Iterable[T], size: int) -> Iterator[Sequence[T]]:
     """Split an iterable into fixed-size chunks.
 
     Args:

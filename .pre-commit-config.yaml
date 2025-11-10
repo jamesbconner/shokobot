@@ -24,8 +24,21 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        additional_dependencies: []
-        args: [--ignore-missing-imports]
+        additional_dependencies:
+          - pydantic
+          - langchain
+          - langchain-core
+          - langchain-openai
+          - langchain-chroma
+          - langchain-community
+          - chromadb
+          - rich
+          - rich-click
+          - python-dotenv
+          - click
+          - pytest
+        args: [--config-file=mypy.ini]
+        exclude: ^cli\.py$
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.10

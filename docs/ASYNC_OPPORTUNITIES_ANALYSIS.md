@@ -24,7 +24,7 @@ def ingest_showdocs_streaming(docs_iter, config, batch_size=100):
         # 2. ChromaDB upsert (~100-500ms)
 ```
 
-**Performance**: 
+**Performance**:
 - 1458 documents in 15 batches
 - ~2-3 seconds per batch
 - **Total: ~40-50 seconds**
@@ -33,16 +33,16 @@ def ingest_showdocs_streaming(docs_iter, config, batch_size=100):
 ```python
 async def ingest_showdocs_streaming_async(docs_iter, config, batch_size=100, concurrency=5):
     semaphore = asyncio.Semaphore(concurrency)
-    
+
     async def process_batch(batch):
         async with semaphore:
             batch_list = list(batch)
             await upsert_documents_async(batch_list, config)
-    
+
     tasks = []
     for batch in chunked(docs_iter, batch_size):
         tasks.append(process_batch(batch))
-    
+
     await asyncio.gather(*tasks)
 ```
 
@@ -65,13 +65,13 @@ def chain_fn(question: str):
     # Sequential operations:
     pre_docs = alias_prefilter(question, config)      # ~200ms (DB query)
     docs = retriever.invoke(question)                  # ~500ms (embedding + search)
-    
+
     # Merge results
     merged = merge_and_dedupe(pre_docs, docs)
-    
+
     # LLM call
     response = llm.invoke(messages)                    # ~2-5s (OpenAI API)
-    
+
     return answer, merged
 ```
 
@@ -83,16 +83,16 @@ async def chain_fn_async(question: str):
     # Parallel operations:
     pre_docs_task = asyncio.create_task(alias_prefilter_async(question, config))
     docs_task = asyncio.create_task(retriever.ainvoke(question))
-    
+
     # Wait for both
     pre_docs, docs = await asyncio.gather(pre_docs_task, docs_task)
-    
+
     # Merge results
     merged = merge_and_dedupe(pre_docs, docs)
-    
+
     # LLM call
     response = await llm.ainvoke(messages)
-    
+
     return answer, merged
 ```
 
@@ -115,24 +115,24 @@ for question in questions:
     print(answer)
 ```
 
-**Performance**: 
+**Performance**:
 - 10 questions = 30-60 seconds
 
 **Async Implementation**:
 ```python
 async def process_questions_async(questions, rag, concurrency=3):
     semaphore = asyncio.Semaphore(concurrency)
-    
+
     async def process_one(q):
         async with semaphore:
             return await rag(q)
-    
+
     tasks = [process_one(q) for q in questions]
     results = await asyncio.gather(*tasks)
     return results
 ```
 
-**Expected Performance**: 
+**Expected Performance**:
 - 10 questions = 10-20 seconds (3x faster)
 
 **Impact**: ⭐⭐⭐⭐⭐ (Very High)
@@ -159,7 +159,7 @@ async def upsert_documents_async(docs, config):
     await vectorstore.aadd(embeddings)
 ```
 
-**Expected Performance**: 
+**Expected Performance**:
 - 20-30% faster per batch
 - Allows concurrent batch processing
 
@@ -183,30 +183,30 @@ async def upsert_documents_async(docs, config):
 ```python
 # services/vectorstore_service.py
 async def upsert_documents_async(
-    docs: list[Document], 
+    docs: list[Document],
     config: ConfigService
 ) -> list[str]:
     """Async version of upsert_documents."""
     if not docs:
         return []
-    
+
     vs = get_chroma_vectorstore(config)
     ids = []
-    
+
     filtered_docs = filter_complex_metadata(docs)
-    
+
     for d in filtered_docs:
         anime_id = d.metadata.get("anime_id")
         if not anime_id:
             raise ValueError(f"Document missing anime_id")
         ids.append(str(anime_id))
-    
+
     # Delete existing (sync - ChromaDB doesn't have async delete)
     vs.delete(where={"anime_id": {"$in": ids}})
-    
+
     # Add documents with async embeddings
     await vs.aadd_documents(filtered_docs, ids=ids)
-    
+
     return ids
 
 
@@ -219,21 +219,21 @@ async def ingest_showdocs_streaming_async(
 ) -> int:
     """Async ingestion with concurrent batch processing."""
     batch_size = batch_size or int(config.get("ingest.batch_size", 256))
-    
+
     semaphore = asyncio.Semaphore(concurrency)
     total = 0
-    
+
     async def process_batch(batch):
         nonlocal total
         async with semaphore:
             batch_list = list(batch)
             await upsert_documents_async(batch_list, config)
             total += len(batch_list)
-    
+
     tasks = []
     for batch in chunked((d.to_langchain_doc() for d in docs_iter), batch_size):
         tasks.append(process_batch(batch))
-    
+
     await asyncio.gather(*tasks)
     return total
 
@@ -244,7 +244,7 @@ async def ingest_showdocs_streaming_async(
 def ingest(ctx, ...):
     """Ingest with async support."""
     # ... setup ...
-    
+
     # Run async ingestion
     total = asyncio.run(
         ingest_showdocs_streaming_async(docs_iter, config, batch_size)
@@ -268,12 +268,12 @@ def ingest(ctx, ...):
 def build_rag_chain_async(config: ConfigService) -> Callable:
     """Build async RAG chain."""
     # ... setup ...
-    
+
     async def chain_fn_async(question: str) -> tuple[str, list[Document]]:
         """Async RAG chain execution."""
         if not question or not question.strip():
             raise ValueError("Question cannot be empty")
-        
+
         # Parallel retrieval
         pre_docs_task = asyncio.create_task(
             alias_prefilter_async(question, config)
@@ -281,19 +281,19 @@ def build_rag_chain_async(config: ConfigService) -> Callable:
         docs_task = asyncio.create_task(
             retriever.ainvoke(question)
         )
-        
+
         pre_docs, docs = await asyncio.gather(
-            pre_docs_task, 
+            pre_docs_task,
             docs_task,
             return_exceptions=True
         )
-        
+
         # Handle exceptions
         if isinstance(pre_docs, Exception):
             pre_docs = []
         if isinstance(docs, Exception):
             raise docs
-        
+
         # Merge and deduplicate
         seen, merged = set(), []
         for d in list(pre_docs) + list(docs):
@@ -301,22 +301,22 @@ def build_rag_chain_async(config: ConfigService) -> Callable:
             if key and key not in seen:
                 seen.add(key)
                 merged.append(d)
-        
+
         # Build context and invoke LLM (async)
         context = "\n\n".join(d.page_content for d in merged)
         messages = prompt.format_messages(question=question, context=context)
-        
+
         response = await llm.ainvoke(
             messages,
             reasoning={"effort": reasoning_effort},
             text={"verbosity": output_verbosity},
         )
-        
+
         # Parse response
         answer_text = extract_text_from_blocks(response.content)
-        
+
         return answer_text, merged
-    
+
     return chain_fn_async
 
 
@@ -324,14 +324,14 @@ def build_rag_chain_async(config: ConfigService) -> Callable:
 async def _run_single_question_async(console, rag, question, show_context):
     """Async version of single question."""
     console.print(f"[bold cyan]Q:[/] {question}\n")
-    
+
     with Progress(...) as progress:
         task = progress.add_task("Thinking...", total=None)
         answer, docs = await rag(question)
         progress.update(task, description="[green]✓[/] Answer ready")
-    
+
     console.print(f"\n[bold green]A:[/] {answer}\n")
-    
+
     if show_context:
         _display_context(console, docs)
 
@@ -342,10 +342,10 @@ def query(ctx, question, ...):
     """Query with async support."""
     config = ctx.obj["config"]
     console = ctx.obj["console"]
-    
+
     # Build async RAG chain
     rag = build_rag_chain_async(config)
-    
+
     if question:
         asyncio.run(_run_single_question_async(console, rag, question, show_context))
 ```
@@ -364,23 +364,23 @@ def query(ctx, question, ...):
 ```python
 # cli/query.py
 async def _run_file_questions_async(
-    console, 
-    rag, 
-    file_path, 
+    console,
+    rag,
+    file_path,
     show_context,
     concurrency=3
 ):
     """Process file questions concurrently."""
     with file_path.open("r", encoding="utf-8") as f:
         questions = [line.strip() for line in f if line.strip()]
-    
+
     semaphore = asyncio.Semaphore(concurrency)
-    
+
     async def process_one(i, q):
         async with semaphore:
             console.print(f"[dim]Question {i}/{len(questions)}[/]")
             await _run_single_question_async(console, rag, q, show_context)
-    
+
     tasks = [process_one(i+1, q) for i, q in enumerate(questions)]
     await asyncio.gather(*tasks)
 
@@ -516,7 +516,7 @@ def ingest_showdocs_streaming_threaded(docs_iter, config, batch_size=100, worker
             batch_list = list(batch)
             future = executor.submit(upsert_documents, batch_list, config)
             futures.append(future)
-        
+
         for future in futures:
             future.result()  # Wait for completion
 ```
@@ -565,7 +565,7 @@ def ingest_showdocs_streaming_threaded(docs_iter, config, batch_size=100, worker
    - Simpler mental model
    - Still provides benefits
 
-**Expected Total Improvement**: 
+**Expected Total Improvement**:
 - Ingestion: 3-4x faster
 - Batch queries: 3x faster
 - Overall user experience: Significantly better

@@ -1,7 +1,10 @@
+from pathlib import Path
+from typing import Any
+
 from services.config_service import ConfigService
 
 
-def test_env_overrides(tmp_path, monkeypatch):
+def test_env_overrides(tmp_path: Path, monkeypatch: Any) -> None:
     cfgfile = tmp_path / "config.json"
     cfgfile.write_text(
         '{"chroma":{"persist_directory":"./.chroma"},"openai":{"model":"x"}}', encoding="utf-8"

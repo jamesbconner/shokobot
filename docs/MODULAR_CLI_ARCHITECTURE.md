@@ -30,13 +30,13 @@ The `cli/__init__.py` module contains an auto-loader that:
 def load_commands() -> None:
     """Auto-load all command modules from the cli package."""
     cli_dir = Path(__file__).parent
-    
+
     for _, module_name, is_pkg in pkgutil.iter_modules([str(cli_dir)]):
         if module_name.startswith("_") or is_pkg:
             continue
-            
+
         module = importlib.import_module(f"cli.{module_name}")
-        
+
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
             if isinstance(attr, click.Command) and attr is not cli:
@@ -64,7 +64,7 @@ def command_name(ctx: click.Context, ...) -> None:
     """Command help text."""
     config: ConfigService = ctx.obj["config"]
     console: Console = ctx.obj["console"]
-    
+
     # Command implementation
 ```
 
@@ -130,7 +130,7 @@ def stats(ctx: click.Context) -> None:
     """Display database statistics."""
     config: ConfigService = ctx.obj["config"]
     console: Console = ctx.obj["console"]
-    
+
     console.print("[bold]Database Statistics[/]\n")
     # Implementation here
 ```
@@ -203,7 +203,7 @@ if TYPE_CHECKING:
 @click.pass_context
 def example(ctx: click.Context, format: str) -> None:
     """Example command demonstrating structure.
-    
+
     This command shows how to:
     - Access shared context
     - Use options
@@ -211,7 +211,7 @@ def example(ctx: click.Context, format: str) -> None:
     """
     config: ConfigService = ctx.obj["config"]
     console: Console = ctx.obj["console"]
-    
+
     if format == "table":
         _display_table(console)
     else:

@@ -44,10 +44,10 @@ from services.example_service import do_something
 def example(config: str) -> None:
     """Example command using AppContext."""
     ctx = AppContext.create(config)
-    
+
     # Pass context to service functions
     result = do_something(ctx)
-    
+
     click.echo(f"Result: {result}")
 ```
 
@@ -95,22 +95,22 @@ from services.config_service import ConfigService
 @dataclass
 class AppContext:
     """Application context containing shared configuration and services."""
-    
+
     config: ConfigService
     _vectorstore: Chroma | None = field(default=None, init=False, repr=False)
-    
+
     @classmethod
     def create(cls, config_path: str = "resources/config.json") -> "AppContext":
         """Create application context with configuration."""
         config = ConfigService(config_path)
         return cls(config=config)
-    
+
     @property
     def vectorstore(self) -> Chroma:
         """Get or create vectorstore instance (lazy initialization)."""
         if self._vectorstore is None:
             from services.vectorstore_service import get_chroma_vectorstore
-            
+
             self._vectorstore = get_chroma_vectorstore(self.config)
         return self._vectorstore
 ```
@@ -133,7 +133,7 @@ def query(ctx: "AppContext", question: str) -> None:
     """Query the anime database."""
     # RAG chain is created only when first accessed (includes vectorstore)
     rag_chain = ctx.rag_chain
-    
+
     # Execute query
     answer, docs = rag_chain(question)
     click.echo(answer)
@@ -150,17 +150,17 @@ from services.vectorstore_service import get_chroma_vectorstore
 
 def process_data(ctx: AppContext, data: list[dict]) -> None:
     """Process data using services from context.
-    
+
     Args:
         ctx: Application context with configuration and services.
         data: Data to process.
     """
     # Get configuration
     batch_size = ctx.config.get("ingest.batch_size", 100)
-    
+
     # Get or create vectorstore
     vectorstore = ctx.vectorstore
-    
+
     # Process in batches
     for i in range(0, len(data), batch_size):
         batch = data[i:i + batch_size]
@@ -186,7 +186,7 @@ def test_context():
 def test_example_service(test_context):
     """Test service with injected context."""
     from services.example_service import do_something
-    
+
     result = do_something(test_context)
     assert result is not None
 ```
@@ -211,7 +211,7 @@ def mock_context():
 def test_with_mock_context(mock_context):
     """Test with fully mocked context."""
     from services.example_service import do_something
-    
+
     result = do_something(mock_context)
     mock_context.config.get.assert_called_once()
 ```
@@ -266,7 +266,7 @@ rag = ctx.rag_chain  # Reuses same vectorstore
 def test_ingest():
     config = Mock(spec=ConfigService)
     config.get.side_effect = lambda key, default=None: {...}
-    
+
     with patch('services.ingest_service.upsert_documents'):
         result = ingest_showdocs_streaming(docs, config, batch_size=10)
 ```
@@ -277,7 +277,7 @@ def test_ingest():
     ctx = Mock(spec=AppContext)
     ctx.config.get.return_value = 100
     ctx.vectorstore = Mock()
-    
+
     result = ingest_showdocs_streaming(docs, ctx, batch_size=10)
 ```
 
@@ -367,10 +367,10 @@ if TYPE_CHECKING:
 def ingest(ctx: "AppContext") -> None:
     """Ingest anime data."""
     from services.ingest_service import ingest_showdocs_streaming, iter_showdocs_from_json
-    
+
     docs_iter = iter_showdocs_from_json(ctx)
     ingest_showdocs_streaming(docs_iter, ctx)
-    
+
     # Reset cached services after ingestion
     ctx.reset_all()
 
@@ -399,13 +399,13 @@ class AppContext:
     config: ConfigService
     _vectorstore: Chroma | None = field(default=None, init=False, repr=False)
     _mcp_client: "MCPClient | None" = field(default=None, init=False, repr=False)
-    
+
     @property
     def mcp_client(self) -> "MCPClient":
         """Get or create MCP client for AniDB API."""
         if self._mcp_client is None:
             from services.mcp_client import MCPClient
-            
+
             self._mcp_client = MCPClient(self.config)
         return self._mcp_client
 ```
@@ -419,7 +419,7 @@ from functools import lru_cache
 @dataclass
 class AppContext:
     config: ConfigService
-    
+
     @property
     @lru_cache(maxsize=1)
     def vectorstore(self) -> Chroma:

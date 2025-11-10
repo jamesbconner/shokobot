@@ -76,7 +76,7 @@ NEW_PROMPT = """Your prompt text here..."""
 
 def build_new_prompt() -> ChatPromptTemplate:
     """Build the new prompt template.
-    
+
     Returns:
         ChatPromptTemplate configured for specific use case.
     """
@@ -116,13 +116,13 @@ from prompts import build_anime_rag_prompt
 
 def test_anime_rag_prompt():
     prompt = build_anime_rag_prompt()
-    
+
     # Test formatting
     messages = prompt.format_messages(
         question="Test question",
         context="Test context"
     )
-    
+
     assert len(messages) == 2
     assert messages[0].type == "system"
     assert messages[1].type == "human"
