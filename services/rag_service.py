@@ -167,10 +167,10 @@ def build_rag_chain(
             f"GPT-5 models use the Responses API with reasoning capabilities."
         )
 
-    # Get configuration for GPT-5 Responses API
-    reasoning_effort = ctx.config.get("openai.reasoning_effort", "medium")
-    output_verbosity = ctx.config.get("openai.output_verbosity", "medium")
-    max_output_tokens = ctx.config.get("openai.max_output_tokens", 4096)
+    # Get configuration for GPT-5 Responses API with validation
+    reasoning_effort = ctx.config.get_reasoning_effort()
+    output_verbosity = ctx.config.get_output_verbosity()
+    max_output_tokens = ctx.config.get_max_output_tokens()
 
     logger.info(
         f"Building RAG chain with model={model_name}, "

@@ -6,6 +6,12 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Allowed values for GPT-5 Responses API parameters
+_ALLOWED_REASONING = {"low", "medium", "high"}
+_ALLOWED_VERBOSITY = {"low", "medium", "high"}
+_MIN_OUTPUT_TOKENS = 512
+_MAX_OUTPUT_TOKENS = 16384
+
 
 class ConfigService:
     """Service for loading and managing application configuration.
@@ -103,3 +109,77 @@ class ConfigService:
             Dictionary containing all configuration values.
         """
         return self._config.copy()
+
+    def get_reasoning_effort(self) -> str:
+        """Get validated reasoning effort setting for GPT-5 Responses API.
+
+        Returns:
+            Reasoning effort level: "low", "medium", or "high".
+
+        Raises:
+            ValueError: If configured value is not in allowed set.
+
+        Examples:
+            >>> config.get_reasoning_effort()
+            'medium'
+        """
+        value = self.get("openai.reasoning_effort", "medium")
+        if value not in _ALLOWED_REASONING:
+            raise ValueError(
+                f"Invalid reasoning_effort '{value}'. "
+                f"Must be one of: {', '.join(sorted(_ALLOWED_REASONING))}"
+            )
+        return value
+
+    def get_output_verbosity(self) -> str:
+        """Get validated output verbosity setting for GPT-5 Responses API.
+
+        Returns:
+            Output verbosity level: "low", "medium", or "high".
+
+        Raises:
+            ValueError: If configured value is not in allowed set.
+
+        Examples:
+            >>> config.get_output_verbosity()
+            'medium'
+        """
+        value = self.get("openai.output_verbosity", "medium")
+        if value not in _ALLOWED_VERBOSITY:
+            raise ValueError(
+                f"Invalid output_verbosity '{value}'. "
+                f"Must be one of: {', '.join(sorted(_ALLOWED_VERBOSITY))}"
+            )
+        return value
+
+    def get_max_output_tokens(self) -> int:
+        """Get validated max output tokens setting for GPT-5 Responses API.
+
+        Returns:
+            Maximum output tokens (between 512 and 16384).
+
+        Raises:
+            ValueError: If configured value is not in valid range or not an integer.
+
+        Examples:
+            >>> config.get_max_output_tokens()
+            8192
+        """
+        value = self.get("openai.max_output_tokens", 4096)
+
+        # Ensure value is an integer
+        try:
+            value = int(value)
+        except (TypeError, ValueError) as e:
+            raise ValueError(
+                f"Invalid max_output_tokens '{value}'. Must be an integer."
+            ) from e
+
+        # Validate range
+        if not _MIN_OUTPUT_TOKENS <= value <= _MAX_OUTPUT_TOKENS:
+            raise ValueError(
+                f"Invalid max_output_tokens {value}. "
+                f"Must be between {_MIN_OUTPUT_TOKENS} and {_MAX_OUTPUT_TOKENS}."
+            )
+
+        return value
