@@ -60,7 +60,7 @@ class AppContext:
 
     @property
     def rag_chain(self) -> Callable[[str], tuple[str, list]]:
-        """Get or create RAG chain (lazy initialization).
+        """Get or create RAG chain with default text output (lazy initialization).
 
         Returns:
             Callable that takes a question and returns (answer, context_docs).
@@ -71,8 +71,29 @@ class AppContext:
         if self._rag_chain is None:
             from services.rag_service import build_rag_chain
 
-            self._rag_chain = build_rag_chain(self)
+            self._rag_chain = build_rag_chain(self, output_format="text")
         return self._rag_chain
+
+    def get_rag_chain(self, output_format: str = "text") -> Callable[[str], tuple[str, list]]:
+        """Get or create RAG chain with specified output format.
+
+        Args:
+            output_format: Output format - "text" (default) or "json" for structured output.
+
+        Returns:
+            Callable that takes a question and returns (answer, context_docs).
+
+        Raises:
+            ValueError: If RAG chain configuration is invalid or output format unsupported.
+        """
+        from services.rag_service import build_rag_chain
+
+        # Don't cache when using non-default format
+        if output_format != "text":
+            return build_rag_chain(self, output_format=output_format)
+
+        # Use cached version for default text format
+        return self.rag_chain
 
     def reset_vectorstore(self) -> None:
         """Reset vectorstore instance, forcing reinitialization on next access.

@@ -1,5 +1,6 @@
 """REPL command - Interactive query mode."""
 
+import json
 from typing import TYPE_CHECKING, Any
 
 import rich_click as click
@@ -24,11 +25,18 @@ if TYPE_CHECKING:
     default=10,
     help="Number of documents to retrieve",
 )
+@click.option(
+    "--output-format",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    default="text",
+    help="Output format for responses (text or json)",
+)
 @click.pass_obj
 def repl(
     ctx: "AppContext",
     show_context: bool,
     k: int,
+    output_format: str,
 ) -> None:
     """Start interactive REPL mode for querying the anime database.
 
@@ -37,31 +45,35 @@ def repl(
     """
     console = Console()
 
-    # Build RAG chain (lazy-loaded from context)
+    # Build RAG chain with specified output format
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
         task = progress.add_task("Building RAG chain...", total=None)
-        rag = ctx.rag_chain
+        rag = ctx.get_rag_chain(output_format=output_format.lower())
         progress.update(task, description="[green]✓[/] RAG chain ready")
 
     console.print()
 
     # Start interactive mode
-    _run_interactive(console, rag, show_context)
+    _run_interactive(console, rag, show_context, output_format.lower())
 
 
-def _run_interactive(console: Console, rag: Any, show_context: bool) -> None:
+def _run_interactive(console: Console, rag: Any, show_context: bool, output_format: str) -> None:
     """Run interactive REPL."""
-    console.print("[bold]Interactive RAG Mode[/]")
-    console.print("Type your questions or [dim]'exit'/'quit'[/] to leave\n")
+    if output_format != "json":
+        console.print("[bold]Interactive RAG Mode[/]")
+        console.print("Type your questions or [dim]'exit'/'quit'[/] to leave\n")
 
     try:
         while True:
             try:
-                question = console.input("[bold cyan]>[/] ").strip()
+                if output_format == "json":
+                    question = input().strip()
+                else:
+                    question = console.input("[bold cyan]>[/] ").strip()
             except EOFError:
                 break
 
@@ -71,32 +83,55 @@ def _run_interactive(console: Console, rag: Any, show_context: bool) -> None:
             if question.lower() in ("exit", "quit", "q"):
                 break
 
-            _run_single_question(console, rag, question, show_context)
-            console.print()
+            _run_single_question(console, rag, question, show_context, output_format)
+            if output_format != "json":
+                console.print()
 
     except KeyboardInterrupt:
         pass
 
-    console.print("\n[dim]Goodbye![/]\n")
+    if output_format != "json":
+        console.print("\n[dim]Goodbye![/]\n")
 
 
-def _run_single_question(console: Console, rag: Any, question: str, show_context: bool) -> None:
+def _run_single_question(
+    console: Console, rag: Any, question: str, show_context: bool, output_format: str
+) -> None:
     """Run a single question."""
-    console.print(f"[bold cyan]Q:[/] {question}\n")
+    if output_format == "json":
+        # For JSON output, skip fancy formatting
+        import json
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
-        task = progress.add_task("Thinking...", total=None)
         answer, docs = rag(question)
-        progress.update(task, description="[green]✓[/] Answer ready")
+        output = {"question": question, "answer": answer}
+        if show_context:
+            output["context"] = [
+                {
+                    "title": doc.metadata.get("title_main", "Unknown"),
+                    "anime_id": doc.metadata.get("anime_id"),
+                    "year": doc.metadata.get("begin_year"),
+                    "episodes": doc.metadata.get("episode_count_normal"),
+                }
+                for doc in docs
+            ]
+        console.print(json.dumps(output, indent=2, ensure_ascii=False))
+    else:
+        # Text output with rich formatting
+        console.print(f"[bold cyan]Q:[/] {question}\n")
 
-    console.print(f"\n[bold green]A:[/] {answer}\n")
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Thinking...", total=None)
+            answer, docs = rag(question)
+            progress.update(task, description="[green]✓[/] Answer ready")
 
-    if show_context:
-        _display_context(console, docs)
+        console.print(f"\n[bold green]A:[/] {answer}\n")
+
+        if show_context:
+            _display_context(console, docs)
 
 
 def _display_context(console: Console, docs: Any) -> None:

@@ -116,3 +116,44 @@ def build_recommendation_prompt() -> ChatPromptTemplate:
             ("human", "{question}\n\nContext:\n{context}"),
         ]
     )
+
+
+# Version: 1.0
+# Purpose: JSON-formatted responses for programmatic usage
+ANIME_RAG_JSON_PROMPT = """You answer questions about anime TV shows using only the provided context.
+
+Guidelines:
+- Use ONLY information from the provided context
+- Map aliases and alternate titles to the same show when present
+- If multiple shows match, mention all relevant ones
+- If no data is available, clearly state what information is missing
+- Be concise but informative
+- Include relevant details like episode count, year, and ratings when available
+
+Context Format:
+Each anime entry includes: title, alternate titles, description, tags, episodes, year, and ratings.
+
+IMPORTANT: You must respond with valid JSON format. Structure your response as a JSON object with an "answer" field containing your response text."""
+
+
+def build_anime_rag_json_prompt() -> ChatPromptTemplate:
+    """Build the anime RAG prompt template for JSON output.
+
+    OpenAI requires the word 'json' in the prompt when using json_object response format.
+
+    Returns:
+        ChatPromptTemplate configured for anime queries with JSON output.
+
+    Examples:
+        >>> prompt = build_anime_rag_json_prompt()
+        >>> messages = prompt.format_messages(
+        ...     question="What is Cowboy Bebop about?",
+        ...     context="Cowboy Bebop: A space western anime..."
+        ... )
+    """
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", ANIME_RAG_JSON_PROMPT),
+            ("human", "{question}\n\nContext:\n{context}"),
+        ]
+    )

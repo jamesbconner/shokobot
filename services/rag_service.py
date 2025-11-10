@@ -3,9 +3,10 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any
 
 from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from prompts import build_anime_rag_prompt
+from prompts import build_anime_rag_json_prompt, build_anime_rag_prompt
 
 if TYPE_CHECKING:
     from services.app_context import AppContext
@@ -93,20 +94,66 @@ def alias_prefilter(query: str, ctx: "AppContext", limit: int = 12) -> Sequence[
         return []
 
 
-def build_rag_chain(ctx: "AppContext") -> Callable[[str], tuple[str, list[Document]]]:
+def _init_llm(
+    model_name: str, max_output_tokens: int, output_format: str
+) -> tuple[ChatOpenAI, ChatPromptTemplate]:
+    """Initialize ChatOpenAI LLM and prompt template based on output format.
+
+    Args:
+        model_name: OpenAI model name (e.g., "gpt-5-nano").
+        max_output_tokens: Maximum tokens for completion.
+        output_format: Output format - "text" or "json".
+
+    Returns:
+        Tuple of (ChatOpenAI instance, ChatPromptTemplate instance).
+
+    Raises:
+        ValueError: If output_format is invalid.
+    """
+    if output_format == "json":
+        # For JSON output, explicitly pass response_format parameter
+        # This avoids the kwargs warning by using explicit parameter names
+        llm = ChatOpenAI(
+            model=model_name,
+            max_completion_tokens=max_output_tokens,
+            model_kwargs={
+                "response_format": {"type": "json_object"}
+            }
+        )
+        prompt = build_anime_rag_json_prompt()
+    elif output_format == "text":
+        # For text output, use standard initialization
+        llm = ChatOpenAI(
+            model=model_name,
+            max_completion_tokens=max_output_tokens,     
+        )
+        prompt = build_anime_rag_prompt()
+    else:
+        raise ValueError(f"output_format must be 'text' or 'json', got '{output_format}'")
+
+    return llm, prompt
+
+
+def build_rag_chain(
+    ctx: "AppContext", output_format: str = "text"
+) -> Callable[[str], tuple[str, list[Document]]]:
     """Build RAG chain for answering anime-related questions.
 
     Uses LangChain's ChatOpenAI with native Responses API support for GPT-5 models.
 
     Args:
         ctx: Application context with configuration and vectorstore access.
+        output_format: Output format - "text" (default) or "json" for structured output.
 
     Returns:
         Callable that takes a question string and returns (answer_text, context_docs).
 
     Raises:
-        ValueError: If required configuration is missing.
+        ValueError: If required configuration is missing or invalid output format.
     """
+    if output_format not in ("text", "json"):
+        raise ValueError(f"output_format must be 'text' or 'json', got '{output_format}'")
+
     model_name = ctx.config.get("openai.model")
     if not model_name:
         raise ValueError("openai.model not configured")
@@ -128,19 +175,13 @@ def build_rag_chain(ctx: "AppContext") -> Callable[[str], tuple[str, list[Docume
     logger.info(
         f"Building RAG chain with model={model_name}, "
         f"reasoning_effort={reasoning_effort}, "
-        f"text_verbosity={output_verbosity}"
+        f"text_verbosity={output_verbosity}, "
+        f"output_format={output_format}"
     )
 
-    # Initialize ChatOpenAI with Responses API parameters
-    # GPT-5 models automatically use the Responses API
-    # Note: reasoning and text parameters are passed at invocation time, not initialization
-    llm = ChatOpenAI(
-        model=model_name,
-        max_completion_tokens=max_output_tokens,
-    )
-
-    # Load prompt template from prompts module
-    prompt = build_anime_rag_prompt()
+    # Initialize LLM and prompt based on output format
+    # This avoids kwargs warnings by using explicit parameters
+    llm, prompt = _init_llm(model_name, max_output_tokens, output_format)
 
     retriever = build_retriever(ctx)
 
@@ -193,22 +234,37 @@ def build_rag_chain(ctx: "AppContext") -> Callable[[str], tuple[str, list[Docume
 
             # GPT-5 Responses API returns content as a list of content blocks
             # Extract text from the response, filtering out reasoning metadata
+            answer_text = ""
             if isinstance(response.content, list):
                 # Handle list of content blocks (GPT-5 Responses API format)
-                answer_text = ""
                 for block in response.content:
                     if isinstance(block, dict):
                         # Skip reasoning metadata blocks
                         if block.get("type") == "reasoning":
                             continue
-                        # Extract text content
-                        if "text" in block:
-                            answer_text += block["text"]
+                        # Keep only user-visible text blocks
+                        block_type = block.get("type")
+                        if block_type in (None, "output_text", "text"):
+                            answer_text += block.get("text", "")
                     elif isinstance(block, str):
                         answer_text += block
             else:
                 # Handle simple string response (fallback)
                 answer_text = str(response.content)
+
+            answer_text = answer_text.strip()
+
+            # For JSON output, extract the answer field from the JSON response
+            if output_format == "json":
+                import json
+
+                try:
+                    json_response = json.loads(answer_text)
+                    # Extract the answer field if it exists, otherwise use the whole response
+                    answer_text = json_response.get("answer", answer_text)
+                except json.JSONDecodeError:
+                    # If parsing fails, use the raw text
+                    logger.warning("Failed to parse JSON response, using raw text")
 
             logger.debug(f"Received answer: {answer_text[:100]}...")
 
