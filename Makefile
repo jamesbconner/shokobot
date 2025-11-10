@@ -44,7 +44,10 @@ pre-commit:  ## Run all pre-commit hooks
 check: format lint type-check security test  ## Run all quality checks
 
 ingest:  ## Run ingestion process
-	poetry run shokobot-ingest
+	poetry run shokobot ingest
+
+ingest-dry-run:  ## Validate data without ingesting (dry-run)
+	poetry run shokobot ingest --dry-run
 
 rag:  ## Start interactive RAG REPL
 	poetry run shokobot-rag --repl

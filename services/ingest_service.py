@@ -213,6 +213,99 @@ def iter_showdocs_from_json(
             continue
 
 
+def validate_showdocs_dry_run(
+    docs_iter: Iterable[ShowDoc],
+    batch_size: int | None = None,
+) -> dict[str, Any]:
+    """Validate show documents without ingesting (dry-run mode).
+
+    Processes all documents to validate mappings and collect statistics
+    without actually inserting into the vector store.
+
+    Args:
+        docs_iter: Iterable of ShowDoc instances to validate.
+        batch_size: Number of documents per batch for logging. If None, defaults to 100.
+
+    Returns:
+        Dictionary containing validation statistics:
+        - total: Total number of valid documents
+        - batch_count: Number of batches processed
+        - sample_titles: List of first 10 titles
+        - year_range: Tuple of (min_year, max_year) or None
+        - episode_stats: Dict with min/max/avg episode counts
+        - errors: List of validation errors encountered
+
+    Raises:
+        ValueError: If batch_size is invalid.
+    """
+    batch_size = batch_size or 100
+
+    if batch_size <= 0:
+        raise ValueError(f"batch_size must be positive, got {batch_size}")
+
+    logger.info(f"Starting dry-run validation with batch_size={batch_size}")
+
+    total = 0
+    batch_count = 0
+    sample_titles: list[str] = []
+    years: list[int] = []
+    episodes: list[int] = []
+    errors: list[str] = []
+
+    try:
+        for batch in chunked(docs_iter, batch_size):
+            batch_list = list(batch)
+
+            for doc in batch_list:
+                # Collect sample titles (first 10)
+                if len(sample_titles) < 10:
+                    sample_titles.append(doc.title_main)
+
+                # Collect year data
+                if doc.begin_year:
+                    years.append(doc.begin_year)
+
+                # Collect episode data
+                if doc.episode_count_normal > 0:
+                    episodes.append(doc.episode_count_normal)
+
+                # Validate that document can be converted to LangChain format
+                try:
+                    doc.to_langchain_doc()
+                except Exception as e:
+                    errors.append(f"Failed to convert {doc.anime_id}: {e}")
+
+            total += len(batch_list)
+            batch_count += 1
+            logger.debug(f"Validated batch {batch_count} ({len(batch_list)} docs)")
+
+    except Exception as e:
+        logger.error(f"Validation failed after {total} documents: {e}")
+        raise
+
+    # Calculate statistics
+    year_range = (min(years), max(years)) if years else None
+    episode_stats = {}
+    if episodes:
+        episode_stats = {
+            "min": min(episodes),
+            "max": max(episodes),
+            "avg": sum(episodes) / len(episodes),
+        }
+
+    stats = {
+        "total": total,
+        "batch_count": batch_count,
+        "sample_titles": sample_titles,
+        "year_range": year_range,
+        "episode_stats": episode_stats,
+        "errors": errors,
+    }
+
+    logger.info(f"Dry-run validation complete: {total} documents in {batch_count} batches")
+    return stats
+
+
 def ingest_showdocs_streaming(
     docs_iter: Iterable[ShowDoc],
     ctx: "AppContext",

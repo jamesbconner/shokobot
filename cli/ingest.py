@@ -32,19 +32,31 @@ if TYPE_CHECKING:
     default="AnimeID",
     help="Field to use as primary ID",
 )
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Validate mappings and show statistics without ingesting",
+)
 @click.pass_obj
 def ingest(
     ctx: "AppContext",
     input_file: Path | None,
     batch_size: int | None,
     id_field: str,  # Click passes as str, we cast below
+    dry_run: bool,
 ) -> None:
     """Ingest anime data into the vector database.
 
     Reads anime data from JSON and creates embeddings for semantic search.
     Progress is displayed with a progress bar.
+
+    Use --dry-run to validate data without actually ingesting.
     """
-    from services.ingest_service import ingest_showdocs_streaming, iter_showdocs_from_json
+    from services.ingest_service import (
+        ingest_showdocs_streaming,
+        iter_showdocs_from_json,
+        validate_showdocs_dry_run,
+    )
 
     console = Console()
 
@@ -52,10 +64,14 @@ def ingest(
     input_path = input_file or ctx.config.get("data.shows_json")
     batch_size = batch_size or int(ctx.config.get("ingest.batch_size", 100))
 
-    console.print("\n[bold]Ingesting anime data[/]")
+    mode = "[yellow]DRY RUN[/]" if dry_run else "Ingesting anime data"
+    console.print(f"\n[bold]{mode}[/]")
     console.print(f"  Input: [cyan]{input_path}[/]")
     console.print(f"  Batch size: [cyan]{batch_size}[/]")
-    console.print(f"  ID field: [cyan]{id_field}[/]\n")
+    console.print(f"  ID field: [cyan]{id_field}[/]")
+    if dry_run:
+        console.print(f"  Mode: [yellow]Validation only (no ingestion)[/]")
+    console.print()
 
     try:
         with Progress(
@@ -69,18 +85,57 @@ def ingest(
             # id_field is validated by Click's Choice, safe to pass as-is
             docs_iter = iter_showdocs_from_json(ctx, path=input_path, id_field=id_field)  # type: ignore[arg-type]
 
-            progress.update(task, description="Ingesting documents...")
+            if dry_run:
+                # Dry-run mode: validate only
+                progress.update(task, description="Validating documents...")
+                stats = validate_showdocs_dry_run(docs_iter, batch_size=batch_size)
+                progress.update(
+                    task, description=f"[green]✓[/] Validated {stats['total']} documents"
+                )
 
-            # Ingest with progress updates
-            total = ingest_showdocs_streaming(docs_iter, ctx, batch_size=batch_size)
+                # Display statistics
+                console.print(f"\n[bold green]✓ Validation Complete[/]\n")
+                console.print(f"[bold]Statistics:[/]")
+                console.print(f"  Total documents: [cyan]{stats['total']}[/]")
+                console.print(f"  Batches: [cyan]{stats['batch_count']}[/]")
 
-            progress.update(task, description=f"[green]✓[/] Ingested {total} documents")
+                if stats["year_range"]:
+                    console.print(
+                        f"  Year range: [cyan]{stats['year_range'][0]} - {stats['year_range'][1]}[/]"
+                    )
 
-        console.print(f"\n[green]✓ Successfully ingested {total} documents![/]\n")
+                if stats["episode_stats"]:
+                    eps = stats["episode_stats"]
+                    console.print(
+                        f"  Episodes: [cyan]min={eps['min']}, max={eps['max']}, avg={eps['avg']:.1f}[/]"
+                    )
 
-        # Reset cached services after ingestion
-        ctx.reset_all()
+                if stats["sample_titles"]:
+                    console.print(f"\n[bold]Sample titles:[/]")
+                    for title in stats["sample_titles"]:
+                        console.print(f"  • {title}")
+
+                if stats["errors"]:
+                    console.print(f"\n[bold yellow]Validation errors ({len(stats['errors'])}):[/]")
+                    for error in stats["errors"][:10]:  # Show first 10 errors
+                        console.print(f"  [yellow]⚠[/] {error}")
+                    if len(stats["errors"]) > 10:
+                        console.print(
+                            f"  [dim]... and {len(stats['errors']) - 10} more errors[/]"
+                        )
+
+                console.print()
+            else:
+                # Normal mode: ingest
+                progress.update(task, description="Ingesting documents...")
+                total = ingest_showdocs_streaming(docs_iter, ctx, batch_size=batch_size)
+                progress.update(task, description=f"[green]✓[/] Ingested {total} documents")
+
+                console.print(f"\n[green]✓ Successfully ingested {total} documents![/]\n")
+
+                # Reset cached services after ingestion
+                ctx.reset_all()
 
     except Exception as e:
-        console.print(f"\n[red]✗ Ingestion failed:[/] {e}\n")
+        console.print(f"\n[red]✗ {'Validation' if dry_run else 'Ingestion'} failed:[/] {e}\n")
         sys.exit(1)

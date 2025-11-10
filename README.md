@@ -137,6 +137,9 @@ Displays current configuration, including ChromaDB settings, OpenAI model, and d
 # Use default settings (1,458 anime records)
 poetry run shokobot ingest
 
+# Dry-run: validate data without ingesting
+poetry run shokobot ingest --dry-run
+
 # Custom input file and batch size
 poetry run shokobot ingest -i custom.json -b 200
 
@@ -148,6 +151,16 @@ poetry run shokobot ingest --id-field AniDB_AnimeID
 - `-i, --input PATH` - Path to JSON file (overrides config)
 - `-b, --batch-size INTEGER` - Documents per batch (overrides config)
 - `--id-field [AnimeID|AniDB_AnimeID]` - Primary ID field
+- `--dry-run` - Validate mappings and show statistics without ingesting
+
+**Dry-Run Mode:**
+Use `--dry-run` to validate your data before ingestion. This mode:
+- Validates all document mappings
+- Shows total document count and batch statistics
+- Displays year range and episode statistics
+- Lists sample titles (first 10)
+- Reports any validation errors
+- Does NOT insert data into the vector store
 
 #### Query Database
 ```bash
