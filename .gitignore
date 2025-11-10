@@ -68,3 +68,4 @@ debug/
 .chroma/
 .ruff_cache/
 .mypy_cache/
+*.zip

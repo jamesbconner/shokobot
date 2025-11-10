@@ -60,3 +60,20 @@ lock:  ## Update lock file without installing
 
 shell:  ## Start poetry shell
 	poetry shell
+
+zip:  ## Create a zipfile of all tracked files (excluding .gitignore entries)
+	@echo "Creating archive..."
+	@PROJECT_NAME=$$(basename $$(pwd)); \
+	TIMESTAMP=$$(date +%Y%m%d_%H%M%S); \
+	ZIP_NAME="$${PROJECT_NAME}_$${TIMESTAMP}.zip"; \
+	git archive -o "$${ZIP_NAME}" HEAD && \
+	echo "Archive created: $${ZIP_NAME}" || \
+	(echo "Error: Not a git repository or git archive failed. Use 'make zip-manual' instead." && exit 1)
+
+zip-manual:  ## Create a zipfile manually (for non-git projects)
+	@echo "Creating archive manually..."
+	@PROJECT_NAME=$$(basename $$(pwd)); \
+	TIMESTAMP=$$(date +%Y%m%d_%H%M%S); \
+	ZIP_NAME="$${PROJECT_NAME}_$${TIMESTAMP}.zip"; \
+	zip -r "$${ZIP_NAME}" . -x@.gitignore -x "*.zip" -x ".git/*" && \
+	echo "Archive created: $${ZIP_NAME}"
