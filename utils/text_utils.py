@@ -1,10 +1,10 @@
 import re
-from typing import List
 
 _PIPE_SPLIT = re.compile(r"\s*\|\s*")
 _BBCODE_TAG = re.compile(r"\[(\/?)(i|b|u|spoiler|quote|code)\]", re.IGNORECASE)
 
-def split_pipe(s: str | None) -> List[str]:
+
+def split_pipe(s: str | None) -> list[str]:
     if not s:
         return []
     parts = [p.strip() for p in _PIPE_SPLIT.split(s) if p.strip()]
@@ -15,6 +15,7 @@ def split_pipe(s: str | None) -> List[str]:
         seen.add(p.lower())
         out.append(p)
     return out
+
 
 def clean_description(desc: str | None) -> str:
     if not desc:

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field, field_validator
@@ -117,7 +118,7 @@ class ShowDoc(BaseModel):
 
     @field_validator("end_year")
     @classmethod
-    def validate_end_year(cls, v: int | None, info: any) -> int | None:
+    def validate_end_year(cls, v: int | None, info: Any) -> int | None:
         """Ensure end_year is not before begin_year.
 
         Args:

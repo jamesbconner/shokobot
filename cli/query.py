@@ -2,11 +2,15 @@
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import rich_click as click
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+
+if TYPE_CHECKING:
+    from services.app_context import AppContext
 
 
 @click.command()
@@ -45,9 +49,9 @@ from rich.table import Table
     default=10,
     help="Number of documents to retrieve",
 )
-@click.pass_context
+@click.pass_obj
 def query(
-    ctx: click.Context,
+    ctx: "AppContext",
     question: str | None,
     input_file: Path | None,
     stdin: bool,
@@ -60,19 +64,16 @@ def query(
     Ask questions about anime and get AI-powered recommendations based on
     semantic search through your anime collection.
     """
-    from services.rag_service import build_rag_chain
+    console = Console()
 
-    config: ConfigService = ctx.obj["config"]
-    console: Console = ctx.obj["console"]
-
-    # Build RAG chain
+    # Build RAG chain (lazy-loaded from context)
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
         task = progress.add_task("Building RAG chain...", total=None)
-        rag = build_rag_chain(config)
+        rag = ctx.rag_chain
         progress.update(task, description="[green]✓[/] RAG chain ready")
 
     console.print()
@@ -91,7 +92,7 @@ def query(
         _run_interactive(console, rag, show_context)
 
 
-def _run_single_question(console: Console, rag, question: str, show_context: bool) -> None:
+def _run_single_question(console: Console, rag: Any, question: str, show_context: bool) -> None:
     """Run a single question."""
     console.print(f"[bold cyan]Q:[/] {question}\n")
 
@@ -110,7 +111,7 @@ def _run_single_question(console: Console, rag, question: str, show_context: boo
         _display_context(console, docs)
 
 
-def _run_file_questions(console: Console, rag, file_path: Path, show_context: bool) -> None:
+def _run_file_questions(console: Console, rag: Any, file_path: Path, show_context: bool) -> None:
     """Run questions from a file."""
     try:
         with file_path.open("r", encoding="utf-8") as f:
@@ -127,7 +128,7 @@ def _run_file_questions(console: Console, rag, file_path: Path, show_context: bo
         sys.exit(1)
 
 
-def _run_stdin_questions(console: Console, rag, show_context: bool) -> None:
+def _run_stdin_questions(console: Console, rag: Any, show_context: bool) -> None:
     """Run questions from stdin."""
     for line in sys.stdin:
         q = line.strip()
@@ -136,7 +137,7 @@ def _run_stdin_questions(console: Console, rag, show_context: bool) -> None:
             console.print()
 
 
-def _run_interactive(console: Console, rag, show_context: bool) -> None:
+def _run_interactive(console: Console, rag: Any, show_context: bool) -> None:
     """Run interactive REPL."""
     console.print("[bold]Interactive RAG Mode[/]")
     console.print("Type your questions or [dim]'exit'/'quit'[/] to leave\n")
@@ -163,7 +164,7 @@ def _run_interactive(console: Console, rag, show_context: bool) -> None:
     console.print("\n[dim]Goodbye![/]\n")
 
 
-def _display_context(console: Console, docs) -> None:
+def _display_context(console: Console, docs: Any) -> None:
     """Display context documents in a table."""
     if not docs:
         return

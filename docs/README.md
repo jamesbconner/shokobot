@@ -20,8 +20,8 @@ Comprehensive guide to the modular CLI architecture, including:
 
 ### For Developers
 - [Modular CLI Architecture](MODULAR_CLI_ARCHITECTURE.md) - CLI design and patterns
-- [Dependency Injection Analysis](../DEPENDENCY_INJECTION_ANALYSIS.md) - DI implementation
-- [Pydantic Migration](../PYDANTIC_MIGRATION.md) - Data model design
+- [AppContext Usage Guide](APPCONTEXT_USAGE.md) - **Dependency injection with AppContext** ⭐
+- [Async Opportunities](ASYNC_OPPORTUNITIES_ANALYSIS.md) - Performance optimization opportunities
 
 ## Contributing
 

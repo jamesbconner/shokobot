@@ -3,20 +3,18 @@
 from typing import TYPE_CHECKING
 
 import rich_click as click
+from rich.console import Console
 from rich.table import Table
 
 if TYPE_CHECKING:
-    from rich.console import Console
-
-    from services.config_service import ConfigService
+    from services.app_context import AppContext
 
 
 @click.command()
-@click.pass_context
-def info(ctx: click.Context) -> None:
+@click.pass_obj
+def info(ctx: "AppContext") -> None:
     """Display configuration and system information."""
-    config: ConfigService = ctx.obj["config"]
-    console: Console = ctx.obj["console"]
+    console = Console()
 
     console.print("\n[bold]ShokoBot Configuration[/]\n")
 
@@ -26,7 +24,7 @@ def info(ctx: click.Context) -> None:
     table.add_column("Value", style="yellow")
 
     # Add configuration rows
-    cfg_dict = config.as_dict()
+    cfg_dict = ctx.config.as_dict()
 
     table.add_row("[bold]ChromaDB[/]", "")
     table.add_row("  Collection", cfg_dict.get("chroma", {}).get("collection_name", "N/A"))

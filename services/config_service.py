@@ -39,7 +39,7 @@ class ConfigService:
             raise FileNotFoundError(f"Config file not found: {self._config_path}")
 
         try:
-            with open(self._config_path, "r", encoding="utf-8") as f:
+            with self._config_path.open(encoding="utf-8") as f:
                 self._config = json.load(f)
             logger.info(f"Loaded configuration from {self._config_path}")
         except json.JSONDecodeError as e:
@@ -57,7 +57,7 @@ class ConfigService:
         override_count = 0
         for section, values in self._config.items():
             if isinstance(values, dict):
-                for key in values.keys():
+                for key in values:
                     env_key = f"{section.upper()}_{key.upper()}"
                     if env_key in os.environ:
                         old_val = self._config[section][key]

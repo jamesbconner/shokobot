@@ -1,10 +1,14 @@
 import logging
-from typing import Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from langchain_chroma import Chroma
 from langchain_community.vectorstores.utils import filter_complex_metadata
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
+
+if TYPE_CHECKING:
+    from services.app_context import AppContext
 
 from services.config_service import ConfigService
 
@@ -27,10 +31,10 @@ def _create_embeddings(config: ConfigService) -> OpenAIEmbeddings:
     if not model:
         raise ValueError("openai.embedding_model not configured")
 
-    timeout = int(config.get("openai.request_timeout_s", 60))
+    timeout = float(config.get("openai.request_timeout_s", 60))
     logger.info(f"Initializing embeddings with model={model}, timeout={timeout}s")
 
-    return OpenAIEmbeddings(model=model, request_timeout=timeout)
+    return OpenAIEmbeddings(model=model, timeout=timeout)
 
 
 def get_chroma_vectorstore(config: ConfigService) -> Chroma:
@@ -62,12 +66,12 @@ def get_chroma_vectorstore(config: ConfigService) -> Chroma:
     )
 
 
-def delete_by_anime_ids(anime_ids: Sequence[str], config: ConfigService) -> None:
+def delete_by_anime_ids(anime_ids: Sequence[str], ctx: "AppContext") -> None:
     """Delete documents from vector store by anime IDs.
 
     Args:
         anime_ids: Sequence of anime ID strings to delete.
-        config: Configuration service instance.
+        ctx: Application context with vectorstore access.
 
     Raises:
         Exception: If deletion fails.
@@ -77,7 +81,7 @@ def delete_by_anime_ids(anime_ids: Sequence[str], config: ConfigService) -> None
         return
 
     try:
-        vs = get_chroma_vectorstore(config)
+        vs = ctx.vectorstore
         vs.delete(where={"anime_id": {"$in": list(map(str, anime_ids))}})
         logger.info(f"Deleted {len(anime_ids)} documents by anime_id")
     except Exception as e:
@@ -85,7 +89,7 @@ def delete_by_anime_ids(anime_ids: Sequence[str], config: ConfigService) -> None
         raise
 
 
-def upsert_documents(docs: list[Document], config: ConfigService) -> list[str]:
+def upsert_documents(docs: list[Document], ctx: "AppContext") -> list[str]:
     """Idempotent upsert of documents by anime_id.
 
     Deletes existing documents with matching anime_ids, then adds the new batch.
@@ -93,7 +97,7 @@ def upsert_documents(docs: list[Document], config: ConfigService) -> list[str]:
 
     Args:
         docs: List of LangChain Document instances to upsert.
-        config: Configuration service instance.
+        ctx: Application context with vectorstore access.
 
     Returns:
         List of document IDs that were upserted.
@@ -107,7 +111,7 @@ def upsert_documents(docs: list[Document], config: ConfigService) -> list[str]:
         return []
 
     try:
-        vs = get_chroma_vectorstore(config)
+        vs = ctx.vectorstore
         ids = []
 
         # Filter complex metadata before upserting

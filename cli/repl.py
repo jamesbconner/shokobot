@@ -1,11 +1,14 @@
 """REPL command - Interactive query mode."""
 
+from typing import TYPE_CHECKING, Any
+
 import rich_click as click
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from services.config_service import ConfigService
+if TYPE_CHECKING:
+    from services.app_context import AppContext
 
 
 @click.command()
@@ -21,9 +24,9 @@ from services.config_service import ConfigService
     default=10,
     help="Number of documents to retrieve",
 )
-@click.pass_context
+@click.pass_obj
 def repl(
-    ctx: click.Context,
+    ctx: "AppContext",
     show_context: bool,
     k: int,
 ) -> None:
@@ -32,19 +35,16 @@ def repl(
     Launch an interactive session where you can ask multiple questions
     without restarting the command. Type 'exit', 'quit', or 'q' to leave.
     """
-    from services.rag_service import build_rag_chain
+    console = Console()
 
-    config: ConfigService = ctx.obj["config"]
-    console: Console = ctx.obj["console"]
-
-    # Build RAG chain
+    # Build RAG chain (lazy-loaded from context)
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
         task = progress.add_task("Building RAG chain...", total=None)
-        rag = build_rag_chain(config)
+        rag = ctx.rag_chain
         progress.update(task, description="[green]✓[/] RAG chain ready")
 
     console.print()
@@ -53,7 +53,7 @@ def repl(
     _run_interactive(console, rag, show_context)
 
 
-def _run_interactive(console: Console, rag, show_context: bool) -> None:
+def _run_interactive(console: Console, rag: Any, show_context: bool) -> None:
     """Run interactive REPL."""
     console.print("[bold]Interactive RAG Mode[/]")
     console.print("Type your questions or [dim]'exit'/'quit'[/] to leave\n")
@@ -80,7 +80,7 @@ def _run_interactive(console: Console, rag, show_context: bool) -> None:
     console.print("\n[dim]Goodbye![/]\n")
 
 
-def _run_single_question(console: Console, rag, question: str, show_context: bool) -> None:
+def _run_single_question(console: Console, rag: Any, question: str, show_context: bool) -> None:
     """Run a single question."""
     console.print(f"[bold cyan]Q:[/] {question}\n")
 
@@ -99,7 +99,7 @@ def _run_single_question(console: Console, rag, question: str, show_context: boo
         _display_context(console, docs)
 
 
-def _display_context(console: Console, docs) -> None:
+def _display_context(console: Console, docs: Any) -> None:
     """Display context documents in a table."""
     if not docs:
         return

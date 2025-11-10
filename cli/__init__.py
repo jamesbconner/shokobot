@@ -9,7 +9,7 @@ import rich_click as click
 from dotenv import load_dotenv
 from rich.console import Console
 
-from services.config_service import ConfigService
+from services.app_context import AppContext
 
 # Configure rich-click for beautiful output
 click.rich_click.USE_RICH_MARKUP = True
@@ -55,11 +55,10 @@ def cli(ctx: click.Context) -> None:
     A powerful CLI for managing anime data and querying with semantic search
     powered by ChromaDB and OpenAI embeddings.
     """
-    # Initialize config and store in context
+    # Initialize AppContext and store in context
     ctx.ensure_object(dict)
     try:
-        ctx.obj["config"] = ConfigService()
-        ctx.obj["console"] = console
+        ctx.obj = AppContext.create()
     except Exception as e:
         console.print(f"[red]Error loading configuration:[/] {e}")
         sys.exit(1)

@@ -1,21 +1,22 @@
 import logging
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING, Any
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from services.config_service import ConfigService
-from services.vectorstore_service import get_chroma_vectorstore
+if TYPE_CHECKING:
+    from services.app_context import AppContext
 
 logger = logging.getLogger(__name__)
 
 
-def build_retriever(config: ConfigService, k: int = 10, score_threshold: float | None = None):
+def build_retriever(ctx: "AppContext", k: int = 10, score_threshold: float | None = None) -> Any:
     """Build a vector store retriever with specified parameters.
 
     Args:
-        config: Configuration service instance.
+        ctx: Application context with vectorstore access.
         k: Number of documents to retrieve.
         score_threshold: Optional minimum similarity score threshold.
 
@@ -28,10 +29,10 @@ def build_retriever(config: ConfigService, k: int = 10, score_threshold: float |
     if k <= 0:
         raise ValueError(f"k must be positive, got {k}")
 
-    vs = get_chroma_vectorstore(config)
-    kwargs = {"k": k}
+    vs = ctx.vectorstore
+    kwargs: dict[str, Any] = {"k": k}
     if score_threshold is not None:
-        if not 0 <= score_threshold <= 1:
+        if not 0.0 <= score_threshold <= 1.0:
             raise ValueError(f"score_threshold must be between 0 and 1, got {score_threshold}")
         kwargs["score_threshold"] = score_threshold
 
@@ -39,7 +40,7 @@ def build_retriever(config: ConfigService, k: int = 10, score_threshold: float |
     return vs.as_retriever(search_kwargs=kwargs)
 
 
-def alias_prefilter(query: str, config: ConfigService, limit: int = 12) -> Sequence[Document]:
+def alias_prefilter(query: str, ctx: "AppContext", limit: int = 12) -> Sequence[Document]:
     """Pre-filter documents based on query patterns for exact matches.
 
     Supports special query patterns:
@@ -49,7 +50,7 @@ def alias_prefilter(query: str, config: ConfigService, limit: int = 12) -> Seque
 
     Args:
         query: User query string with optional special patterns.
-        config: Configuration service instance.
+        ctx: Application context with vectorstore access.
         limit: Maximum number of documents to return.
 
     Returns:
@@ -62,7 +63,7 @@ def alias_prefilter(query: str, config: ConfigService, limit: int = 12) -> Seque
         raise ValueError(f"limit must be positive, got {limit}")
 
     try:
-        vs = get_chroma_vectorstore(config)
+        vs = ctx.vectorstore
 
         # Exact title match using quotes
         if '"' in query:
@@ -91,13 +92,13 @@ def alias_prefilter(query: str, config: ConfigService, limit: int = 12) -> Seque
         return []
 
 
-def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Document]]]:
+def build_rag_chain(ctx: "AppContext") -> Callable[[str], tuple[str, list[Document]]]:
     """Build RAG chain for answering anime-related questions.
 
     Uses LangChain's ChatOpenAI with native Responses API support for GPT-5 models.
 
     Args:
-        config: Configuration service instance.
+        ctx: Application context with configuration and vectorstore access.
 
     Returns:
         Callable that takes a question string and returns (answer_text, context_docs).
@@ -105,7 +106,7 @@ def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Do
     Raises:
         ValueError: If required configuration is missing.
     """
-    model_name = config.get("openai.model")
+    model_name = ctx.config.get("openai.model")
     if not model_name:
         raise ValueError("openai.model not configured")
 
@@ -119,9 +120,9 @@ def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Do
         )
 
     # Get configuration for GPT-5 Responses API
-    reasoning_effort = config.get("openai.reasoning_effort", "medium")
-    output_verbosity = config.get("openai.output_verbosity", "medium")
-    max_output_tokens = config.get("openai.max_output_tokens", 4096)
+    reasoning_effort = ctx.config.get("openai.reasoning_effort", "medium")
+    output_verbosity = ctx.config.get("openai.output_verbosity", "medium")
+    max_output_tokens = ctx.config.get("openai.max_output_tokens", 4096)
 
     logger.info(
         f"Building RAG chain with model={model_name}, "
@@ -134,7 +135,7 @@ def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Do
     # Note: reasoning and text parameters are passed at invocation time, not initialization
     llm = ChatOpenAI(
         model=model_name,
-        max_tokens=max_output_tokens,
+        max_completion_tokens=max_output_tokens,
     )
 
     system = (
@@ -146,7 +147,7 @@ def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Do
         [("system", system), ("human", "{question}\n\nContext:\n{context}")]
     )
 
-    retriever = build_retriever(config)
+    retriever = build_retriever(ctx)
 
     def chain_fn(question: str) -> tuple[str, list[Document]]:
         """Execute RAG chain for a given question.
@@ -167,7 +168,7 @@ def build_rag_chain(config: ConfigService) -> Callable[[str], tuple[str, list[Do
 
         try:
             # Get pre-filtered documents for exact matches
-            pre_docs = alias_prefilter(question, config) or []
+            pre_docs = alias_prefilter(question, ctx) or []
             logger.debug(f"Prefilter returned {len(pre_docs)} documents")
 
             # Get semantic search results

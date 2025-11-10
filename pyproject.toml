@@ -5,7 +5,7 @@ description = "RAG-based anime recommendation system using LangChain and ChromaD
 authors = ["James Conner"]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "services"}, {include = "models"}, {include = "utils"}]
+packages = [{include = "cli"}, {include = "services"}, {include = "models"}, {include = "utils"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -85,8 +85,11 @@ warn_unused_ignores = true
 warn_no_return = true
 strict_equality = true
 strict_concatenate = true
+exclude = [
+    "^cli\\.py$",
+]
 
-[[tool.mypy.overrides]]
+[tool.mypy.overrides]
 module = [
     "langchain.*",
     "langchain_core.*",

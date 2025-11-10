@@ -3,10 +3,12 @@ import logging
 from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from services.app_context import AppContext
 
 from models.show_doc import ShowDoc
-from services.config_service import ConfigService
 from services.vectorstore_service import upsert_documents
 from utils.batch_utils import chunked
 from utils.text_utils import clean_description, split_pipe
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 IdField = Literal["AnimeID", "AniDB_AnimeID"]
 
 
-def _pick_id(rec: dict[str, any], id_field: IdField = "AnimeID") -> str:
+def _pick_id(rec: dict[str, Any], id_field: IdField = "AnimeID") -> str:
     """Extract anime ID from record using specified field.
 
     Args:
@@ -35,7 +37,7 @@ def _pick_id(rec: dict[str, any], id_field: IdField = "AnimeID") -> str:
     return str(val)
 
 
-def _titles(rec: dict[str, any]) -> tuple[str, list[str]]:
+def _titles(rec: dict[str, Any]) -> tuple[str, list[str]]:
     """Extract main title and alternate titles from record.
 
     Args:
@@ -55,7 +57,7 @@ def _titles(rec: dict[str, any]) -> tuple[str, list[str]]:
     return main, alts
 
 
-def _tags(rec: dict[str, any]) -> list[str]:
+def _tags(rec: dict[str, Any]) -> list[str]:
     """Extract tags from record.
 
     Args:
@@ -67,7 +69,7 @@ def _tags(rec: dict[str, any]) -> list[str]:
     return split_pipe(rec.get("AllTags"))
 
 
-def _description(rec: dict[str, any]) -> str:
+def _description(rec: dict[str, Any]) -> str:
     """Extract and clean description from record.
 
     Args:
@@ -98,7 +100,7 @@ def _parse_datetime(date_str: str | None) -> datetime | None:
         return None
 
 
-def _safe_int(value: any, default: int = 0) -> int:
+def _safe_int(value: Any, default: int = 0) -> int:
     """Safely convert value to int with default fallback.
 
     Args:
@@ -116,7 +118,7 @@ def _safe_int(value: any, default: int = 0) -> int:
         return default
 
 
-def _safe_str(value: any) -> str | None:
+def _safe_str(value: Any) -> str | None:
     """Safely convert value to string, returning None for empty strings.
 
     Args:
@@ -132,14 +134,14 @@ def _safe_str(value: any) -> str | None:
 
 
 def iter_showdocs_from_json(
-    config: ConfigService,
+    ctx: "AppContext",
     path: str | Path | None = None,
     id_field: IdField = "AnimeID",
 ) -> Iterator[ShowDoc]:
     """Load and iterate over anime show documents from JSON file.
 
     Args:
-        config: Configuration service instance.
+        ctx: Application context with configuration access.
         path: Path to JSON file containing anime data. If None, uses config default.
         id_field: Field name to use as primary anime ID.
 
@@ -151,7 +153,7 @@ def iter_showdocs_from_json(
         json.JSONDecodeError: If the JSON file is malformed.
         ValueError: If a record is missing required ID fields.
     """
-    path = Path(path or config.get("data.shows_json"))
+    path = Path(path or ctx.config.get("data.shows_json"))
 
     if not path.exists():
         raise FileNotFoundError(f"Shows JSON file not found: {path}")
@@ -213,14 +215,14 @@ def iter_showdocs_from_json(
 
 def ingest_showdocs_streaming(
     docs_iter: Iterable[ShowDoc],
-    config: ConfigService,
+    ctx: "AppContext",
     batch_size: int | None = None,
 ) -> int:
     """Ingest show documents into vector store in batches.
 
     Args:
         docs_iter: Iterable of ShowDoc instances to ingest.
-        config: Configuration service instance.
+        ctx: Application context with configuration and vectorstore access.
         batch_size: Number of documents per batch. If None, uses config default.
 
     Returns:
@@ -229,7 +231,7 @@ def ingest_showdocs_streaming(
     Raises:
         ValueError: If batch_size is invalid.
     """
-    batch_size = batch_size or int(config.get("ingest.batch_size", 256))
+    batch_size = batch_size or int(ctx.config.get("ingest.batch_size", 256))
 
     if batch_size <= 0:
         raise ValueError(f"batch_size must be positive, got {batch_size}")
@@ -241,7 +243,7 @@ def ingest_showdocs_streaming(
     try:
         for batch in chunked((d.to_langchain_doc() for d in docs_iter), batch_size):
             batch_list = list(batch)
-            upsert_documents(batch_list, config)
+            upsert_documents(batch_list, ctx)
             total += len(batch_list)
             batch_count += 1
             logger.debug(f"Ingested batch {batch_count} ({len(batch_list)} docs)")

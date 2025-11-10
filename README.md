@@ -286,8 +286,8 @@ shokobot/
 │   ├── query.py                # Natural language queries
 │   └── repl.py                 # Interactive REPL mode
 ├── services/                    # Business logic (dependency injection)
+│   ├── app_context.py          # Application context
 │   ├── config_service.py       # Configuration management
-│   ├── context.py              # Application context
 │   ├── ingest_service.py       # Data ingestion logic
 │   ├── rag_service.py          # RAG chain with GPT-5
 │   └── vectorstore_service.py  # ChromaDB operations
@@ -299,9 +299,8 @@ shokobot/
 ├── docs/                        # Documentation
 │   ├── README.md               # Documentation index
 │   ├── MODULAR_CLI_ARCHITECTURE.md
-│   ├── DEPENDENCY_INJECTION_ANALYSIS.md
-│   ├── ASYNC_OPPORTUNITIES_ANALYSIS.md
-│   └── APPCONTEXT_VALUE_ANALYSIS.md
+│   ├── APPCONTEXT_USAGE.md     # Dependency injection guide
+│   └── ASYNC_OPPORTUNITIES_ANALYSIS.md
 ├── resources/                   # Configuration files
 │   └── config.json             # Main configuration
 ├── input/                       # Data files
@@ -468,8 +467,7 @@ ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
 ### Architecture Documentation
 - [docs/README.md](docs/README.md) - Documentation index
 - [docs/MODULAR_CLI_ARCHITECTURE.md](docs/MODULAR_CLI_ARCHITECTURE.md) - CLI design patterns
-- [docs/DEPENDENCY_INJECTION_ANALYSIS.md](docs/DEPENDENCY_INJECTION_ANALYSIS.md) - DI implementation
-- [docs/APPCONTEXT_VALUE_ANALYSIS.md](docs/APPCONTEXT_VALUE_ANALYSIS.md) - Context management
+- [docs/APPCONTEXT_USAGE.md](docs/APPCONTEXT_USAGE.md) - Dependency injection guide
 - [docs/ASYNC_OPPORTUNITIES_ANALYSIS.md](docs/ASYNC_OPPORTUNITIES_ANALYSIS.md) - Performance analysis
 
 ## Troubleshooting
