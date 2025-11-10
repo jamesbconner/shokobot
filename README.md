@@ -293,6 +293,10 @@ shokobot/
 │   └── vectorstore_service.py  # ChromaDB operations
 ├── models/                      # Pydantic data models
 │   └── show_doc.py             # ShowDoc model (21 fields)
+├── prompts/                     # LLM prompt templates (versioned)
+│   ├── __init__.py             # Prompt exports
+│   ├── anime_rag.py            # Anime RAG prompts
+│   └── README.md               # Prompt engineering guide
 ├── utils/                       # Utility functions
 │   ├── batch_utils.py          # Batch processing helpers
 │   └── text_utils.py           # Text cleaning utilities

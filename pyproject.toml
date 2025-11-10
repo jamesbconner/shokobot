@@ -5,7 +5,7 @@ description = "RAG-based anime recommendation system using LangChain and ChromaD
 authors = ["James Conner"]
 readme = "README.md"
 license = "MIT"
-packages = [{include = "cli"}, {include = "services"}, {include = "models"}, {include = "utils"}]
+packages = [{include = "cli"}, {include = "services"}, {include = "models"}, {include = "utils"}, {include = "prompts"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"

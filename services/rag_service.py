@@ -3,8 +3,9 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any
 
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+
+from prompts import build_anime_rag_prompt
 
 if TYPE_CHECKING:
     from services.app_context import AppContext
@@ -138,14 +139,8 @@ def build_rag_chain(ctx: "AppContext") -> Callable[[str], tuple[str, list[Docume
         max_completion_tokens=max_output_tokens,
     )
 
-    system = (
-        "You answer questions about anime TV shows using only the provided context. "
-        "Map aliases and alternate titles to the same show when present. "
-        "If no data is available, say what's missing."
-    )
-    prompt = ChatPromptTemplate.from_messages(
-        [("system", system), ("human", "{question}\n\nContext:\n{context}")]
-    )
+    # Load prompt template from prompts module
+    prompt = build_anime_rag_prompt()
 
     retriever = build_retriever(ctx)
 
