@@ -32,9 +32,10 @@ def _create_embeddings(config: ConfigService) -> OpenAIEmbeddings:
         raise ValueError("openai.embedding_model not configured")
 
     timeout = float(config.get("openai.request_timeout_s", 60))
-    logger.info(f"Initializing embeddings with model={model}, timeout={timeout}s")
+    retries = int(config.get("openai.max_retries",3))
+    logger.info(f"Initializing embeddings with model={model}, timeout={timeout}s, max_retries={retries}")
 
-    return OpenAIEmbeddings(model=model, timeout=timeout)
+    return OpenAIEmbeddings(model=model, request_timeout=timeout, max_retries=retries)
 
 
 def get_chroma_vectorstore(config: ConfigService) -> Chroma:

@@ -116,6 +116,8 @@ def _init_llm(
         llm = ChatOpenAI(
             model=model_name,
             max_completion_tokens=max_output_tokens,
+            timeout=120,
+            max_retries=3,
             model_kwargs={
                 "response_format": {"type": "json_object"}
             }
@@ -125,7 +127,9 @@ def _init_llm(
         # For text output, use standard initialization
         llm = ChatOpenAI(
             model=model_name,
-            max_completion_tokens=max_output_tokens,     
+            max_completion_tokens=max_output_tokens,
+            timeout=120,
+            max_retries=3,
         )
         prompt = build_anime_rag_prompt()
     else:

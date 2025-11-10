@@ -9,6 +9,7 @@ RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI GPT-
 - 📊 **Efficient ingestion** - Batch processing with progress indicators (1,458 anime records)
 - 💬 **Multiple query modes** - Interactive REPL, single questions, file input, or stdin
 - 🎨 **Beautiful CLI** - Rich formatting with tables, colors, and progress bars
+- 📤 **JSON output format** - Structured output for programmatic usage and API integration
 - ⚙️ **Flexible configuration** - JSON config with environment variable overrides
 - 🤖 **GPT-5 integration** - Responses API with configurable reasoning effort
 - 🏗️ **Modular architecture** - Auto-loading CLI commands with dependency injection
@@ -173,6 +174,7 @@ poetry run shokobot query -i
 - `-i, --interactive` - Start interactive REPL mode
 - `-c, --show-context` - Display retrieved context documents
 - `--k INTEGER` - Number of documents to retrieve (default: 10)
+- `--output-format [text|json]` - Output format (default: text)
 
 #### Interactive REPL
 ```bash
@@ -189,11 +191,75 @@ poetry run shokobot repl --k 15
 **Options:**
 - `-c, --show-context` - Display retrieved context documents
 - `--k INTEGER` - Number of documents to retrieve
+- `--output-format [text|json]` - Output format (default: text)
 
 **REPL Commands:**
 - Type your question and press Enter
 - `exit`, `quit`, or `q` to leave
 - Questions are processed with cached RAG chain for efficiency
+
+#### JSON Output Format
+
+For programmatic usage and service integration, both `query` and `repl` commands support JSON output:
+
+```bash
+# Single question with JSON output
+poetry run shokobot query -q "What is Frieren about?" --output-format json
+
+# With context metadata
+poetry run shokobot query -q "Recommend a sci-fi anime" --output-format json --show-context
+
+# Interactive mode with JSON
+poetry run shokobot repl --output-format json
+
+# From file (batch processing)
+poetry run shokobot query -f questions.txt --output-format json
+
+# From stdin (pipeline integration)
+echo "What is Cowboy Bebop about?" | poetry run shokobot query --stdin --output-format json
+```
+
+**JSON Response Structure:**
+```json
+{
+  "question": "What is Frieren about?",
+  "answer": "Frieren (Sousou no Frieren) is an action-adventure fantasy...",
+  "context": [
+    {
+      "title": "Sousou no Frieren",
+      "anime_id": "17617",
+      "year": 2023,
+      "episodes": 28
+    }
+  ]
+}
+```
+
+**Use Cases:**
+- Building APIs or microservices on top of ShokoBot
+- Automating batch processing of queries
+- Integrating with other services that expect structured data
+- Parsing and storing responses in databases
+- Creating custom frontends or chatbots
+
+**Programmatic Example:**
+```python
+import subprocess
+import json
+
+result = subprocess.run(
+    ["poetry", "run", "shokobot", "query", 
+     "-q", "Recommend a sci-fi anime", 
+     "--output-format", "json"],
+    capture_output=True,
+    text=True
+)
+
+data = json.loads(result.stdout)
+print(f"Answer: {data['answer']}")
+if 'context' in data:
+    print(f"Found {len(data['context'])} relevant anime")
+```
 
 ### Using with uv
 
