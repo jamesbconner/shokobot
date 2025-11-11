@@ -183,3 +183,99 @@ class ConfigService:
             )
 
         return value
+
+    def get_mcp_enabled(self) -> bool:
+        """Get MCP integration enabled status.
+
+        Returns:
+            True if MCP integration is enabled, False otherwise.
+
+        Examples:
+            >>> config.get_mcp_enabled()
+            True
+        """
+        return bool(self.get("mcp.enabled", False))
+
+    def get_mcp_servers(self) -> dict[str, dict[str, Any]]:
+        """Get all configured MCP servers.
+
+        Returns:
+            Dictionary of server configurations keyed by server name.
+
+        Examples:
+            >>> config.get_mcp_servers()
+            {'anime': {'command': '/path/to/python', 'args': [...]}}
+        """
+        return self.get("mcp.servers", {})
+
+    def get_mcp_server_config(self, server_name: str) -> dict[str, Any]:
+        """Get configuration for a specific MCP server.
+
+        Args:
+            server_name: Name of the MCP server (e.g., "anime").
+
+        Returns:
+            Server configuration dictionary.
+
+        Raises:
+            ValueError: If server is not configured.
+
+        Examples:
+            >>> config.get_mcp_server_config("anime")
+            {'command': '/path/to/python', 'args': [...]}
+        """
+        servers = self.get_mcp_servers()
+        if server_name not in servers:
+            raise ValueError(
+                f"MCP server '{server_name}' not configured. "
+                f"Available servers: {', '.join(servers.keys()) or 'none'}"
+            )
+        return servers[server_name]
+
+    def get_mcp_cache_dir(self) -> str:
+        """Get MCP cache directory path for persisted ShowDocs.
+
+        Returns:
+            Path to MCP cache directory.
+
+        Examples:
+            >>> config.get_mcp_cache_dir()
+            'data/mcp_cache'
+        """
+        return str(self.get("mcp.cache_dir", "data/mcp_cache"))
+
+    def get_mcp_fallback_count_threshold(self) -> int:
+        """Get minimum result count before MCP fallback.
+
+        Returns:
+            Minimum number of results required to skip MCP fallback.
+
+        Examples:
+            >>> config.get_mcp_fallback_count_threshold()
+            3
+        """
+        return int(self.get("mcp.fallback_count_threshold", 3))
+
+    def get_mcp_fallback_score_threshold(self) -> float:
+        """Get minimum similarity score before MCP fallback.
+
+        Returns:
+            Minimum similarity score (0.0-1.0) required to skip MCP fallback.
+
+        Examples:
+            >>> config.get_mcp_fallback_score_threshold()
+            0.7
+        """
+        return float(self.get("mcp.fallback_score_threshold", 0.7))
+
+    def get_mcp_timeout(self) -> int:
+        """Get MCP server timeout in seconds.
+
+        Returns:
+            Timeout in seconds for MCP server operations.
+
+        Examples:
+            >>> config.get_mcp_timeout()
+            30
+        """
+        return int(self.get("mcp.timeout", 30))

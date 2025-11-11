@@ -118,7 +118,7 @@ class TestRagChainLazyLoading:
 
         # Assert
         assert result is mock_chain
-        mock_build_chain.assert_called_once_with(ctx)
+        mock_build_chain.assert_called_once_with(ctx, output_format="text")
 
     @patch("services.rag_service.build_rag_chain")
     def test_rag_chain_caching(self, mock_build_chain: Mock, mock_config: Mock) -> None:
@@ -137,7 +137,7 @@ class TestRagChainLazyLoading:
         assert result1 is result2
         assert result2 is result3
         # Verify build_rag_chain called only once
-        mock_build_chain.assert_called_once_with(ctx)
+        mock_build_chain.assert_called_once_with(ctx, output_format="text")
 
 
 class TestCacheManagement:

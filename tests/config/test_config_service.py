@@ -124,3 +124,266 @@ def test_config_all_env_overrides(tmp_path: Path, monkeypatch: Any) -> None:
     assert cfg.get("openai.model") == "env-model"
     assert cfg.get("openai.api_key") == "env-key"
     assert cfg.get("chroma.persist_directory") == "env-dir"
+
+
+# GPT-5 Responses API Configuration Tests
+
+
+def test_get_reasoning_effort_default(tmp_path: Path) -> None:
+    """Test get_reasoning_effort returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_reasoning_effort() == "medium"
+
+
+def test_get_reasoning_effort_valid_values(tmp_path: Path) -> None:
+    """Test get_reasoning_effort with all valid values."""
+    for value in ["low", "medium", "high"]:
+        cfgfile = tmp_path / "config.json"
+        cfgfile.write_text(f'{{"openai":{{"reasoning_effort":"{value}"}}}}', encoding="utf-8")
+
+        cfg = ConfigService(str(cfgfile))
+        assert cfg.get_reasoning_effort() == value
+
+
+def test_get_reasoning_effort_invalid_value(tmp_path: Path) -> None:
+    """Test get_reasoning_effort raises ValueError for invalid value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{"reasoning_effort":"invalid"}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="Invalid reasoning_effort"):
+        cfg.get_reasoning_effort()
+
+
+def test_get_output_verbosity_default(tmp_path: Path) -> None:
+    """Test get_output_verbosity returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_output_verbosity() == "medium"
+
+
+def test_get_output_verbosity_valid_values(tmp_path: Path) -> None:
+    """Test get_output_verbosity with all valid values."""
+    for value in ["low", "medium", "high"]:
+        cfgfile = tmp_path / "config.json"
+        cfgfile.write_text(f'{{"openai":{{"output_verbosity":"{value}"}}}}', encoding="utf-8")
+
+        cfg = ConfigService(str(cfgfile))
+        assert cfg.get_output_verbosity() == value
+
+
+def test_get_output_verbosity_invalid_value(tmp_path: Path) -> None:
+    """Test get_output_verbosity raises ValueError for invalid value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{"output_verbosity":"invalid"}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="Invalid output_verbosity"):
+        cfg.get_output_verbosity()
+
+
+def test_get_max_output_tokens_default(tmp_path: Path) -> None:
+    """Test get_max_output_tokens returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_max_output_tokens() == 4096
+
+
+def test_get_max_output_tokens_valid_values(tmp_path: Path) -> None:
+    """Test get_max_output_tokens with valid range."""
+    for value in [512, 4096, 8192, 16384]:
+        cfgfile = tmp_path / "config.json"
+        cfgfile.write_text(f'{{"openai":{{"max_output_tokens":{value}}}}}', encoding="utf-8")
+
+        cfg = ConfigService(str(cfgfile))
+        assert cfg.get_max_output_tokens() == value
+
+
+def test_get_max_output_tokens_below_minimum(tmp_path: Path) -> None:
+    """Test get_max_output_tokens raises ValueError for value below minimum."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{"max_output_tokens":256}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="Must be between 512 and 16384"):
+        cfg.get_max_output_tokens()
+
+
+def test_get_max_output_tokens_above_maximum(tmp_path: Path) -> None:
+    """Test get_max_output_tokens raises ValueError for value above maximum."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{"max_output_tokens":20000}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="Must be between 512 and 16384"):
+        cfg.get_max_output_tokens()
+
+
+def test_get_max_output_tokens_invalid_type(tmp_path: Path) -> None:
+    """Test get_max_output_tokens raises ValueError for non-integer value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"openai":{"max_output_tokens":"not_a_number"}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="Must be an integer"):
+        cfg.get_max_output_tokens()
+
+
+# MCP Configuration Tests
+
+
+def test_get_mcp_enabled_default(tmp_path: Path) -> None:
+    """Test get_mcp_enabled returns False by default."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_enabled() is False
+
+
+def test_get_mcp_enabled_true(tmp_path: Path) -> None:
+    """Test get_mcp_enabled returns True when configured."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"enabled":true}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_enabled() is True
+
+
+def test_get_mcp_enabled_false(tmp_path: Path) -> None:
+    """Test get_mcp_enabled returns False when explicitly disabled."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"enabled":false}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_enabled() is False
+
+
+def test_get_mcp_servers_default(tmp_path: Path) -> None:
+    """Test get_mcp_servers returns empty dict by default."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_servers() == {}
+
+
+def test_get_mcp_servers_with_config(tmp_path: Path) -> None:
+    """Test get_mcp_servers returns configured servers."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text(
+        '{"mcp":{"servers":{"anime":{"command":"python","args":["-m","server"]},"other":{"command":"node"}}}}',
+        encoding="utf-8",
+    )
+
+    cfg = ConfigService(str(cfgfile))
+    servers = cfg.get_mcp_servers()
+
+    assert "anime" in servers
+    assert "other" in servers
+    assert servers["anime"]["command"] == "python"
+    assert servers["anime"]["args"] == ["-m", "server"]
+
+
+def test_get_mcp_server_config_valid(tmp_path: Path) -> None:
+    """Test get_mcp_server_config returns specific server config."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text(
+        '{"mcp":{"servers":{"anime":{"command":"python","args":["-m","server"]}}}}',
+        encoding="utf-8",
+    )
+
+    cfg = ConfigService(str(cfgfile))
+    server_config = cfg.get_mcp_server_config("anime")
+
+    assert server_config["command"] == "python"
+    assert server_config["args"] == ["-m", "server"]
+
+
+def test_get_mcp_server_config_missing(tmp_path: Path) -> None:
+    """Test get_mcp_server_config raises ValueError for missing server."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"servers":{"anime":{}}}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    with pytest.raises(ValueError, match="MCP server 'missing' not configured"):
+        cfg.get_mcp_server_config("missing")
+
+
+def test_get_mcp_cache_dir_default(tmp_path: Path) -> None:
+    """Test get_mcp_cache_dir returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_cache_dir() == "data/mcp_cache"
+
+
+def test_get_mcp_cache_dir_custom(tmp_path: Path) -> None:
+    """Test get_mcp_cache_dir returns custom value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"cache_dir":"/custom/path"}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_cache_dir() == "/custom/path"
+
+
+def test_get_mcp_fallback_count_threshold_default(tmp_path: Path) -> None:
+    """Test get_mcp_fallback_count_threshold returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_fallback_count_threshold() == 3
+
+
+def test_get_mcp_fallback_count_threshold_custom(tmp_path: Path) -> None:
+    """Test get_mcp_fallback_count_threshold returns custom value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"fallback_count_threshold":5}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_fallback_count_threshold() == 5
+
+
+def test_get_mcp_fallback_score_threshold_default(tmp_path: Path) -> None:
+    """Test get_mcp_fallback_score_threshold returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_fallback_score_threshold() == 0.7
+
+
+def test_get_mcp_fallback_score_threshold_custom(tmp_path: Path) -> None:
+    """Test get_mcp_fallback_score_threshold returns custom value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"fallback_score_threshold":0.85}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_fallback_score_threshold() == 0.85
+
+
+def test_get_mcp_timeout_default(tmp_path: Path) -> None:
+    """Test get_mcp_timeout returns default value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_timeout() == 30
+
+
+def test_get_mcp_timeout_custom(tmp_path: Path) -> None:
+    """Test get_mcp_timeout returns custom value."""
+    cfgfile = tmp_path / "config.json"
+    cfgfile.write_text('{"mcp":{"timeout":60}}', encoding="utf-8")
+
+    cfg = ConfigService(str(cfgfile))
+    assert cfg.get_mcp_timeout() == 60

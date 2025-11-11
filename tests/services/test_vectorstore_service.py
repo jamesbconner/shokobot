@@ -40,7 +40,7 @@ class TestCreateEmbeddings:
         # Assert
         assert result is mock_embeddings
         mock_embeddings_class.assert_called_once_with(
-            model="text-embedding-3-small", timeout=60.0
+            model="text-embedding-3-small", request_timeout=60.0, max_retries=3
         )
 
     @patch("services.vectorstore_service.OpenAIEmbeddings")
@@ -62,7 +62,7 @@ class TestCreateEmbeddings:
 
         # Assert
         mock_embeddings_class.assert_called_once_with(
-            model="text-embedding-3-large", timeout=120.0
+            model="text-embedding-3-large", request_timeout=120.0, max_retries=3
         )
 
     def test_create_embeddings_missing_model(self, mock_config: Mock) -> None:

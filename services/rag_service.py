@@ -14,6 +14,178 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+async def search_with_mcp_fallback(
+    query: str,
+    ctx: "AppContext",
+    min_results: int = 3,
+    min_score: float = 0.7,
+) -> list[Document]:
+    """Search vector store with MCP fallback for insufficient results.
+
+    Queries the vector store first. If results don't meet both count and score
+    thresholds, attempts to fetch data from AniDB via MCP server, persists it,
+    and adds it to the vector store.
+
+    Args:
+        query: Search query string.
+        ctx: Application context with configuration and services.
+        min_results: Minimum number of results required (default from config).
+        min_score: Minimum similarity score required (default from config).
+
+    Returns:
+        List of Document objects from vector store and/or MCP.
+
+    Raises:
+        ValueError: If query is empty or thresholds are invalid.
+    """
+    if not query or not query.strip():
+        raise ValueError("Query cannot be empty")
+
+    if min_results <= 0:
+        raise ValueError(f"min_results must be positive, got {min_results}")
+
+    if not 0.0 <= min_score <= 1.0:
+        raise ValueError(f"min_score must be between 0 and 1, got {min_score}")
+
+    # Get thresholds from config if not provided
+    count_threshold = ctx.config.get_mcp_fallback_count_threshold()
+    score_threshold = ctx.config.get_mcp_fallback_score_threshold()
+
+    logger.debug(
+        f"Searching with MCP fallback: query='{query}', "
+        f"count_threshold={count_threshold}, score_threshold={score_threshold}"
+    )
+
+    # Query vector store with similarity scores
+    vs = ctx.vectorstore
+    results = vs.similarity_search_with_score(query, k=min_results)
+
+    # Evaluate results
+    result_count = len(results)
+    best_score = max((score for _, score in results), default=0.0)
+
+    logger.debug(
+        f"Vector store returned {result_count} results, best score: {best_score:.3f}"
+    )
+
+    # Check if both thresholds are met
+    count_met = result_count >= count_threshold
+    score_met = best_score >= score_threshold
+
+    if count_met and score_met:
+        logger.debug("Both thresholds met, returning vector store results")
+        return [doc for doc, _ in results]
+
+    # Check if MCP is enabled
+    if not ctx.config.get_mcp_enabled():
+        logger.debug("MCP disabled, returning vector store results only")
+        return [doc for doc, _ in results]
+
+    # Trigger MCP fallback
+    reason = []
+    if not count_met:
+        reason.append(f"count {result_count} < {count_threshold}")
+    if not score_met:
+        reason.append(f"score {best_score:.3f} < {score_threshold}")
+
+    logger.info(f"MCP fallback triggered for query '{query}': {', '.join(reason)}")
+
+    try:
+        # Import services needed for MCP fallback
+        from services.anidb_parser import parse_anidb_xml
+        from services.mcp_client_service import create_mcp_client
+        from services.showdoc_persistence import ShowDocPersistence
+        from services.vectorstore_service import upsert_documents
+
+        # Initialize persistence
+        cache_dir = ctx.config.get_mcp_cache_dir()
+        persistence = ShowDocPersistence(cache_dir)
+
+        # Connect to MCP server
+        async with await create_mcp_client(ctx) as mcp:
+            # Search for anime
+            search_results = await mcp.search_anime(query)
+
+            if not search_results:
+                logger.info(f"No MCP results found for query '{query}'")
+                return [doc for doc, _ in results]
+
+            # Process first result
+            mcp_docs = []
+            for search_result in search_results[:1]:  # Only process top result
+                # Extract anime ID from search result
+                if isinstance(search_result, dict):
+                    aid = search_result.get("aid")
+                elif hasattr(search_result, "aid"):
+                    aid = search_result.aid
+                else:
+                    logger.warning(f"Could not extract aid from search result: {search_result}")
+                    continue
+
+                if not aid:
+                    logger.warning("Search result missing anime ID")
+                    continue
+
+                # Check persistence cache first
+                if persistence.exists(aid):
+                    logger.debug(f"Loading anime {aid} from persistence cache")
+                    show_doc = persistence.load_showdoc(aid)
+                    if show_doc:
+                        mcp_docs.append(show_doc.to_langchain_doc())
+                        logger.info(f"Loaded cached anime: {show_doc.title_main} ({aid})")
+                        continue
+
+                # Fetch from MCP
+                logger.debug(f"Fetching anime details from MCP: {aid}")
+                xml_data = await mcp.get_anime_details(aid)
+
+                if not xml_data:
+                    logger.warning(f"No XML data returned for anime {aid}")
+                    continue
+
+                # Parse XML to ShowDoc
+                show_doc = parse_anidb_xml(xml_data)
+                logger.info(f"Fetched anime from MCP: {show_doc.title_main} ({aid})")
+
+                # Save to persistence
+                persistence.save_showdoc(show_doc)
+                logger.info(f"Persisted anime to cache: {show_doc.title_main}")
+
+                # Convert to LangChain Document
+                doc = show_doc.to_langchain_doc()
+                mcp_docs.append(doc)
+
+                # Upsert to vector store
+                upsert_documents([doc], ctx)
+                logger.info(f"Added anime to vector store: {show_doc.title_main}")
+
+            # Merge and deduplicate results by anime_id
+            seen_ids = set()
+            merged_docs = []
+
+            # Add MCP docs first (higher priority)
+            for doc in mcp_docs:
+                anime_id = doc.metadata.get("anime_id")
+                if anime_id and anime_id not in seen_ids:
+                    seen_ids.add(anime_id)
+                    merged_docs.append(doc)
+
+            # Add vector store docs
+            for doc, _ in results:
+                anime_id = doc.metadata.get("anime_id")
+                if anime_id and anime_id not in seen_ids:
+                    seen_ids.add(anime_id)
+                    merged_docs.append(doc)
+
+            logger.debug(f"Returning {len(merged_docs)} merged documents")
+            return merged_docs
+
+    except Exception as e:
+        logger.error(f"MCP fallback failed: {e}", exc_info=True)
+        logger.info("Continuing with vector store results only")
+        return [doc for doc, _ in results]
+
+
 def build_retriever(ctx: "AppContext", k: int = 10, score_threshold: float | None = None) -> Any:
     """Build a vector store retriever with specified parameters.
 

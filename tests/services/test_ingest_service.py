@@ -731,3 +731,214 @@ class TestIngestShowdocsStreaming:
         # Act & Assert
         with pytest.raises(RuntimeError, match="Network error"):
             ingest_showdocs_streaming(docs, mock_context, batch_size=2)
+
+
+
+class TestValidateShowdocsDryRun:
+    """Tests for validate_showdocs_dry_run function."""
+
+    def test_validate_showdocs_dry_run_basic(self) -> None:
+        """Test dry-run validation with basic ShowDocs."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange
+        docs = [
+            ShowDoc(
+                anime_id="1",
+                anidb_anime_id=1,
+                title_main="Anime 1",
+                begin_year=2020,
+                episode_count_normal=12,
+            ),
+            ShowDoc(
+                anime_id="2",
+                anidb_anime_id=2,
+                title_main="Anime 2",
+                begin_year=2021,
+                episode_count_normal=24,
+            ),
+            ShowDoc(
+                anime_id="3",
+                anidb_anime_id=3,
+                title_main="Anime 3",
+                begin_year=2022,
+                episode_count_normal=13,
+            ),
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs), batch_size=2)
+
+        # Assert
+        assert stats["total"] == 3
+        assert stats["batch_count"] == 2
+        assert len(stats["sample_titles"]) == 3
+        assert stats["year_range"] == (2020, 2022)
+        assert stats["episode_stats"]["min"] == 12
+        assert stats["episode_stats"]["max"] == 24
+        assert stats["episode_stats"]["avg"] == (12 + 24 + 13) / 3
+        assert stats["errors"] == []
+
+    def test_validate_showdocs_dry_run_sample_titles_limit(self) -> None:
+        """Test that sample titles are limited to 10."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange - create 15 docs (start from 1 since anidb_anime_id must be > 0)
+        docs = [
+            ShowDoc(
+                anime_id=str(i),
+                anidb_anime_id=i,
+                title_main=f"Anime {i}",
+            )
+            for i in range(1, 16)
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs))
+
+        # Assert
+        assert stats["total"] == 15
+        assert len(stats["sample_titles"]) == 10  # Limited to 10
+
+    def test_validate_showdocs_dry_run_no_years(self) -> None:
+        """Test dry-run with docs that have no year data."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange
+        docs = [
+            ShowDoc(anime_id="1", anidb_anime_id=1, title_main="Anime 1"),
+            ShowDoc(anime_id="2", anidb_anime_id=2, title_main="Anime 2"),
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs))
+
+        # Assert
+        assert stats["total"] == 2
+        assert stats["year_range"] is None
+
+    def test_validate_showdocs_dry_run_no_episodes(self) -> None:
+        """Test dry-run with docs that have no episode data."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange
+        docs = [
+            ShowDoc(anime_id="1", anidb_anime_id=1, title_main="Anime 1"),
+            ShowDoc(anime_id="2", anidb_anime_id=2, title_main="Anime 2"),
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs))
+
+        # Assert
+        assert stats["total"] == 2
+        assert stats["episode_stats"] == {}
+
+    def test_validate_showdocs_dry_run_invalid_batch_size(self) -> None:
+        """Test that invalid batch size raises ValueError."""
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Act & Assert - only negative values raise error (0 becomes 100 due to `or` operator)
+        with pytest.raises(ValueError, match="batch_size must be positive"):
+            validate_showdocs_dry_run(iter([]), batch_size=-1)
+
+    def test_validate_showdocs_dry_run_conversion_error(self) -> None:
+        """Test dry-run captures conversion errors."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+        from unittest.mock import Mock, patch
+
+        # Arrange
+        docs = [
+            ShowDoc(anime_id="1", anidb_anime_id=1, title_main="Anime 1"),
+            ShowDoc(anime_id="2", anidb_anime_id=2, title_main="Anime 2"),
+        ]
+
+        # Mock to_langchain_doc to raise error for second doc
+        with patch.object(ShowDoc, "to_langchain_doc") as mock_convert:
+            mock_convert.side_effect = [
+                Mock(),  # First call succeeds
+                Exception("Conversion failed"),  # Second call fails
+            ]
+
+            # Act
+            stats = validate_showdocs_dry_run(iter(docs))
+
+            # Assert
+            assert stats["total"] == 2
+            assert len(stats["errors"]) == 1
+            assert "Failed to convert 2" in stats["errors"][0]
+            assert "Conversion failed" in stats["errors"][0]
+
+    def test_validate_showdocs_dry_run_empty_iterator(self) -> None:
+        """Test dry-run with empty iterator."""
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Act
+        stats = validate_showdocs_dry_run(iter([]))
+
+        # Assert
+        assert stats["total"] == 0
+        assert stats["batch_count"] == 0
+        assert stats["sample_titles"] == []
+        assert stats["year_range"] is None
+        assert stats["episode_stats"] == {}
+        assert stats["errors"] == []
+
+    def test_validate_showdocs_dry_run_custom_batch_size(self) -> None:
+        """Test dry-run with custom batch size."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange - create 10 docs (start from 1 since anidb_anime_id must be > 0)
+        docs = [
+            ShowDoc(anime_id=str(i), anidb_anime_id=i, title_main=f"Anime {i}")
+            for i in range(1, 11)
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs), batch_size=3)
+
+        # Assert
+        assert stats["total"] == 10
+        assert stats["batch_count"] == 4  # 3 + 3 + 3 + 1
+
+    def test_validate_showdocs_dry_run_mixed_episode_data(self) -> None:
+        """Test dry-run with mixed episode data (some zero, some positive)."""
+        from models.show_doc import ShowDoc
+        from services.ingest_service import validate_showdocs_dry_run
+
+        # Arrange
+        docs = [
+            ShowDoc(
+                anime_id="1",
+                anidb_anime_id=1,
+                title_main="Anime 1",
+                episode_count_normal=12,
+            ),
+            ShowDoc(
+                anime_id="2",
+                anidb_anime_id=2,
+                title_main="Anime 2",
+                episode_count_normal=0,  # Zero episodes
+            ),
+            ShowDoc(
+                anime_id="3",
+                anidb_anime_id=3,
+                title_main="Anime 3",
+                episode_count_normal=24,
+            ),
+        ]
+
+        # Act
+        stats = validate_showdocs_dry_run(iter(docs))
+
+        # Assert
+        assert stats["total"] == 3
+        # Only non-zero episodes should be included in stats
+        assert stats["episode_stats"]["min"] == 12
+        assert stats["episode_stats"]["max"] == 24
