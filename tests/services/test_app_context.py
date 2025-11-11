@@ -327,3 +327,70 @@ class TestIndependentCaching:
         assert chain1 is chain2
         assert mock_get_vectorstore.call_count == 2
         assert mock_build_chain.call_count == 1
+
+
+
+class TestGetRagChainMethod:
+    """Tests for get_rag_chain method with different output formats."""
+
+    @patch("services.rag_service.build_rag_chain")
+    def test_get_rag_chain_text_format_uses_cache(
+        self, mock_build_chain: Mock, mock_config: Mock
+    ) -> None:
+        """Test that get_rag_chain with text format uses cached rag_chain."""
+        # Arrange
+        mock_chain = Mock()
+        mock_build_chain.return_value = mock_chain
+        ctx = AppContext(config=mock_config)
+
+        # Act
+        result1 = ctx.get_rag_chain(output_format="text")
+        result2 = ctx.get_rag_chain(output_format="text")
+
+        # Assert - should use cached version
+        assert result1 is result2
+        assert result1 is mock_chain
+        # build_rag_chain should only be called once (for caching)
+        mock_build_chain.assert_called_once_with(ctx, output_format="text")
+
+    @patch("services.rag_service.build_rag_chain")
+    def test_get_rag_chain_json_format_no_cache(
+        self, mock_build_chain: Mock, mock_config: Mock
+    ) -> None:
+        """Test that get_rag_chain with json format doesn't use cache."""
+        # Arrange
+        mock_chain1 = Mock()
+        mock_chain2 = Mock()
+        mock_build_chain.side_effect = [mock_chain1, mock_chain2]
+        ctx = AppContext(config=mock_config)
+
+        # Act
+        result1 = ctx.get_rag_chain(output_format="json")
+        result2 = ctx.get_rag_chain(output_format="json")
+
+        # Assert - should create new instance each time
+        assert result1 is mock_chain1
+        assert result2 is mock_chain2
+        assert result1 is not result2
+        # build_rag_chain should be called twice (no caching)
+        assert mock_build_chain.call_count == 2
+        mock_build_chain.assert_any_call(ctx, output_format="json")
+
+    @patch("services.rag_service.build_rag_chain")
+    def test_get_rag_chain_default_format_uses_cache(
+        self, mock_build_chain: Mock, mock_config: Mock
+    ) -> None:
+        """Test that get_rag_chain with default format uses cached rag_chain."""
+        # Arrange
+        mock_chain = Mock()
+        mock_build_chain.return_value = mock_chain
+        ctx = AppContext(config=mock_config)
+
+        # Act - call without output_format (defaults to "text")
+        result1 = ctx.get_rag_chain()
+        result2 = ctx.get_rag_chain()
+
+        # Assert - should use cached version
+        assert result1 is result2
+        assert result1 is mock_chain
+        mock_build_chain.assert_called_once_with(ctx, output_format="text")
