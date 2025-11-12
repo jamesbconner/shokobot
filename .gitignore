@@ -63,7 +63,6 @@ Thumbs.db
 # Project specific
 #resources/config.json
 input/
-debug/
 .kiro/
 .chroma/
 .ruff_cache/
