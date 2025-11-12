@@ -661,10 +661,11 @@ class TestSearchWithMCPFallback:
         mock_doc3 = Document(page_content="Content 3", metadata={"anime_id": "3"})
 
         mock_vectorstore = Mock()
+        # Distance scores: lower = better. Best score (0.3) is <= threshold (0.7)
         mock_vectorstore.similarity_search_with_score.return_value = [
-            (mock_doc1, 0.9),
-            (mock_doc2, 0.8),
-            (mock_doc3, 0.75),
+            (mock_doc1, 0.3),  # Good match
+            (mock_doc2, 0.4),  # Good match
+            (mock_doc3, 0.5),  # Good match
         ]
         mock_context.vectorstore = mock_vectorstore
 
@@ -696,8 +697,9 @@ class TestSearchWithMCPFallback:
         mock_doc1 = Document(page_content="Content 1", metadata={"anime_id": "1"})
 
         mock_vectorstore = Mock()
+        # Distance score: 0.3 is good, but only 1 result (< threshold of 3)
         mock_vectorstore.similarity_search_with_score.return_value = [
-            (mock_doc1, 0.9),  # Good score but only 1 result
+            (mock_doc1, 0.3),  # Good distance but only 1 result
         ]
         mock_context.vectorstore = mock_vectorstore
 
@@ -729,10 +731,11 @@ class TestSearchWithMCPFallback:
         mock_doc3 = Document(page_content="Content 3", metadata={"anime_id": "3"})
 
         mock_vectorstore = Mock()
+        # Distance scores: best (0.8) is > threshold (0.7), so MCP should trigger
         mock_vectorstore.similarity_search_with_score.return_value = [
-            (mock_doc1, 0.6),  # Low score
-            (mock_doc2, 0.5),
-            (mock_doc3, 0.4),
+            (mock_doc1, 0.8),  # Poor match (> 0.7 threshold)
+            (mock_doc2, 0.9),  # Poor match
+            (mock_doc3, 1.0),  # Poor match
         ]
         mock_context.vectorstore = mock_vectorstore
 
@@ -761,8 +764,9 @@ class TestSearchWithMCPFallback:
         mock_doc1 = Document(page_content="Content 1", metadata={"anime_id": "1"})
 
         mock_vectorstore = Mock()
+        # Both thresholds not met: count=1 (< 3) AND distance=0.8 (> 0.7)
         mock_vectorstore.similarity_search_with_score.return_value = [
-            (mock_doc1, 0.5),  # Low score and count
+            (mock_doc1, 0.8),  # Poor score AND insufficient count
         ]
         mock_context.vectorstore = mock_vectorstore
 

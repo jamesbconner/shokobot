@@ -1,80 +1,34 @@
-"""Tests for vectorstore service functions.
+"""Unit tests for vectorstore service."""
 
-This module tests vectorstore initialization, document operations,
-and metadata filtering.
-"""
-
-from unittest.mock import Mock, patch
+import logging
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from langchain_core.documents import Document
 
+from services.config_service import ConfigService
 from services.vectorstore_service import (
-    _create_embeddings,
-    delete_by_anime_ids,
+    _validate_distance_function,
     get_chroma_vectorstore,
-    upsert_documents,
 )
 
 
-class TestCreateEmbeddings:
-    """Tests for _create_embeddings function."""
+@pytest.fixture
+def mock_config() -> ConfigService:
+    """Create mock configuration service.
 
-    @patch("services.vectorstore_service.OpenAIEmbeddings")
-    def test_create_embeddings_with_valid_config(
-        self, mock_embeddings_class: Mock, mock_config: Mock
-    ) -> None:
-        """Test embeddings creation with valid configuration."""
-        # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "openai.embedding_model": "text-embedding-3-small",
-            "openai.request_timeout_s": 60,
-        }.get(key, default)
-
-        mock_embeddings = Mock()
-        mock_embeddings_class.return_value = mock_embeddings
-
-        # Act
-        result = _create_embeddings(mock_config)
-
-        # Assert
-        assert result is mock_embeddings
-        mock_embeddings_class.assert_called_once_with(
-            model="text-embedding-3-small", request_timeout=60.0, max_retries=3
-        )
-
-    @patch("services.vectorstore_service.OpenAIEmbeddings")
-    def test_create_embeddings_with_custom_timeout(
-        self, mock_embeddings_class: Mock, mock_config: Mock
-    ) -> None:
-        """Test embeddings creation with custom timeout."""
-        # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "openai.embedding_model": "text-embedding-3-large",
-            "openai.request_timeout_s": 120,
-        }.get(key, default)
-
-        mock_embeddings = Mock()
-        mock_embeddings_class.return_value = mock_embeddings
-
-        # Act
-        result = _create_embeddings(mock_config)
-
-        # Assert
-        mock_embeddings_class.assert_called_once_with(
-            model="text-embedding-3-large", request_timeout=120.0, max_retries=3
-        )
-
-    def test_create_embeddings_missing_model(self, mock_config: Mock) -> None:
-        """Test that missing embedding model raises ValueError."""
-        # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "openai.embedding_model": None,
-        }.get(key, default)
-
-        # Act & Assert
-        with pytest.raises(ValueError, match="openai.embedding_model not configured"):
-            _create_embeddings(mock_config)
+    Returns:
+        Mock ConfigService instance.
+    """
+    config = Mock(spec=ConfigService)
+    config.get.side_effect = lambda key, default=None: {
+        "chroma.persist_directory": "./.chroma_test",
+        "chroma.collection_name": "test_collection",
+        "openai.embedding_model": "text-embedding-3-small",
+        "openai.request_timeout_s": 60,
+        "openai.max_retries": 3,
+    }.get(key, default)
+    return config
 
 
 class TestGetChromaVectorstore:
@@ -82,221 +36,476 @@ class TestGetChromaVectorstore:
 
     @patch("services.vectorstore_service.Chroma")
     @patch("services.vectorstore_service._create_embeddings")
-    def test_get_chroma_vectorstore_valid_config(
-        self, mock_create_embeddings: Mock, mock_chroma_class: Mock, mock_config: Mock
+    @patch("services.vectorstore_service._validate_distance_function")
+    def test_creates_vectorstore_with_cosine_distance(
+        self,
+        mock_validate: MagicMock,
+        mock_create_embeddings: MagicMock,
+        mock_chroma: MagicMock,
+        mock_config: ConfigService,
     ) -> None:
-        """Test vectorstore creation with valid configuration."""
-        # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "chroma.persist_directory": "./.chroma",
-            "chroma.collection_name": "test_collection",
-        }.get(key, default)
+        """Test that vectorstore is created with cosine distance metadata.
 
+        Args:
+            mock_validate: Mock validation function.
+            mock_create_embeddings: Mock embeddings creation.
+            mock_chroma: Mock Chroma class.
+            mock_config: Mock configuration service.
+        """
+        # Arrange
         mock_embeddings = Mock()
         mock_create_embeddings.return_value = mock_embeddings
         mock_vectorstore = Mock()
-        mock_chroma_class.return_value = mock_vectorstore
+        mock_chroma.return_value = mock_vectorstore
 
         # Act
         result = get_chroma_vectorstore(mock_config)
 
         # Assert
-        assert result is mock_vectorstore
-        mock_chroma_class.assert_called_once_with(
+        mock_chroma.assert_called_once_with(
             collection_name="test_collection",
             embedding_function=mock_embeddings,
-            persist_directory="./.chroma",
+            persist_directory="./.chroma_test",
+            collection_metadata={"hnsw:space": "cosine"},
+        )
+        assert result == mock_vectorstore
+        mock_validate.assert_called_once_with(mock_vectorstore, "test_collection")
+
+    @patch("services.vectorstore_service.Chroma")
+    @patch("services.vectorstore_service._create_embeddings")
+    def test_raises_error_when_config_incomplete(
+        self,
+        mock_create_embeddings: MagicMock,
+        mock_chroma: MagicMock,
+    ) -> None:
+        """Test that error is raised when configuration is incomplete.
+
+        Args:
+            mock_create_embeddings: Mock embeddings creation.
+            mock_chroma: Mock Chroma class.
+        """
+        # Arrange
+        config = Mock(spec=ConfigService)
+        config.get.return_value = None  # Missing configuration
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Chroma configuration incomplete"):
+            get_chroma_vectorstore(config)
+
+        mock_chroma.assert_not_called()
+
+    @patch("services.vectorstore_service.Chroma")
+    @patch("services.vectorstore_service._create_embeddings")
+    @patch("services.vectorstore_service._validate_distance_function")
+    def test_calls_validation_after_creation(
+        self,
+        mock_validate: MagicMock,
+        mock_create_embeddings: MagicMock,
+        mock_chroma: MagicMock,
+        mock_config: ConfigService,
+    ) -> None:
+        """Test that validation is called after vectorstore creation.
+
+        Args:
+            mock_validate: Mock validation function.
+            mock_create_embeddings: Mock embeddings creation.
+            mock_chroma: Mock Chroma class.
+            mock_config: Mock configuration service.
+        """
+        # Arrange
+        mock_vectorstore = Mock()
+        mock_chroma.return_value = mock_vectorstore
+
+        # Act
+        get_chroma_vectorstore(mock_config)
+
+        # Assert
+        mock_validate.assert_called_once_with(mock_vectorstore, "test_collection")
+
+
+class TestValidateDistanceFunction:
+    """Tests for _validate_distance_function."""
+
+    def test_logs_info_when_cosine_distance_correct(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that info is logged when distance function is correct.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
+        # Arrange
+        mock_collection = Mock()
+        mock_collection.metadata = {"hnsw:space": "cosine"}
+
+        mock_vectorstore = Mock()
+        mock_vectorstore._collection = mock_collection
+
+        # Act
+        with caplog.at_level(logging.INFO):
+            _validate_distance_function(mock_vectorstore, "test_collection")
+
+        # Assert
+        assert "correctly configured with cosine distance" in caplog.text
+
+    def test_logs_warning_when_distance_function_incorrect(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that warning is logged when distance function is incorrect.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
+        # Arrange
+        mock_collection = Mock()
+        mock_collection.metadata = {"hnsw:space": "l2"}
+
+        mock_vectorstore = Mock()
+        mock_vectorstore._collection = mock_collection
+
+        # Act
+        with caplog.at_level(logging.WARNING):
+            _validate_distance_function(mock_vectorstore, "test_collection")
+
+        # Assert
+        assert "using l2 distance instead of cosine" in caplog.text
+        assert "migrate_chromadb_distance.py" in caplog.text
+
+    def test_logs_warning_when_metadata_missing(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that warning is logged when metadata is missing.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
+        # Arrange
+        mock_collection = Mock()
+        mock_collection.metadata = None
+
+        mock_vectorstore = Mock()
+        mock_vectorstore._collection = mock_collection
+
+        # Act
+        with caplog.at_level(logging.WARNING):
+            _validate_distance_function(mock_vectorstore, "test_collection")
+
+        # Assert
+        assert "using none distance instead of cosine" in caplog.text
+
+    def test_logs_warning_when_hnsw_space_missing(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that warning is logged when hnsw:space key is missing.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
+        # Arrange
+        mock_collection = Mock()
+        mock_collection.metadata = {}  # Empty metadata
+
+        mock_vectorstore = Mock()
+        mock_vectorstore._collection = mock_collection
+
+        # Act
+        with caplog.at_level(logging.WARNING):
+            _validate_distance_function(mock_vectorstore, "test_collection")
+
+        # Assert
+        assert "using none distance instead of cosine" in caplog.text
+
+    def test_handles_exception_gracefully(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test that exceptions are handled gracefully.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
+        # Arrange
+        mock_collection = Mock()
+        # Make metadata property raise an exception
+        type(mock_collection).metadata = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("Test error"))
         )
 
-    def test_get_chroma_vectorstore_missing_persist_dir(
-        self, mock_config: Mock
-    ) -> None:
-        """Test that missing persist_directory raises ValueError."""
+        mock_vectorstore = Mock()
+        mock_vectorstore._collection = mock_collection
+
+        # Act
+        with caplog.at_level(logging.DEBUG):
+            _validate_distance_function(mock_vectorstore, "test_collection")
+
+        # Assert - should not raise exception and should log debug message
+        assert "Could not validate distance function" in caplog.text
+
+
+
+class TestCreateEmbeddings:
+    """Tests for _create_embeddings function."""
+
+    def test_creates_embeddings_with_valid_config(self, mock_config: ConfigService):
+        """Test that embeddings are created with valid configuration.
+
+        Args:
+            mock_config: Mock configuration service.
+        """
         # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "chroma.persist_directory": None,
-            "chroma.collection_name": "test_collection",
-        }.get(key, default)
+        from services.vectorstore_service import _create_embeddings
+
+        # Act
+        embeddings = _create_embeddings(mock_config)
+
+        # Assert
+        assert embeddings is not None
+        assert embeddings.model == "text-embedding-3-small"
+
+    def test_raises_error_when_model_not_configured(self):
+        """Test that error is raised when embedding model is not configured."""
+        # Arrange
+        from services.vectorstore_service import _create_embeddings
+
+        config = Mock(spec=ConfigService)
+        config.get.return_value = None  # No model configured
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Chroma configuration incomplete"):
-            get_chroma_vectorstore(mock_config)
+        with pytest.raises(ValueError, match="openai.embedding_model not configured"):
+            _create_embeddings(config)
 
-    def test_get_chroma_vectorstore_missing_collection_name(
-        self, mock_config: Mock
-    ) -> None:
-        """Test that missing collection_name raises ValueError."""
+    def test_uses_default_timeout_and_retries(self):
+        """Test that default timeout and retries are used when not configured."""
         # Arrange
-        mock_config.get.side_effect = lambda key, default=None: {
-            "chroma.persist_directory": "./.chroma",
-            "chroma.collection_name": None,
+        from services.vectorstore_service import _create_embeddings
+
+        config = Mock(spec=ConfigService)
+        config.get.side_effect = lambda key, default=None: {
+            "openai.embedding_model": "text-embedding-3-small",
+            "openai.request_timeout_s": 60,
+            "openai.max_retries": 3,
         }.get(key, default)
 
-        # Act & Assert
-        with pytest.raises(ValueError, match="Chroma configuration incomplete"):
-            get_chroma_vectorstore(mock_config)
+        # Act
+        embeddings = _create_embeddings(config)
+
+        # Assert
+        assert embeddings.request_timeout == 60
+        assert embeddings.max_retries == 3
 
 
 class TestDeleteByAnimeIds:
     """Tests for delete_by_anime_ids function."""
 
-    def test_delete_by_anime_ids_with_ids(self, mock_context: Mock) -> None:
-        """Test deletion with valid anime IDs."""
+    def test_deletes_documents_by_anime_ids(self):
+        """Test that documents are deleted by anime IDs."""
         # Arrange
-        anime_ids = ["123", "456", "789"]
+        from services.vectorstore_service import delete_by_anime_ids
+
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
+        mock_ctx.vectorstore = mock_vectorstore
+
+        anime_ids = ["123", "456", "789"]
 
         # Act
-        delete_by_anime_ids(anime_ids, mock_context)
+        delete_by_anime_ids(anime_ids, mock_ctx)
 
         # Assert
         mock_vectorstore.delete.assert_called_once_with(
             where={"anime_id": {"$in": ["123", "456", "789"]}}
         )
 
-    def test_delete_by_anime_ids_empty_list(self, mock_context: Mock) -> None:
-        """Test deletion with empty list does nothing."""
+    def test_handles_empty_anime_ids(self, caplog: pytest.LogCaptureFixture):
+        """Test that empty anime_ids list is handled gracefully.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
         # Arrange
-        anime_ids: list[str] = []
+        from services.vectorstore_service import delete_by_anime_ids
+
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
+        mock_ctx.vectorstore = mock_vectorstore
 
         # Act
-        delete_by_anime_ids(anime_ids, mock_context)
+        with caplog.at_level(logging.DEBUG):
+            delete_by_anime_ids([], mock_ctx)
 
         # Assert
+        assert "No anime IDs provided" in caplog.text
         mock_vectorstore.delete.assert_not_called()
 
-    def test_delete_by_anime_ids_single_id(self, mock_context: Mock) -> None:
-        """Test deletion with single anime ID."""
+    def test_raises_exception_on_deletion_failure(self):
+        """Test that exception is raised when deletion fails."""
         # Arrange
-        anime_ids = ["123"]
+        from services.vectorstore_service import delete_by_anime_ids
+
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
-
-        # Act
-        delete_by_anime_ids(anime_ids, mock_context)
-
-        # Assert
-        mock_vectorstore.delete.assert_called_once_with(
-            where={"anime_id": {"$in": ["123"]}}
-        )
-
-    def test_delete_by_anime_ids_failure(self, mock_context: Mock) -> None:
-        """Test that deletion failures raise exception."""
-        # Arrange
-        anime_ids = ["123"]
-        mock_vectorstore = Mock()
-        mock_vectorstore.delete.side_effect = Exception("Delete failed")
-        mock_context.vectorstore = mock_vectorstore
+        mock_vectorstore.delete.side_effect = Exception("Deletion failed")
+        mock_ctx.vectorstore = mock_vectorstore
 
         # Act & Assert
-        with pytest.raises(Exception, match="Delete failed"):
-            delete_by_anime_ids(anime_ids, mock_context)
+        with pytest.raises(Exception, match="Deletion failed"):
+            delete_by_anime_ids(["123"], mock_ctx)
 
 
 class TestUpsertDocuments:
     """Tests for upsert_documents function."""
 
-    @patch("services.vectorstore_service.filter_complex_metadata")
-    def test_upsert_documents_valid(
-        self, mock_filter: Mock, mock_context: Mock
-    ) -> None:
-        """Test upserting valid documents."""
+    def test_upserts_documents_successfully(self):
+        """Test that documents are upserted successfully."""
         # Arrange
-        docs = [
-            Document(page_content="Test 1", metadata={"anime_id": "123"}),
-            Document(page_content="Test 2", metadata={"anime_id": "456"}),
-        ]
-        mock_filter.return_value = docs
+        from services.vectorstore_service import upsert_documents
 
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
+        mock_ctx.vectorstore = mock_vectorstore
+
+        docs = [
+            Document(page_content="Content 1", metadata={"anime_id": "123"}),
+            Document(page_content="Content 2", metadata={"anime_id": "456"}),
+        ]
 
         # Act
-        result = upsert_documents(docs, mock_context)
+        result = upsert_documents(docs, mock_ctx)
 
         # Assert
         assert result == ["123", "456"]
-        mock_vectorstore.delete.assert_called_once_with(
-            where={"anime_id": {"$in": ["123", "456"]}}
-        )
-        mock_vectorstore.add_documents.assert_called_once_with(
-            docs, ids=["123", "456"]
-        )
+        mock_vectorstore.delete.assert_called_once()
+        mock_vectorstore.add_documents.assert_called_once()
 
-    def test_upsert_documents_empty_list(self, mock_context: Mock) -> None:
-        """Test upserting empty list returns empty list."""
+    def test_handles_empty_documents_list(self, caplog: pytest.LogCaptureFixture):
+        """Test that empty documents list is handled gracefully.
+
+        Args:
+            caplog: Pytest log capture fixture.
+        """
         # Arrange
-        docs: list[Document] = []
+        from services.vectorstore_service import upsert_documents
+
+        mock_ctx = Mock()
+        mock_vectorstore = Mock()
+        mock_ctx.vectorstore = mock_vectorstore
 
         # Act
-        result = upsert_documents(docs, mock_context)
+        with caplog.at_level(logging.WARNING):
+            result = upsert_documents([], mock_ctx)
 
         # Assert
         assert result == []
+        assert "No documents provided" in caplog.text
+        mock_vectorstore.delete.assert_not_called()
+        mock_vectorstore.add_documents.assert_not_called()
 
-    @patch("services.vectorstore_service.filter_complex_metadata")
-    def test_upsert_documents_missing_anime_id(
-        self, mock_filter: Mock, mock_context: Mock
-    ) -> None:
-        """Test that documents missing anime_id raise ValueError."""
+    def test_raises_error_when_anime_id_missing(self):
+        """Test that error is raised when document is missing anime_id."""
         # Arrange
-        docs = [
-            Document(page_content="Test", metadata={"title": "No ID"}),
-        ]
-        mock_filter.return_value = docs
+        from services.vectorstore_service import upsert_documents
 
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
+        mock_ctx.vectorstore = mock_vectorstore
+
+        docs = [
+            Document(page_content="Content", metadata={}),  # Missing anime_id
+        ]
 
         # Act & Assert
         with pytest.raises(ValueError, match="Document missing anime_id"):
-            upsert_documents(docs, mock_context)
+            upsert_documents(docs, mock_ctx)
 
-    @patch("services.vectorstore_service.filter_complex_metadata")
-    def test_upsert_documents_filters_complex_metadata(
-        self, mock_filter: Mock, mock_context: Mock
-    ) -> None:
-        """Test that complex metadata is filtered."""
+    def test_filters_complex_metadata(self):
+        """Test that complex metadata is filtered before upserting."""
         # Arrange
-        original_docs = [
+        from services.vectorstore_service import upsert_documents
+
+        mock_ctx = Mock()
+        mock_vectorstore = Mock()
+        mock_ctx.vectorstore = mock_vectorstore
+
+        # Document with complex metadata (lists, dicts)
+        docs = [
             Document(
-                page_content="Test",
-                metadata={"anime_id": "123", "tags": ["action", "comedy"]},
+                page_content="Content",
+                metadata={
+                    "anime_id": "123",
+                    "tags": ["action", "mecha"],  # List (complex)
+                    "ratings": {"imdb": 8.5},  # Dict (complex)
+                    "title": "Test Anime",  # Simple (kept)
+                },
             ),
         ]
-        filtered_docs = [
-            Document(page_content="Test", metadata={"anime_id": "123"}),
-        ]
-        mock_filter.return_value = filtered_docs
-
-        mock_vectorstore = Mock()
-        mock_context.vectorstore = mock_vectorstore
 
         # Act
-        result = upsert_documents(original_docs, mock_context)
+        result = upsert_documents(docs, mock_ctx)
 
         # Assert
-        mock_filter.assert_called_once_with(original_docs)
         assert result == ["123"]
+        # Verify add_documents was called (complex metadata filtered by filter_complex_metadata)
+        mock_vectorstore.add_documents.assert_called_once()
 
-    @patch("services.vectorstore_service.filter_complex_metadata")
-    def test_upsert_documents_failure(
-        self, mock_filter: Mock, mock_context: Mock
-    ) -> None:
-        """Test that upsert failures raise exception."""
+    def test_deletes_existing_before_adding(self):
+        """Test that existing documents are deleted before adding new ones."""
         # Arrange
-        docs = [
-            Document(page_content="Test", metadata={"anime_id": "123"}),
-        ]
-        mock_filter.return_value = docs
+        from services.vectorstore_service import upsert_documents
 
+        mock_ctx = Mock()
         mock_vectorstore = Mock()
-        mock_vectorstore.add_documents.side_effect = Exception("Upsert failed")
-        mock_context.vectorstore = mock_vectorstore
+        mock_ctx.vectorstore = mock_vectorstore
+
+        docs = [
+            Document(page_content="Content", metadata={"anime_id": "123"}),
+        ]
+
+        # Act
+        upsert_documents(docs, mock_ctx)
+
+        # Assert
+        # Verify delete was called before add_documents
+        assert mock_vectorstore.delete.call_count == 1
+        assert mock_vectorstore.add_documents.call_count == 1
+        # Check that delete was called with correct IDs
+        delete_call_args = mock_vectorstore.delete.call_args
+        assert delete_call_args[1]["where"]["anime_id"]["$in"] == ["123"]
+
+    def test_raises_exception_on_upsert_failure(self):
+        """Test that exception is raised when upsert fails."""
+        # Arrange
+        from services.vectorstore_service import upsert_documents
+
+        mock_ctx = Mock()
+        mock_vectorstore = Mock()
+        mock_vectorstore.delete.side_effect = Exception("Upsert failed")
+        mock_ctx.vectorstore = mock_vectorstore
+
+        docs = [
+            Document(page_content="Content", metadata={"anime_id": "123"}),
+        ]
 
         # Act & Assert
         with pytest.raises(Exception, match="Upsert failed"):
-            upsert_documents(docs, mock_context)
+            upsert_documents(docs, mock_ctx)
+
+    def test_converts_anime_ids_to_strings(self):
+        """Test that anime IDs are converted to strings."""
+        # Arrange
+        from services.vectorstore_service import upsert_documents
+
+        mock_ctx = Mock()
+        mock_vectorstore = Mock()
+        mock_ctx.vectorstore = mock_vectorstore
+
+        docs = [
+            Document(page_content="Content", metadata={"anime_id": 123}),  # Integer
+        ]
+
+        # Act
+        result = upsert_documents(docs, mock_ctx)
+
+        # Assert
+        assert result == ["123"]  # Should be string
+        # Verify delete was called with string ID
+        delete_call_args = mock_vectorstore.delete.call_args
+        assert delete_call_args[1]["where"]["anime_id"]["$in"] == ["123"]

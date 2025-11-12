@@ -257,14 +257,23 @@ class ConfigService:
         return int(self.get("mcp.fallback_count_threshold", 3))
 
     def get_mcp_fallback_score_threshold(self) -> float:
-        """Get minimum similarity score before MCP fallback.
+        """Get maximum distance score before MCP fallback.
 
         Returns:
-            Minimum similarity score (0.0-1.0) required to skip MCP fallback.
+            Maximum distance score (0.0-2.0) to skip MCP fallback.
+            Lower scores = better matches. If best result has distance <= threshold,
+            MCP fallback is skipped.
 
         Examples:
             >>> config.get_mcp_fallback_score_threshold()
             0.7
+        
+        Notes:
+            With cosine distance (lower=better):
+            - 0.0-0.3: Excellent match
+            - 0.3-0.6: Very good match  
+            - 0.6-0.9: Good match
+            - Default 0.7 means: skip MCP if best match is "good" or better
         """
         return float(self.get("mcp.fallback_score_threshold", 0.7))
 

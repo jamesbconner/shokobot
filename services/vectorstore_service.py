@@ -38,17 +38,55 @@ def _create_embeddings(config: ConfigService) -> OpenAIEmbeddings:
     return OpenAIEmbeddings(model=model, request_timeout=timeout, max_retries=retries)
 
 
+def _validate_distance_function(vectorstore: Chroma, collection_name: str) -> None:
+    """Validate that collection uses cosine distance.
+
+    Args:
+        vectorstore: ChromaDB vectorstore instance.
+        collection_name: Name of the collection.
+
+    Logs:
+        Warning if incorrect distance function detected.
+    """
+    try:
+        if hasattr(vectorstore, "_collection"):
+            collection = vectorstore._collection
+            metadata = getattr(collection, "metadata", None)
+
+            if metadata is None or metadata.get("hnsw:space") != "cosine":
+                actual = (
+                    metadata.get("hnsw:space", "default (L2)")
+                    if metadata
+                    else "none"
+                )
+                logger.warning(
+                    f"Collection '{collection_name}' using {actual} distance instead of cosine. "
+                    f"Run 'python scripts/migrate_chromadb_distance.py' to fix."
+                )
+            else:
+                logger.info(
+                    f"Collection '{collection_name}' correctly configured with cosine distance"
+                )
+    except Exception as e:
+        logger.debug(f"Could not validate distance function: {e}")
+
+
 def get_chroma_vectorstore(config: ConfigService) -> Chroma:
-    """Get or create Chroma vector store instance.
+    """Get or create Chroma vector store with cosine distance.
 
     Args:
         config: Configuration service instance.
 
     Returns:
-        Configured Chroma vector store instance.
+        Configured Chroma vector store instance with cosine distance.
 
     Raises:
         ValueError: If required configuration is missing.
+
+    Notes:
+        - Uses cosine distance for normalized embeddings from OpenAI
+        - Validates existing collection's distance function
+        - Logs warning if incorrect distance function detected
     """
     persist_dir = config.get("chroma.persist_directory")
     collection_name = config.get("chroma.collection_name")
@@ -58,13 +96,25 @@ def get_chroma_vectorstore(config: ConfigService) -> Chroma:
             "Chroma configuration incomplete: missing persist_directory or collection_name"
         )
 
-    logger.info(f"Initializing Chroma vectorstore: collection={collection_name}, dir={persist_dir}")
+    logger.info(
+        f"Initializing Chroma vectorstore: collection={collection_name}, dir={persist_dir}"
+    )
 
-    return Chroma(
+    # Specify cosine distance for normalized embeddings
+    collection_metadata = {"hnsw:space": "cosine"}
+
+    # Create Chroma vector store with cosine distance
+    vectorstore = Chroma(
         collection_name=collection_name,
         embedding_function=_create_embeddings(config),
         persist_directory=persist_dir,
+        collection_metadata=collection_metadata,
     )
+
+    # Validate distance function
+    _validate_distance_function(vectorstore, collection_name)
+
+    return vectorstore
 
 
 def delete_by_anime_ids(anime_ids: Sequence[str], ctx: "AppContext") -> None:

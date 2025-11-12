@@ -62,15 +62,17 @@ async def search_with_mcp_fallback(
 
     # Evaluate results
     result_count = len(results)
-    best_score = max((score for _, score in results), default=0.0)
+    # For distance scores: lower = better, so we want the minimum (best) score
+    best_score = min((score for _, score in results), default=float('inf'))
 
     logger.debug(
-        f"Vector store returned {result_count} results, best score: {best_score:.3f}"
+        f"Vector store returned {result_count} results, best score: {best_score:.3f} (lower=better)"
     )
 
     # Check if both thresholds are met
+    # For distance scores: good results have LOW scores, so check if best score is BELOW threshold
     count_met = result_count >= count_threshold
-    score_met = best_score >= score_threshold
+    score_met = best_score <= score_threshold
 
     if count_met and score_met:
         logger.debug("Both thresholds met, returning vector store results")
