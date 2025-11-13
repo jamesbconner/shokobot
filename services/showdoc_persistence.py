@@ -133,7 +133,7 @@ class ShowDocPersistence:
             List of all ShowDoc instances.
         """
         showdocs = []
-        for anidb_id in self.index["anime"].keys():
+        for anidb_id in self.index["anime"]:
             show_doc = self.load_showdoc(int(anidb_id))
             if show_doc:
                 showdocs.append(show_doc)

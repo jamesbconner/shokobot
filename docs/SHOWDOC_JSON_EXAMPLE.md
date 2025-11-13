@@ -225,15 +225,15 @@ To update an anime's data:
 
 ```python
 from services.mcp_client_service import create_mcp_client
-from services.anidb_parser import parse_anidb_xml
+from services.mcp_anime_json_parser import parse_anidb_json
 from services.showdoc_persistence import ShowDocPersistence
 
 async def update_anime(aid: int):
     persistence = ShowDocPersistence()
-    
+
     async with await create_mcp_client() as mcp:
-        xml_data = await mcp.get_anime_details(aid)
-        show_doc = parse_anidb_xml(xml_data)
+        json_data = await mcp.get_anime_details(aid)
+        show_doc = parse_anidb_json(json_data)
         persistence.save_showdoc(show_doc)  # Overwrites existing
 ```
 
@@ -248,19 +248,19 @@ def clean_old_cache(days: int = 90):
     """Remove anime not updated in X days."""
     cache_dir = Path("data/mcp_cache")
     index_file = cache_dir / "index.json"
-    
+
     with index_file.open() as f:
         index = json.load(f)
-    
+
     cutoff = datetime.now() - timedelta(days=days)
-    
+
     for aid, info in list(index["anime"].items()):
         updated = datetime.fromisoformat(info["updated"])
         if updated < cutoff:
             # Remove file and index entry
             (cache_dir / info["file"]).unlink(missing_ok=True)
             del index["anime"][aid]
-    
+
     # Save updated index
     with index_file.open("w") as f:
         json.dump(index, f, indent=2)

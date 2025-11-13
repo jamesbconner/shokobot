@@ -5,16 +5,17 @@ from the MCP anime server into ShowDoc instances.
 """
 
 import json
-import pytest
 from datetime import datetime
+
+import pytest
 
 from models.show_doc import ShowDoc
 from services.mcp_anime_json_parser import parse_anidb_json
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def valid_complete_anime_json() -> dict:
@@ -62,15 +63,13 @@ def valid_complete_anime_json() -> dict:
 @pytest.fixture
 def minimal_anime_json() -> dict:
     """Minimal valid JSON with only required fields."""
-    return {
-        "aid": 12345,
-        "title": "Test Anime"
-    }
+    return {"aid": 12345, "title": "Test Anime"}
 
 
 # ============================================================================
 # Test Classes
 # ============================================================================
+
 
 class TestParseAnidbJson:
     """Tests for main parsing functionality."""
@@ -167,11 +166,14 @@ class TestParseAnidbJsonValidation:
 class TestParseAnidbJsonEdgeCases:
     """Tests for edge cases and error handling."""
 
-    @pytest.mark.parametrize("invalid_json,expected_error", [
-        ("{invalid json", "Invalid JSON"),
-        ("", "Invalid JSON"),
-        ("not json at all", "Invalid JSON"),
-    ])
+    @pytest.mark.parametrize(
+        "invalid_json,expected_error",
+        [
+            ("{invalid json", "Invalid JSON"),
+            ("", "Invalid JSON"),
+            ("not json at all", "Invalid JSON"),
+        ],
+    )
     def test_parse_invalid_json_string_raises_error(
         self, invalid_json: str, expected_error: str
     ) -> None:
@@ -243,13 +245,16 @@ class TestParseAnidbJsonDateParsing:
         assert isinstance(result.air_date, datetime)
         assert isinstance(result.end_date, datetime)
 
-    @pytest.mark.parametrize("invalid_date", [
-        "invalid-date",
-        "2023-13-01",  # Invalid month
-        "2023-01-32",  # Invalid day
-        "",
-        "not-a-date",
-    ])
+    @pytest.mark.parametrize(
+        "invalid_date",
+        [
+            "invalid-date",
+            "2023-13-01",  # Invalid month
+            "2023-01-32",  # Invalid day
+            "",
+            "not-a-date",
+        ],
+    )
     def test_parse_invalid_dates_handled_gracefully(self, invalid_date: str) -> None:
         """Test that invalid date formats are handled gracefully."""
         # Arrange

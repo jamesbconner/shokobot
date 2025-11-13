@@ -236,7 +236,7 @@ class TestValidateDistanceFunction:
 class TestCreateEmbeddings:
     """Tests for _create_embeddings function."""
 
-    def test_creates_embeddings_with_valid_config(self, mock_config: ConfigService):
+    def test_creates_embeddings_with_valid_config(self, mock_config: ConfigService) -> None:
         """Test that embeddings are created with valid configuration.
 
         Args:
@@ -252,7 +252,7 @@ class TestCreateEmbeddings:
         assert embeddings is not None
         assert embeddings.model == "text-embedding-3-small"
 
-    def test_raises_error_when_model_not_configured(self):
+    def test_raises_error_when_model_not_configured(self) -> None:
         """Test that error is raised when embedding model is not configured."""
         # Arrange
         from services.vectorstore_service import _create_embeddings
@@ -264,7 +264,7 @@ class TestCreateEmbeddings:
         with pytest.raises(ValueError, match="openai.embedding_model not configured"):
             _create_embeddings(config)
 
-    def test_uses_default_timeout_and_retries(self):
+    def test_uses_default_timeout_and_retries(self) -> None:
         """Test that default timeout and retries are used when not configured."""
         # Arrange
         from services.vectorstore_service import _create_embeddings
@@ -287,7 +287,7 @@ class TestCreateEmbeddings:
 class TestDeleteByAnimeIds:
     """Tests for delete_by_anime_ids function."""
 
-    def test_deletes_documents_by_anime_ids(self):
+    def test_deletes_documents_by_anime_ids(self) -> None:
         """Test that documents are deleted by anime IDs."""
         # Arrange
         from services.vectorstore_service import delete_by_anime_ids
@@ -306,7 +306,7 @@ class TestDeleteByAnimeIds:
             where={"anime_id": {"$in": ["123", "456", "789"]}}
         )
 
-    def test_handles_empty_anime_ids(self, caplog: pytest.LogCaptureFixture):
+    def test_handles_empty_anime_ids(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that empty anime_ids list is handled gracefully.
 
         Args:
@@ -327,7 +327,7 @@ class TestDeleteByAnimeIds:
         assert "No anime IDs provided" in caplog.text
         mock_vectorstore.delete.assert_not_called()
 
-    def test_raises_exception_on_deletion_failure(self):
+    def test_raises_exception_on_deletion_failure(self) -> None:
         """Test that exception is raised when deletion fails."""
         # Arrange
         from services.vectorstore_service import delete_by_anime_ids
@@ -345,7 +345,7 @@ class TestDeleteByAnimeIds:
 class TestUpsertDocuments:
     """Tests for upsert_documents function."""
 
-    def test_upserts_documents_successfully(self):
+    def test_upserts_documents_successfully(self) -> None:
         """Test that documents are upserted successfully."""
         # Arrange
         from services.vectorstore_service import upsert_documents
@@ -367,7 +367,7 @@ class TestUpsertDocuments:
         mock_vectorstore.delete.assert_called_once()
         mock_vectorstore.add_documents.assert_called_once()
 
-    def test_handles_empty_documents_list(self, caplog: pytest.LogCaptureFixture):
+    def test_handles_empty_documents_list(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that empty documents list is handled gracefully.
 
         Args:
@@ -390,7 +390,7 @@ class TestUpsertDocuments:
         mock_vectorstore.delete.assert_not_called()
         mock_vectorstore.add_documents.assert_not_called()
 
-    def test_raises_error_when_anime_id_missing(self):
+    def test_raises_error_when_anime_id_missing(self) -> None:
         """Test that error is raised when document is missing anime_id."""
         # Arrange
         from services.vectorstore_service import upsert_documents
@@ -407,7 +407,7 @@ class TestUpsertDocuments:
         with pytest.raises(ValueError, match="Document missing anime_id"):
             upsert_documents(docs, mock_ctx)
 
-    def test_filters_complex_metadata(self):
+    def test_filters_complex_metadata(self) -> None:
         """Test that complex metadata is filtered before upserting."""
         # Arrange
         from services.vectorstore_service import upsert_documents
@@ -437,7 +437,7 @@ class TestUpsertDocuments:
         # Verify add_documents was called (complex metadata filtered by filter_complex_metadata)
         mock_vectorstore.add_documents.assert_called_once()
 
-    def test_deletes_existing_before_adding(self):
+    def test_deletes_existing_before_adding(self) -> None:
         """Test that existing documents are deleted before adding new ones."""
         # Arrange
         from services.vectorstore_service import upsert_documents
@@ -461,7 +461,7 @@ class TestUpsertDocuments:
         delete_call_args = mock_vectorstore.delete.call_args
         assert delete_call_args[1]["where"]["anime_id"]["$in"] == ["123"]
 
-    def test_raises_exception_on_upsert_failure(self):
+    def test_raises_exception_on_upsert_failure(self) -> None:
         """Test that exception is raised when upsert fails."""
         # Arrange
         from services.vectorstore_service import upsert_documents
@@ -479,7 +479,7 @@ class TestUpsertDocuments:
         with pytest.raises(Exception, match="Upsert failed"):
             upsert_documents(docs, mock_ctx)
 
-    def test_converts_anime_ids_to_strings(self):
+    def test_converts_anime_ids_to_strings(self) -> None:
         """Test that anime IDs are converted to strings."""
         # Arrange
         from services.vectorstore_service import upsert_documents

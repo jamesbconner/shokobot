@@ -37,8 +37,8 @@ repos:
           - python-dotenv
           - click
           - pytest
-        args: [--config-file=mypy.ini]
-        exclude: ^cli\.py$
+        args: [--config-file=mypy.ini, --ignore-missing-imports]
+        files: ^(services|utils|models|cli)/.*\.py$
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.10

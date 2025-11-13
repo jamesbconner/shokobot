@@ -1,5 +1,6 @@
 """Tests for MCP client service."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -18,7 +19,7 @@ def sample_server_config() -> dict:
 
 
 @pytest.fixture
-def mock_session():
+def mock_session() -> Any:
     """Mock MCP ClientSession."""
     session = AsyncMock()
     session.__aenter__ = AsyncMock(return_value=session)
@@ -50,20 +51,20 @@ class TestMCPAnimeClient:
         # Arrange
         mock_read = AsyncMock()
         mock_write = AsyncMock()
-        
+
         # Mock stdio_client context manager
         mock_stdio_context = AsyncMock()
         mock_stdio_context.__aenter__ = AsyncMock(return_value=(mock_read, mock_write))
         mock_stdio_context.__aexit__ = AsyncMock()
         mock_stdio_client.return_value = mock_stdio_context
-        
+
         # Mock ClientSession
         mock_session = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock()
         mock_session.initialize = AsyncMock()
         mock_client_session_class.return_value = mock_session
-        
+
         client = MCPAnimeClient(sample_server_config)
 
         # Act
@@ -129,20 +130,20 @@ class TestMCPAnimeClient:
         # Arrange
         mock_read = AsyncMock()
         mock_write = AsyncMock()
-        
+
         # Mock stdio_client context manager
         mock_stdio_context = AsyncMock()
         mock_stdio_context.__aenter__ = AsyncMock(return_value=(mock_read, mock_write))
         mock_stdio_context.__aexit__ = AsyncMock()
         mock_stdio_client.return_value = mock_stdio_context
-        
+
         # Mock ClientSession
         mock_session = AsyncMock()
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock()
         mock_session.initialize = AsyncMock()
         mock_client_session_class.return_value = mock_session
-        
+
         client = MCPAnimeClient(sample_server_config)
 
         # Act
@@ -160,7 +161,7 @@ class TestMCPAnimeClient:
     ) -> None:
         """Test that search_anime returns search results."""
         import json
-        
+
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
@@ -168,7 +169,7 @@ class TestMCPAnimeClient:
         # Mock MCP response structure
         mock_text_content = Mock()
         mock_text_content.text = json.dumps([{"aid": 12345, "title": "Test Anime"}])
-        
+
         mock_result = Mock()
         mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
@@ -276,8 +277,7 @@ class TestMCPAnimeClient:
         self, sample_server_config: dict, mock_session: AsyncMock
     ) -> None:
         """Test that get_anime_details handles empty response."""
-        import json
-        
+
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
@@ -345,7 +345,6 @@ class TestCreateMCPClient:
             await create_mcp_client(mock_context, "nonexistent")
 
 
-
 class TestMCPClientErrorHandling:
     """Tests for MCP client error handling scenarios."""
 
@@ -367,14 +366,12 @@ class TestMCPClientErrorHandling:
         mock_session.__aexit__.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_disconnect_handles_stdio_error(
-        self, sample_server_config: dict
-    ) -> None:
+    async def test_disconnect_handles_stdio_error(self, sample_server_config: dict) -> None:
         """Test that disconnect handles stdio context error gracefully."""
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = None
-        
+
         mock_stdio = AsyncMock()
         mock_stdio.__aexit__ = AsyncMock(side_effect=Exception("Stdio error"))
         client._stdio_context = mock_stdio
@@ -387,9 +384,7 @@ class TestMCPClientErrorHandling:
         mock_stdio.__aexit__.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_list_tools_raises_when_not_connected(
-        self, sample_server_config: dict
-    ) -> None:
+    async def test_list_tools_raises_when_not_connected(self, sample_server_config: dict) -> None:
         """Test that list_tools raises when not connected."""
         # Arrange
         client = MCPAnimeClient(sample_server_config)
@@ -420,7 +415,7 @@ class TestMCPClientErrorHandling:
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
-        
+
         mock_result = Mock(spec=[])  # Explicitly no 'tools' attribute
         mock_session.list_tools = AsyncMock(return_value=mock_result)
 
@@ -480,7 +475,7 @@ class TestMCPClientErrorHandling:
 
         mock_text_content = Mock()
         mock_text_content.text = "{invalid json"
-        
+
         mock_result = Mock()
         mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
@@ -497,14 +492,14 @@ class TestMCPClientErrorHandling:
     ) -> None:
         """Test that search_anime wraps dict result in list."""
         import json
-        
+
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
 
         mock_text_content = Mock()
         mock_text_content.text = json.dumps({"aid": 12345, "title": "Test Anime"})
-        
+
         mock_result = Mock()
         mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
@@ -522,14 +517,14 @@ class TestMCPClientErrorHandling:
     ) -> None:
         """Test that search_anime handles unexpected data types."""
         import json
-        
+
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
 
         mock_text_content = Mock()
         mock_text_content.text = json.dumps("unexpected string")
-        
+
         mock_result = Mock()
         mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
@@ -551,7 +546,7 @@ class TestMCPClientErrorHandling:
 
         mock_text_content = Mock()
         mock_text_content.text = "not valid json"
-        
+
         mock_result = Mock()
         mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
@@ -607,7 +602,7 @@ class TestMCPClientErrorHandling:
         """Test that context manager handles exception during exit."""
         # Arrange
         client = MCPAnimeClient(sample_server_config)
-        
+
         mock_session = AsyncMock()
         mock_session.__aexit__ = AsyncMock(side_effect=Exception("Exit error"))
         client._session = mock_session

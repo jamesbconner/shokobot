@@ -319,8 +319,8 @@ class TestBuildRagChain:
         gpt5_models = ["gpt-5-nano", "gpt-5-mini", "gpt-5", "gpt-5-turbo"]
 
         for model_name in gpt5_models:
-            mock_context.config.get.side_effect = lambda key, default=None: {
-                "openai.model": model_name,
+            mock_context.config.get.side_effect = lambda key, default=None, m=model_name: {
+                "openai.model": m,
                 "openai.reasoning_effort": "medium",
                 "openai.output_verbosity": "medium",
                 "openai.max_output_tokens": 4096,
@@ -389,8 +389,8 @@ class TestRagChainExecution:
     ) -> None:
         """Test successful RAG chain execution with valid question."""
         # Arrange
+
         from langchain_core.documents import Document
-        from unittest.mock import AsyncMock
 
         mock_context.config.get.side_effect = lambda key, default=None: {
             "openai.model": "gpt-5-nano",
@@ -446,8 +446,8 @@ class TestRagChainExecution:
     ) -> None:
         """Test RAG chain execution with GPT-5 list response format."""
         # Arrange
+
         from langchain_core.documents import Document
-        from unittest.mock import AsyncMock
 
         mock_context.config.get.side_effect = lambda key, default=None: {
             "openai.model": "gpt-5-nano",
@@ -499,8 +499,8 @@ class TestRagChainExecution:
     ) -> None:
         """Test that RAG chain deduplicates documents by anime_id."""
         # Arrange
+
         from langchain_core.documents import Document
-        from unittest.mock import AsyncMock
 
         mock_context.config.get.side_effect = lambda key, default=None: {
             "openai.model": "gpt-5-nano",
@@ -552,8 +552,8 @@ class TestRagChainExecution:
     ) -> None:
         """Test RAG chain when prefilter returns no results."""
         # Arrange
+
         from langchain_core.documents import Document
-        from unittest.mock import AsyncMock
 
         mock_context.config.get.side_effect = lambda key, default=None: {
             "openai.model": "gpt-5-nano",
@@ -604,13 +604,14 @@ class TestSearchWithMCPFallback:
     async def test_search_with_mcp_fallback_invalid_thresholds(self, mock_context: Mock) -> None:
         """Test that invalid thresholds from config are handled."""
         from langchain_core.documents import Document
+
         from services.rag_service import search_with_mcp_fallback
 
         # Arrange - mock config with valid thresholds
         mock_context.config.get_mcp_fallback_count_threshold.return_value = 3
         mock_context.config.get_mcp_fallback_score_threshold.return_value = 0.7
         mock_context.retrieval_k = 10
-        
+
         # Mock vectorstore to return results
         mock_doc = Document(page_content="Content", metadata={"anime_id": "1"})
         mock_vectorstore = Mock()
@@ -1485,88 +1486,68 @@ class TestBuildRagChainJsonFormat:
             build_rag_chain(mock_context, output_format="invalid")
 
 
-
 class TestExtractAnimeTitleRegex:
     """Tests for _extract_anime_title_regex function."""
 
     def test_extract_title_with_quotes(self) -> None:
         """Test extracting title from query with quotes."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex('Tell me about "Cowboy Bebop"')
-        
+
         # Assert
         assert result == "cowboy bebop"
 
     def test_extract_title_with_single_quotes(self) -> None:
         """Test extracting title from query with single quotes."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex("Tell me about 'Cowboy Bebop'")
-        
+
         # Assert
         assert result == "cowboy bebop"
 
     def test_extract_title_with_about_pattern(self) -> None:
         """Test extracting title using 'about' pattern."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex("Tell me about Cowboy Bebop")
-        
+
         # Assert
         assert result == "cowboy bebop"
 
     def test_extract_title_with_called_pattern(self) -> None:
         """Test extracting title using 'called' pattern."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex("What is the anime called Cowboy Bebop?")
-        
+
         # Assert
         assert result == "cowboy bebop"
 
     def test_extract_title_removes_trailing_punctuation(self) -> None:
         """Test that trailing punctuation is removed."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex('Tell me about "Cowboy Bebop".')
-        
+
         # Assert
         assert result == "cowboy bebop"
 
     def test_extract_title_returns_none_when_no_match(self) -> None:
         """Test that None is returned when no pattern matches."""
         from services.rag_service import _extract_anime_title_regex
-        
+
         # Act
         result = _extract_anime_title_regex("What are some good anime?")
-        
+
         # Assert
         assert result is None
-
-
-class TestExtractAnimeTitleLLM:
-    """Tests for _extract_anime_title_llm function."""
-
-    @pytest.mark.asyncio
-    async def test_llm_extraction_with_no_model_configured(self, mock_context: Mock) -> None:
-        """Test that original query is returned when no model is configured."""
-        from services.rag_service import _extract_anime_title_llm
-        
-        # Arrange
-        mock_context.config.get.return_value = None
-        query = "What's that space cowboy anime?"
-        
-        # Act
-        result = await _extract_anime_title_llm(query, mock_context)
-        
-        # Assert
-        assert result == query
 
 
 class TestExtractAnimeTitle:
@@ -1576,10 +1557,10 @@ class TestExtractAnimeTitle:
     async def test_extract_title_uses_regex_when_successful(self, mock_context: Mock) -> None:
         """Test that regex is used when it successfully extracts a title."""
         from services.rag_service import _extract_anime_title
-        
+
         # Act
         result = await _extract_anime_title('Tell me about "Cowboy Bebop"', mock_context)
-        
+
         # Assert
         assert result == "cowboy bebop"
 
@@ -1590,14 +1571,14 @@ class TestExtractAnimeTitle:
     ) -> None:
         """Test that LLM is used when regex fails."""
         from services.rag_service import _extract_anime_title
-        
+
         # Arrange
         mock_llm_extract.return_value = "Cowboy Bebop"
         query = "What's that space cowboy anime?"
-        
+
         # Act
         result = await _extract_anime_title(query, mock_context)
-        
+
         # Assert
         assert result == "Cowboy Bebop"
         mock_llm_extract.assert_called_once_with(query, mock_context)

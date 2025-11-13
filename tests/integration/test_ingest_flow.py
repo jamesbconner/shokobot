@@ -130,7 +130,7 @@ class TestFullIngestFlow:
         """Test that ingestion completes without errors for empty file."""
         # Arrange: Create JSON with empty anime list
         json_file = tmp_path / "anime.json"
-        json_data = {"AniDB_Anime": []}
+        json_data: dict[str, list[Any]] = {"AniDB_Anime": []}
         json_file.write_text(json.dumps(json_data), encoding="utf-8")
 
         mock_upsert.return_value = None

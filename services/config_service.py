@@ -123,7 +123,7 @@ class ConfigService:
             >>> config.get_reasoning_effort()
             'medium'
         """
-        value = self.get("openai.reasoning_effort", "medium")
+        value = str(self.get("openai.reasoning_effort", "medium"))
         if value not in _ALLOWED_REASONING:
             raise ValueError(
                 f"Invalid reasoning_effort '{value}'. "
@@ -144,7 +144,7 @@ class ConfigService:
             >>> config.get_output_verbosity()
             'medium'
         """
-        value = self.get("openai.output_verbosity", "medium")
+        value = str(self.get("openai.output_verbosity", "medium"))
         if value not in _ALLOWED_VERBOSITY:
             raise ValueError(
                 f"Invalid output_verbosity '{value}'. "
@@ -180,7 +180,7 @@ class ConfigService:
                 f"Must be between {_MIN_OUTPUT_TOKENS} and {_MAX_OUTPUT_TOKENS}."
             )
 
-        return value
+        return int(value)
 
     def get_mcp_enabled(self) -> bool:
         """Get MCP integration enabled status.
@@ -204,7 +204,8 @@ class ConfigService:
             >>> config.get_mcp_servers()
             {'anime': {'command': '/path/to/python', 'args': [...]}}
         """
-        return self.get("mcp.servers", {})
+        servers = self.get("mcp.servers", {})
+        return dict(servers) if isinstance(servers, dict) else {}
 
     def get_mcp_server_config(self, server_name: str) -> dict[str, Any]:
         """Get configuration for a specific MCP server.

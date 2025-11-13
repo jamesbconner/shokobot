@@ -1,0 +1,660 @@
+{
+  "aid": 19060,
+  "title": "Dan Da Dan (2025)",
+  "type": "TV Series",
+  "episode_count": 12,
+  "episode_count_normal": 12,
+  "episode_count_special": 2,
+  "start_date": "2025-07-04T00:00:00",
+  "end_date": "2025-09-19T00:00:00",
+  "begin_year": 2025,
+  "end_year": 2025,
+  "titles": [
+    {
+      "title": "Dan Da Dan (2025)",
+      "language": "x-jat",
+      "type": "main"
+    },
+    {
+      "title": "Dan Da Dan Season 2",
+      "language": "en",
+      "type": "synonym"
+    },
+    {
+      "title": "\u30c0\u30f3\u30c0\u30c0\u30f3 (2025)",
+      "language": "ja",
+      "type": "official"
+    },
+    {
+      "title": "Dan Da Dan (2025)",
+      "language": "en",
+      "type": "official"
+    },
+    {
+      "title": "\u05d3\u05df \u05d3\u05d4 \u05d3\u05df (2025)",
+      "language": "he",
+      "type": "official"
+    },
+    {
+      "title": "\u80c6\u5927\u515a \u7b2c\u4e8c\u5b63",
+      "language": "zh-Hans",
+      "type": "official"
+    }
+  ],
+  "synopsis": "* Based on a paranormal mystery battle & romantic comedy manga by http://anidb.net/cr74655 [Tatsu Yukinobu].\nNote: The first three episodes received an early screening at a special event on 29 June 2025 at United Cinemas Toyosu in Tokyo. The regular TV broadcast started on 4 July 2025.",
+  "url": "https://anime-dandadan.com/",
+  "creators": [
+    {
+      "name": "Science Saru",
+      "id": 48093,
+      "type": "Animation Work"
+    },
+    {
+      "name": "Tatsu Yukinobu",
+      "id": 74655,
+      "type": "Original Work"
+    },
+    {
+      "name": "Yamashiro Fuuga",
+      "id": 59946,
+      "type": "Direction"
+    },
+    {
+      "name": "Abel Gongora",
+      "id": 48450,
+      "type": "Direction"
+    },
+    {
+      "name": "Onda Naoyuki",
+      "id": 2163,
+      "type": "Character Design"
+    },
+    {
+      "name": "Seko Hiroshi",
+      "id": 37817,
+      "type": "Series Composition"
+    },
+    {
+      "name": "Ushio Kensuke",
+      "id": 39776,
+      "type": "Music"
+    }
+  ],
+  "related_anime": [
+    {
+      "aid": 19584,
+      "title": "Dan Da Dan 3",
+      "type": "Sequel"
+    },
+    {
+      "aid": 18290,
+      "title": "Dan Da Dan",
+      "type": "Prequel"
+    }
+  ],
+  "restricted": false,
+  "ratings": {
+    "permanent": 8.45,
+    "temporary": 8.03,
+    "review": null,
+    "permanent_count": 514,
+    "temporary_count": 519,
+    "review_count": null
+  },
+  "similar_anime": [],
+  "picture": "315122.jpg",
+  "ann_id": null,
+  "crunchyroll_id": "GG5H5XQ0D",
+  "wikipedia_id": "Dandadan",
+  "episodes": [
+    {
+      "episode_number": 294967,
+      "title": "\u7b2c2\u671f\u7b2c1\u5f3ePV",
+      "air_date": "2025-04-26T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 297760,
+      "title": "\u5927\u86c7\u4f1d\u8aac\u3063\u3066\u3053\u308c\u3058\u3083\u3093\u3088",
+      "air_date": "2025-07-04T00:00:00",
+      "description": "Okarun and Jiji find a hidden room where talismans are plastered everywhere, including the ceiling, walls, and floor. The front door intercom suddenly rings. Expecting Momo, they open the front door, only to find Naki and the Kito family members waiting for them. Meanwhile, Momo is in a pinch, being attacked by the Kito family men at the onsen...\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 297761,
+      "title": "\u90aa\u8996",
+      "air_date": "2025-07-11T00:00:00",
+      "description": "The Kito family has been offering sacrifices to the Mongolian Death Worm for 200 years, and Jiji\u2019s house is built on top of the sacrificial altar. Momo and Okarun, controlled by the psychic waves, try to commit suicide, but Jiji attempts to carry them to safety. However, the Mongolian Death Worm looms before them. Just when it looks like everything is done for, the Evil Eye shows himself...\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 297762,
+      "title": "\u3086\u308b\u3055\u306d\u3048\u305c",
+      "air_date": "2025-07-18T00:00:00",
+      "description": null,
+      "length": 25
+    },
+    {
+      "episode_number": 297763,
+      "title": "\u3084\u3070\u904e\u304e\u3058\u3083\u3093\u3088",
+      "air_date": "2025-07-25T00:00:00",
+      "description": null,
+      "length": 25
+    },
+    {
+      "episode_number": 298141,
+      "title": "\u7b2c2\u671f\u76f4\u524d \u3053\u308c\u3092\u898b\u3068\u3051\u3070\u7d9a\u304d\u304c\u3082\u3063\u3068\u697d\u3057\u3081\u308b\u3058\u3083\u3093\u3088",
+      "air_date": "2025-06-27T00:00:00",
+      "description": null,
+      "length": 25
+    },
+    {
+      "episode_number": 298142,
+      "title": "\u7b2c2\u671f\u7b2c2\u5f3ePV",
+      "air_date": "2025-05-20T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 298143,
+      "title": "\u7b2c2\u671f\u30c6\u30a3\u30b6\u30fcPV",
+      "air_date": "2024-12-21T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 298395,
+      "title": "Opening",
+      "air_date": "2025-07-04T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 298396,
+      "title": "Ending",
+      "air_date": "2025-07-04T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 298621,
+      "title": "\u307f\u3093\u306a\u3067\u304a\u6cca\u307e\u308a\u3058\u3083\u3093\u3088",
+      "air_date": "2025-08-01T00:00:00",
+      "description": "Momo succeeds in rescuing Okarun. They return safely to their home, but Jiji is still possessed by Evil Eye.\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 298622,
+      "title": "\u5bb6\u65cf\u306b\u306a\u308a\u307e\u3057\u305f",
+      "air_date": "2025-08-08T00:00:00",
+      "description": "Jiji\u2019s transformation into Evil Eye intensifies. The group tries to exorcize Evil Eye from Jiji\u2019s body with a Hayashi performance. They invite the Hayashi and almost succeed in pushing Evil Eye out, but Jiji pleads with them to not kill Evil Eye...\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 298623,
+      "title": "\u306a\u3093\u304b\u30e2\u30e4\u30e2\u30e4\u3059\u308b\u3058\u3083\u3093\u3088",
+      "air_date": "2025-08-15T00:00:00",
+      "description": "Seiko teaches Jiji how to hold back the Evil Eye. However, Jiji struggles keeping him at bay. Jiji turns into Evil Eye and assaults Momo. With some quick thinking, Momo somehow manages to get through the situation, while Okarun is determined to get stronger so he can send Evil Eye packing.\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 298624,
+      "title": "\u304c\u3093\u3070\u308c\u30aa\u30ab\u30eb\u30f3",
+      "air_date": "2025-08-22T00:00:00",
+      "description": "Okarun and Aira end up fighting against classical composers lurking in the school music room for training. Aira gradually gets the hang of it, but Okarun is unable to dodge the composers` flying musical note bomb attacks. Turbo Granny gives Okarun some advice, telling him to move his body to the rhythm.\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 299684,
+      "title": "\u5bb6\u3092\u5efa\u3066\u76f4\u3057\u305f\u3044",
+      "air_date": "2025-08-29T00:00:00",
+      "description": "The battle between Okarun and Evil Eye-fied Jiji has begun. Showing the results of his training, Okarun fights toe-to-toe against Evil Eye, going \"full throttle.\" However, he can`t fully defeat Evil Eye. And then, Okarun\u2019s transformation is undone\u2026\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 299685,
+      "title": "\u30e2\u30c6\u308b\u79d8\u8a23\u306f\u306a\u3093\u3060",
+      "air_date": "2025-09-05T00:00:00",
+      "description": "Momo gets information about a \"golden ball\" from Miko and Muko. She immediately heads over to Okarun`s class to tell him and notices that he is talking to a slightly chubby male student. After school, Momo and Okarun head over to the apartment building rumored to be the site of the golden ball sightings. The chubby boy, Kinta, is following them...\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 299686,
+      "title": "\u602a\u7363\u3058\u3083\u3093\u3088",
+      "air_date": "2025-09-12T00:00:00",
+      "description": "Kinta`s quick thinking lets Momo and Okarun defeat the invisible \"something\" that has a golden ball. Its optical camouflage wears off, and out comes a space kaiju. The trio is then attacked by the now-gigantic space kaiju. The entire town is enveloped in a pitch-black dimension, and Aira and Jiji get wrapped up as well.\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 299687,
+      "title": "\u6fc0\u7a81! \u5b87\u5b99\u602a\u7363\u5bfe\u5de8\u5927\u30ed\u30dc!",
+      "air_date": "2025-09-19T00:00:00",
+      "description": "Using the nanoskin that Momo`s house is made of, Momo and company create a giant Buddha robot to fight against the space kaiju. Kinta pilots the robot, and together with Momo`s psychic powers and Aira`s hair abilities, the group seeks to turn the tides of battle. Meanwhile, Okarun and Jiji have been ejected from the Buddha robot, and they land in the middle of a rice paddy...\nSource: Crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 300702,
+      "title": "\u30af\u30e9\u30a4\u30de\u30c3\u30af\u30b9\u76f4\u524d\u7279\u756a\u3058\u3083\u3093\u3088!",
+      "air_date": "2025-08-23T00:00:00",
+      "description": null,
+      "length": 60
+    }
+  ],
+  "resources": {
+    "myanimelist": [
+      {
+        "type": "MyAnimeList",
+        "identifier": null,
+        "url": null
+      }
+    ],
+    "imdb": [],
+    "official_sites": [
+      {
+        "type": "Official Homepage",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Wikipedia (EN)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Wikipedia (JP)",
+        "identifier": null,
+        "url": null
+      }
+    ],
+    "other": [
+      {
+        "type": "AnimeNfo",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (8)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (9)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (10)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (23)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (26)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (28)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (41)",
+        "identifier": null,
+        "url": null
+      }
+    ]
+  },
+  "characters": [
+    {
+      "name": "Serpo Seijin",
+      "id": 136696,
+      "description": "Male-only aliens that clone themselves to increase their number. They target human females to regain reproductive organs.\nSource: Official page",
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Ayase Momo",
+      "id": 136698,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Takakura Ken",
+      "id": 136699,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Ayase Seiko",
+      "id": 141682,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Enjouji Jin",
+      "id": 141683,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Shiratori Aira",
+      "id": 141684,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Dover Demon",
+      "id": 143424,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Tarou",
+      "id": 143426,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Hana",
+      "id": 143427,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Miiko",
+      "id": 144144,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Muuko",
+      "id": 144145,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Tsubame",
+      "id": 144231,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Anzu",
+      "id": 144232,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Turbo Babaa",
+      "id": 144244,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Chiquitita",
+      "id": 145010,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Jashi",
+      "id": 145303,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Naki",
+      "id": 145304,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juhiko",
+      "id": 145305,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Jugemu",
+      "id": 145306,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juria",
+      "id": 145307,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juuichi",
+      "id": 145308,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Jumanuel",
+      "id": 145309,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Manjirou",
+      "id": 148948,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Tsuru-chan Junsha",
+      "id": 149446,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juju",
+      "id": 149447,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juriko",
+      "id": 149448,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Junko",
+      "id": 149449,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Kitou Juteimu",
+      "id": 149450,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Toshirou",
+      "id": 150241,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Hideji",
+      "id": 150242,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Yoshikichi",
+      "id": 150243,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Paterson",
+      "id": 150244,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Sakata Kinta",
+      "id": 150408,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Megane",
+      "id": 150469,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Babaa",
+      "id": 150470,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Daiku",
+      "id": 150471,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Ototetsu",
+      "id": 150472,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Vanben",
+      "id": 150473,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Mossan",
+      "id": 150474,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Ludris",
+      "id": 150560,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Sawaki Rin",
+      "id": 150749,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Vamola",
+      "id": 151051,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    }
+  ],
+  "tags": [
+    {
+      "id": 8192,
+      "name": "Gainax pose",
+      "description": null,
+      "weight": 100,
+      "spoiler": false,
+      "verified": false,
+      "parent_id": null
+    },
+    {
+      "id": 6173,
+      "name": "origin",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 7885,
+      "name": "Japanese production",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6173
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "Recommended",
+      "text": "Great until like the last 3 episodes. That one guy with the screechy screams and glasses was so annoying I almost added the anime to my blacklist.",
+      "user_id": 592652
+    },
+    {
+      "type": "Recommended",
+      "text": "S2 continues directly after the S1 cliffhanger. This season continues the wacky and randomness trend while introducing new characters. For the most part, this was a solid season, but the previous season also had moving moments and in this current season, there isn`t any of that, just the wackiness. While S2 is a solid entry, IMO this is a step down to the previous season. Still looking forward to S3.",
+      "user_id": 73747
+    },
+    {
+      "type": "Must See",
+      "text": "Thou shall watch this and be amazed :D As crazy as Furi kuri but actually makes sense.......sometime. You will definitely NOT get bored.",
+      "user_id": 117590
+    },
+    {
+      "type": "Must See",
+      "text": "This is a direct continuation of the first season, with the same fun unexpected twists and turns. It can`t be anything other than a must-see in the context of season 1, due to episode 12`s cliffhanger. Thank fully this season`s ending didn`t feel like a complete break in the story like season 1, and is actually a well done, fun cliffhanger. Having an actual end was a big relief.",
+      "user_id": 613092
+    }
+  ]
+}

@@ -1,5 +1,12 @@
 # ShokoBot
 
+[![Tests](https://github.com/jamesbconner/shokobot/actions/workflows/test.yml/badge.svg)](https://github.com/jamesbconner/shokobot/actions/workflows/test.yml)
+[![Lint](https://github.com/jamesbconner/shokobot/actions/workflows/lint.yml/badge.svg)](https://github.com/jamesbconner/shokobot/actions/workflows/lint.yml)
+[![Security](https://github.com/jamesbconner/shokobot/actions/workflows/security.yml/badge.svg)](https://github.com/jamesbconner/shokobot/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/jamesbconner/shokobot/branch/main/graph/badge.svg)](https://codecov.io/gh/jamesbconner/shokobot)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
 Retrival Augmented Generation (RAG) enabled anime recommendation system using LangChain, ChromaDB Vectorstore, Model Context Protocol, and OpenAI GPT-5.
 
 ## Overview
@@ -367,7 +374,40 @@ poetry run pytest -v
 # Generate HTML coverage report
 poetry run pytest --cov-report=html
 open htmlcov/index.html
+
+# Enforce coverage threshold (90%)
+poetry run pytest --cov --cov-fail-under=90
 ```
+
+**Test Coverage:** 96.75% (380 tests)
+- MCP JSON Parser: 91.14%
+- MCP Client Service: 98.36%
+- RAG Service: 92.97%
+- All other services: 95%+
+
+### Continuous Integration
+
+The project uses GitHub Actions for automated testing and quality checks:
+
+**Workflows:**
+- **Tests** - Runs on Python 3.12 and 3.13, enforces 90% coverage threshold
+- **Lint** - Checks code formatting and linting with ruff
+- **Security** - Runs bandit security scans weekly
+
+**Pull Request Checks:**
+All PRs must pass:
+- ✅ All tests (380+ tests)
+- ✅ Coverage ≥ 90%
+- ✅ Ruff formatting and linting
+- ✅ Type checking with mypy
+- ✅ Security scan with bandit
+
+**Setup for Contributors:**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with tests
+4. Ensure all checks pass locally
+5. Submit a PR using the template
 
 ### Pre-commit Hooks
 

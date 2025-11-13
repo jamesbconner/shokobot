@@ -4,6 +4,8 @@ This module tests the ShowDoc model's validation logic, field constraints,
 data cleaning, and conversion to LangChain Document format.
 """
 
+# mypy: disable-error-code="arg-type"
+
 from datetime import datetime
 from typing import Any
 

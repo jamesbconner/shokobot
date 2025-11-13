@@ -38,7 +38,9 @@ class MCPAnimeClient:
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any
+    ) -> None:
         """Async context manager exit."""
         await self.disconnect()
 
@@ -103,7 +105,7 @@ class MCPAnimeClient:
         try:
             tools = await self._session.list_tools()
             logger.debug(f"Available tools: {tools}")
-            return tools.tools if hasattr(tools, "tools") else []
+            return list(tools.tools) if hasattr(tools, "tools") else []
         except Exception as e:
             logger.error(f"Failed to list tools: {e}")
             raise RuntimeError(f"MCP list tools failed: {e}") from e
@@ -213,17 +215,19 @@ class MCPAnimeClient:
                         try:
                             import json
 
-                            json_data = json.loads(json_text)
+                            json_data: dict[Any, Any] = json.loads(json_text)
                             logger.debug(f"Successfully parsed JSON with {len(json_data)} keys")
                             return json_data
                         except json.JSONDecodeError:
                             # Return as string if not valid JSON
                             logger.warning("Response is not valid JSON, returning as string")
-                            return json_text
+                            text_result: str = json_text
+                            return text_result
 
                 # Fallback: try to convert content directly to string
                 logger.warning("Unexpected content format, attempting string conversion")
-                return str(content)
+                content_str: str = str(content)
+                return content_str
 
             logger.warning("No valid content in MCP details result")
             return ""

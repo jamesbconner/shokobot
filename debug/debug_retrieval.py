@@ -3,11 +3,13 @@
 
 from dotenv import load_dotenv
 
+from services.config_service import Config
 from services.vectorstore_service import get_chroma_vectorstore
 
 load_dotenv()
 
-vs = get_chroma_vectorstore()
+config = Config()
+vs = get_chroma_vectorstore(config)
 results = vs.similarity_search("anime about time travel", k=3)
 
 if results:

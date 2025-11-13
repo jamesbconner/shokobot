@@ -24,12 +24,9 @@ def parse_anidb_json(json_data: str | dict) -> ShowDoc:
         ValueError: If JSON is invalid or missing required fields.
     """
     try:
-        if isinstance(json_data, str):
-            data = json.loads(json_data)
-        else:
-            data = json_data
+        data = json.loads(json_data) if isinstance(json_data, str) else json_data
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON: {e}")
+        raise ValueError(f"Invalid JSON: {e}") from e
 
     # Extract required fields
     anidb_anime_id = data.get("aid")
@@ -156,4 +153,4 @@ def parse_anidb_json(json_data: str | dict) -> ShowDoc:
 
     except Exception as e:
         logger.error(f"Failed to create ShowDoc: {e}")
-        raise ValueError(f"Failed to create ShowDoc from JSON: {e}")
+        raise ValueError(f"Failed to create ShowDoc from JSON: {e}") from e

@@ -84,16 +84,17 @@ class TestChunked:
         """Test chunking with generator input."""
 
         # Arrange
-        def number_generator() -> int:
+        from collections.abc import Generator
+
+        def number_generator() -> Generator[int, None, None]:
             """Generate numbers 1 through 10."""
-            for i in range(1, 11):
-                yield i
+            yield from range(1, 11)
 
         chunk_size = 4
         expected = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10]]
 
         # Act
-        result = list(chunked(number_generator(), chunk_size))
+        result: list[list[int]] = list(chunked(number_generator(), chunk_size))
 
         # Assert
         assert result == expected

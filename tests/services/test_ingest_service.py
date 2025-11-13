@@ -477,7 +477,7 @@ class TestIterShowdocsFromJson:
         """Test handling of empty anime list."""
         # Arrange
         json_file = tmp_path / "empty.json"
-        json_data = {"AniDB_Anime": []}
+        json_data: dict[str, list[Any]] = {"AniDB_Anime": []}
         json_file.write_text(json.dumps(json_data), encoding="utf-8")
 
         # Act
@@ -492,7 +492,7 @@ class TestIterShowdocsFromJson:
         """Test handling when AniDB_Anime key is missing."""
         # Arrange
         json_file = tmp_path / "no_key.json"
-        json_data = {"SomeOtherKey": []}
+        json_data: dict[str, list[Any]] = {"SomeOtherKey": []}
         json_file.write_text(json.dumps(json_data), encoding="utf-8")
 
         # Act

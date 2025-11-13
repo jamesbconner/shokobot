@@ -91,7 +91,7 @@ poetry run shokobot repl --show-context --k 15
 When using `--show-context`, you'll see a table with similarity scores:
 
 ```
-                            Retrieved Context                             
+                            Retrieved Context
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ Title                          ┃ ID       ┃ Year     ┃ Episodes ┃ Similarity ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━┩

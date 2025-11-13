@@ -44,7 +44,7 @@ class TestAppContextCreation:
         mock_config_class.return_value = mock_config_instance
 
         # Act
-        ctx = AppContext.create()
+        _ = AppContext.create()
 
         # Assert
         mock_config_class.assert_called_once_with("resources/config.json")

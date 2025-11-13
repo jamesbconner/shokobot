@@ -47,7 +47,7 @@ def check_prerequisites() -> bool:
 
     # Check if config file exists
     try:
-        ctx = AppContext.create()
+        _ = AppContext.create()
         logger.info("Successfully initialized AppContext")
         return True
     except FileNotFoundError as e:

@@ -1,5 +1,6 @@
 """Tests for similarity_utils module."""
 
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -14,7 +15,7 @@ from utils.similarity_utils import (
 
 
 @pytest.fixture
-def mock_context():
+def mock_context() -> Any:
     """Create mock application context.
 
     Returns:
@@ -26,7 +27,7 @@ def mock_context():
 
 
 @pytest.fixture
-def sample_results():
+def sample_results() -> Any:
     """Create sample search results with distance scores.
 
     Returns:
@@ -59,7 +60,7 @@ def sample_results():
 class TestSearchWithScores:
     """Tests for search_with_scores function."""
 
-    def test_search_with_scores_returns_results(self, mock_context):
+    def test_search_with_scores_returns_results(self, mock_context) -> None:
         """Test that search_with_scores returns results from vectorstore.
 
         Args:
@@ -80,7 +81,7 @@ class TestSearchWithScores:
             "test query", k=5
         )
 
-    def test_search_with_scores_with_logging(self, mock_context, caplog):
+    def test_search_with_scores_with_logging(self, mock_context, caplog) -> None:
         """Test that search_with_scores logs results when enabled.
 
         Args:
@@ -109,7 +110,7 @@ class TestSearchWithScores:
         assert "Test Anime" in caplog.text
         assert "0.3" in caplog.text
 
-    def test_search_with_scores_respects_k_parameter(self, mock_context):
+    def test_search_with_scores_respects_k_parameter(self, mock_context) -> None:
         """Test that search_with_scores passes k parameter correctly.
 
         Args:
@@ -128,7 +129,7 @@ class TestSearchWithScores:
 class TestGetScoreStatistics:
     """Tests for get_score_statistics function."""
 
-    def test_get_score_statistics_with_results(self, sample_results):
+    def test_get_score_statistics_with_results(self, sample_results) -> None:
         """Test statistics calculation with valid results.
 
         Args:
@@ -143,7 +144,7 @@ class TestGetScoreStatistics:
         assert stats["avg"] == 0.6  # Average
         assert stats["median"] == 0.6  # Median
 
-    def test_get_score_statistics_empty_results(self):
+    def test_get_score_statistics_empty_results(self) -> None:
         """Test statistics calculation with empty results."""
         # Act
         stats = get_score_statistics([])
@@ -154,7 +155,7 @@ class TestGetScoreStatistics:
         assert stats["avg"] == 0.0
         assert stats["median"] == 0.0
 
-    def test_get_score_statistics_single_result(self):
+    def test_get_score_statistics_single_result(self) -> None:
         """Test statistics calculation with single result."""
         # Arrange
         results = [(Document(page_content="Test"), 0.5)]
@@ -168,7 +169,7 @@ class TestGetScoreStatistics:
         assert stats["avg"] == 0.5
         assert stats["median"] == 0.5
 
-    def test_get_score_statistics_median_calculation(self):
+    def test_get_score_statistics_median_calculation(self) -> None:
         """Test median calculation with even number of results."""
         # Arrange
         results = [
@@ -189,7 +190,7 @@ class TestGetScoreStatistics:
 class TestFilterByScore:
     """Tests for filter_by_score function."""
 
-    def test_filter_by_score_keeps_good_matches(self, sample_results):
+    def test_filter_by_score_keeps_good_matches(self, sample_results) -> None:
         """Test that filter keeps results with distance <= threshold.
 
         Args:
@@ -203,7 +204,7 @@ class TestFilterByScore:
         assert filtered[0][1] == 0.2
         assert filtered[1][1] == 0.4
 
-    def test_filter_by_score_strict_threshold(self, sample_results):
+    def test_filter_by_score_strict_threshold(self, sample_results) -> None:
         """Test filtering with strict threshold.
 
         Args:
@@ -216,7 +217,7 @@ class TestFilterByScore:
         assert len(filtered) == 1  # Only 0.2 is <= 0.3
         assert filtered[0][1] == 0.2
 
-    def test_filter_by_score_lenient_threshold(self, sample_results):
+    def test_filter_by_score_lenient_threshold(self, sample_results) -> None:
         """Test filtering with lenient threshold.
 
         Args:
@@ -229,7 +230,7 @@ class TestFilterByScore:
         assert len(filtered) == 5  # All results are <= 1.5
         assert len(filtered) == len(sample_results)
 
-    def test_filter_by_score_no_matches(self, sample_results):
+    def test_filter_by_score_no_matches(self, sample_results) -> None:
         """Test filtering when no results meet threshold.
 
         Args:
@@ -241,7 +242,7 @@ class TestFilterByScore:
         # Assert
         assert len(filtered) == 0
 
-    def test_filter_by_score_empty_input(self):
+    def test_filter_by_score_empty_input(self) -> None:
         """Test filtering with empty input."""
         # Act
         filtered = filter_by_score([], max_distance=0.5)
@@ -253,7 +254,7 @@ class TestFilterByScore:
 class TestPrintScoreTable:
     """Tests for print_score_table function."""
 
-    def test_print_score_table_displays_results(self, sample_results, capsys):
+    def test_print_score_table_displays_results(self, sample_results, capsys) -> None:
         """Test that print_score_table displays results correctly.
 
         Args:
@@ -275,7 +276,7 @@ class TestPrintScoreTable:
         assert "0.2000" in captured.out
         assert "0.4000" in captured.out
 
-    def test_print_score_table_respects_max_results(self, sample_results, capsys):
+    def test_print_score_table_respects_max_results(self, sample_results, capsys) -> None:
         """Test that print_score_table respects max_results parameter.
 
         Args:
@@ -292,7 +293,7 @@ class TestPrintScoreTable:
         assert "Anime 3" not in captured.out
         assert "and 3 more results" in captured.out
 
-    def test_print_score_table_shows_statistics(self, sample_results, capsys):
+    def test_print_score_table_shows_statistics(self, sample_results, capsys) -> None:
         """Test that print_score_table shows statistics.
 
         Args:
@@ -311,7 +312,7 @@ class TestPrintScoreTable:
         assert "0.2000" in captured.out  # Best
         assert "1.0000" in captured.out  # Worst
 
-    def test_print_score_table_empty_results(self, capsys):
+    def test_print_score_table_empty_results(self, capsys) -> None:
         """Test print_score_table with empty results."""
         # Act
         print_score_table([], max_results=10)
@@ -320,7 +321,7 @@ class TestPrintScoreTable:
         # Assert
         assert "No results found" in captured.out
 
-    def test_print_score_table_handles_missing_metadata(self, capsys):
+    def test_print_score_table_handles_missing_metadata(self, capsys) -> None:
         """Test that print_score_table handles missing metadata gracefully."""
         # Arrange
         results = [(Document(page_content="Test", metadata={}), 0.3)]
@@ -338,7 +339,7 @@ class TestPrintScoreTable:
 class TestDistanceScoreLogic:
     """Tests to verify distance score logic (lower = better)."""
 
-    def test_distance_scores_lower_is_better(self):
+    def test_distance_scores_lower_is_better(self) -> None:
         """Test that lower distance scores are treated as better matches."""
         # Arrange
         results = [
@@ -359,7 +360,7 @@ class TestDistanceScoreLogic:
         assert len(filtered_good) == 2  # 0.1 and 0.5 <= 0.7
         assert filtered_excellent[0][0].metadata["title_main"] == "Excellent"
 
-    def test_threshold_comparison_uses_less_than_or_equal(self):
+    def test_threshold_comparison_uses_less_than_or_equal(self) -> None:
         """Test that threshold comparison uses <= (not >=)."""
         # Arrange
         results = [

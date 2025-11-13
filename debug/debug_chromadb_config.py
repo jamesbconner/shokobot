@@ -36,18 +36,18 @@ def main() -> None:
         persist_dir = config.get("chroma.persist_directory")
         collection_name = config.get("chroma.collection_name")
 
-        print(f"\n📁 Configuration:")
+        print("\n📁 Configuration:")
         print(f"  Persist directory: {persist_dir}")
         print(f"  Collection name: {collection_name}")
         print(f"  Directory exists: {Path(persist_dir).exists()}")
 
         # Connect to ChromaDB directly
-        print(f"\n🔌 Connecting to ChromaDB...")
+        print("\n🔌 Connecting to ChromaDB...")
         client = chromadb.PersistentClient(path=persist_dir)
 
         # List collections
         collections = client.list_collections()
-        print(f"\n📚 Available Collections:")
+        print("\n📚 Available Collections:")
         for collection in collections:
             print(f"  - {collection.name}")
 
@@ -70,79 +70,68 @@ def main() -> None:
                 print(f"\n  🎯 Distance function: {distance_func}")
 
                 if distance_func == "cosine":
-                    print(f"     ✅ Using cosine distance")
+                    print("     ✅ Using cosine distance")
                 elif distance_func == "l2":
-                    print(f"     ⚠️  Using L2/Euclidean distance")
+                    print("     ⚠️  Using L2/Euclidean distance")
                 elif distance_func == "ip":
-                    print(f"     ⚠️  Using inner product")
+                    print("     ⚠️  Using inner product")
             else:
-                print(f"\n  ❌ NO DISTANCE FUNCTION SPECIFIED!")
-                print(f"     ChromaDB is using DEFAULT (likely L2/Euclidean)")
+                print("\n  ❌ NO DISTANCE FUNCTION SPECIFIED!")
+                print("     ChromaDB is using DEFAULT (likely L2/Euclidean)")
 
             # Sample documents
             if count > 0:
-                print(f"\n🔬 Sampling Documents:")
+                print("\n🔬 Sampling Documents:")
                 results = collection.get(limit=2, include=["embeddings", "metadatas"])
 
-                if (
-                    results["embeddings"] is not None
-                    and len(results["embeddings"]) > 0
-                ):
+                embeddings = results["embeddings"]
+                metadatas = results["metadatas"]
+                if embeddings is not None and metadatas is not None and len(embeddings) > 0:
                     for i, (embedding, metadata) in enumerate(
-                        zip(results["embeddings"][:2], results["metadatas"][:2])
+                        zip(embeddings[:2], metadatas[:2], strict=False)
                     ):
-                        title = (
-                            metadata.get("title_main", "Unknown")
-                            if metadata
-                            else "Unknown"
-                        )
+                        title = metadata.get("title_main", "Unknown") if metadata else "Unknown"
                         norm = np.linalg.norm(embedding)
                         print(f"  {i+1}. {title}")
                         print(f"     Dimension: {len(embedding)}")
                         print(f"     Norm: {norm:.6f}")
-                        print(
-                            f"     Normalized: {'Yes' if abs(norm - 1.0) < 0.01 else 'No'}"
-                        )
+                        print(f"     Normalized: {'Yes' if abs(norm - 1.0) < 0.01 else 'No'}")
 
         else:
             print(f"\n❌ Collection '{collection_name}' not found!")
 
         # Summary
-        print(f"\n" + "=" * 50)
-        print(f"📊 DIAGNOSIS:")
+        print("\n" + "=" * 50)
+        print("📊 DIAGNOSIS:")
 
         if collection_name in [c.name for c in collections]:
             collection = client.get_collection(collection_name)
             metadata = collection.metadata
 
             if not metadata or "hnsw:space" not in metadata:
-                print(f"\n❌ PROBLEM FOUND: No distance function specified!")
-                print(f"   ChromaDB is using default L2 (Euclidean) distance.")
-                print(
-                    f"   For normalized embeddings, this gives different results than cosine."
-                )
-                print(f"\n💡 SOLUTION:")
-                print(
-                    f"   The vectorstore service now automatically uses cosine distance."
-                )
-                print(f"   You need to recreate the collection:")
-                print(f"   1. Backup your data")
-                print(f"   2. Delete the collection")
-                print(f"   3. Re-run ingest (will create with cosine distance)")
-                print(f"\n📚 For more information:")
-                print(f"   See docs/chromadb_distance_fix.md")
+                print("\n❌ PROBLEM FOUND: No distance function specified!")
+                print("   ChromaDB is using default L2 (Euclidean) distance.")
+                print("   For normalized embeddings, this gives different results than cosine.")
+                print("\n💡 SOLUTION:")
+                print("   The vectorstore service now automatically uses cosine distance.")
+                print("   You need to recreate the collection:")
+                print("   1. Backup your data")
+                print("   2. Delete the collection")
+                print("   3. Re-run ingest (will create with cosine distance)")
+                print("\n📚 For more information:")
+                print("   See docs/chromadb_distance_fix.md")
             elif metadata["hnsw:space"] != "cosine":
                 print(f"\n⚠️  Using {metadata['hnsw:space']} distance")
-                print(f"   For embeddings, cosine distance is usually better")
+                print("   For embeddings, cosine distance is usually better")
             else:
-                print(f"\n✅ Using cosine distance (correct)")
-                print(f"   Your ChromaDB configuration is optimal for semantic search!")
-                print(f"\n📊 Score Interpretation Guide:")
-                print(f"   0.0-0.3: Excellent match")
-                print(f"   0.3-0.6: Very good match")
-                print(f"   0.6-0.9: Good match")
-                print(f"   0.9-1.2: Moderate match")
-                print(f"   1.2+:    Poor match")
+                print("\n✅ Using cosine distance (correct)")
+                print("   Your ChromaDB configuration is optimal for semantic search!")
+                print("\n📊 Score Interpretation Guide:")
+                print("   0.0-0.3: Excellent match")
+                print("   0.3-0.6: Very good match")
+                print("   0.6-0.9: Good match")
+                print("   0.9-1.2: Moderate match")
+                print("   1.2+:    Poor match")
 
     except Exception as e:
         print(f"ERROR: {e}")

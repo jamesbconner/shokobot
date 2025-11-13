@@ -1,0 +1,767 @@
+{
+  "aid": 17920,
+  "title": "Ryza no Atelier: Tokoyami no Joou to Himitsu no Kakurega",
+  "type": "TV Series",
+  "episode_count": 12,
+  "episode_count_normal": 0,
+  "episode_count_special": 0,
+  "start_date": "2023-07-02T00:00:00",
+  "end_date": "2023-09-17T00:00:00",
+  "begin_year": null,
+  "end_year": null,
+  "titles": [
+    {
+      "title": "Ryza no Atelier: Tokoyami no Joou to Himitsu no Kakurega",
+      "language": "x-jat",
+      "type": "main"
+    },
+    {
+      "title": "\u840a\u838e\u7684\u934a\u91d1\u5de5\u623f \uff5e\u5e38\u95c7\u5973\u738b\u8207\u79d8\u5bc6\u85cf\u8eab\u8655\uff5e",
+      "language": "zh-Hant",
+      "type": "synonym"
+    },
+    {
+      "title": "\u30e9\u30a4\u30b6\u306e\u30a2\u30c8\u30ea\u30a8 ~\u5e38\u95c7\u306e\u5973\u738b\u3068\u79d8\u5bc6\u306e\u96a0\u308c\u5bb6~",
+      "language": "ja",
+      "type": "official"
+    },
+    {
+      "title": "Atelier Ryza: Ever Darkness & the Secret Hideout",
+      "language": "en",
+      "type": "official"
+    },
+    {
+      "title": "\u0410\u0442\u0435\u043b\u044c\u0435 \u0420\u0430\u0439\u0437\u044b: \u0426\u0430\u0440\u0438\u0446\u0430 \u0432\u0435\u0447\u043d\u043e\u0439 \u0442\u044c\u043c\u044b \u0438 \u0442\u0430\u0439\u043d\u043e\u0435 \u0443\u0431\u0435\u0436\u0438\u0449\u0435",
+      "language": "ru",
+      "type": "official"
+    },
+    {
+      "title": "\u0e2d\u0e40\u0e17\u0e25\u0e34\u0e40\u0e22\u0e23\u0e4c \u0e44\u0e23\u0e0b\u0e48\u0e32 \u0e23\u0e32\u0e0a\u0e34\u0e19\u0e35\u0e41\u0e2b\u0e48\u0e07\u0e23\u0e31\u0e15\u0e15\u0e34\u0e01\u0e32\u0e25\u0e41\u0e25\u0e30\u0e17\u0e35\u0e48\u0e0b\u0e48\u0e2d\u0e19\u0e25\u0e31\u0e1a",
+      "language": "th",
+      "type": "official"
+    },
+    {
+      "title": "\u83b1\u838e\u7684\u70bc\u91d1\u5de5\u623f ~\u5e38\u6697\u5973\u738b\u4e0e\u79d8\u5bc6\u85cf\u8eab\u5904~",
+      "language": "zh-Hans",
+      "type": "official"
+    }
+  ],
+  "synopsis": "http://anidb.net/ch131160 [Ryza] is an ordinary girl. Tired of boring village life, she escapes the village to gather with her good friends in a secret location to talk of their dreams and plan thrilling adventures. One day, the determined Ryza and company decide to head for the forbidden \"island across the shore\" as their first exploration trip. Together with the alchemist and other friends they meet there, they have a \"summer adventure\" that they will never forget.\nSource: Koei Tecmo Games\nNote: The first episode received an early screening at a special event on June 17, 2023 at Shinjuku Wald 9 in Tokyo and on June 25, 2023 at Animate Osaka Nipponbashi and Animate Nagoya. The regular TV broadcast started on July 2, 2023.",
+  "url": "https://ar-anime.com/",
+  "creators": [
+    {
+      "name": "Yuki Shizuku",
+      "id": 65497,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Yuki Shizuku",
+      "id": 65497,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Shitaya Tomoyuki",
+      "id": 2932,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Liden Films",
+      "id": 35233,
+      "type": "Animation Work"
+    },
+    {
+      "name": "Yuzuriha Ema",
+      "id": 71222,
+      "type": "Direction"
+    },
+    {
+      "name": "Yanagawa Kazuki",
+      "id": 39822,
+      "type": "Music"
+    },
+    {
+      "name": "Shitaya Tomoyuki",
+      "id": 2932,
+      "type": "Character Design"
+    },
+    {
+      "name": "Takahashi Yashichirou",
+      "id": 5805,
+      "type": "Series Composition"
+    },
+    {
+      "name": "Koei Tecmo Games",
+      "id": 42315,
+      "type": "Original Work"
+    },
+    {
+      "name": "Nishimichi Takuya",
+      "id": 42423,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Nishio Junnosuke",
+      "id": 56332,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Shirokuma",
+      "id": 69499,
+      "type": "Chief Animation Direction"
+    },
+    {
+      "name": "Matsuoka Kenji",
+      "id": 12263,
+      "type": "Chief Animation Direction"
+    }
+  ],
+  "related_anime": [],
+  "restricted": false,
+  "ratings": {
+    "permanent": 3.54,
+    "temporary": 5.73,
+    "review": 6.5,
+    "permanent_count": 384,
+    "temporary_count": 386,
+    "review_count": 1
+  },
+  "similar_anime": [
+    {
+      "aid": 10241,
+      "title": "Escha & Logy no Atelier: Tasogare no Sora no Renkinjutsushi",
+      "approval": 10,
+      "total": 10
+    },
+    {
+      "aid": 16732,
+      "title": "Shinmai Renkinjutsushi no Tenpo Keiei",
+      "approval": 6,
+      "total": 6
+    }
+  ],
+  "picture": "289335.jpg",
+  "ann_id": null,
+  "crunchyroll_id": null,
+  "wikipedia_id": null,
+  "episodes": [
+    {
+      "episode_number": 266593,
+      "title": "\u590f\u307e\u3067\u5f85\u3066\u306a\u3044! \u30e9\u30a4\u30b6\u306e\u30a2\u30c8\u30ea\u30a8 \u79d8\u5bc6\u306e\u7279\u756a ~ROAD TO SUMMER~",
+      "air_date": "2023-05-13T00:00:00",
+      "description": null,
+      "length": 60
+    },
+    {
+      "episode_number": 266594,
+      "title": "\u7b2c\u4e00\u5f3ePV",
+      "air_date": "2023-05-13T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 267097,
+      "title": "\u7279\u5831",
+      "air_date": "2023-03-19T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 268468,
+      "title": "\u932c\u91d1\u8853\u58eb",
+      "air_date": "2023-07-02T00:00:00",
+      "description": "Ryza is an ordinary farmgirl tired of her ordinary life. Refusing to ignore the call of adventure any longer, she drags her childhood friends, Lent and Tao, to forbidden ground, breaking their island`s traditions.\nSource: crunchyroll",
+      "length": 50
+    },
+    {
+      "episode_number": 268514,
+      "title": "\u307e\u305a\u306f\u4e00\u6b69\u306e\u59cb\u307e\u308a",
+      "air_date": "2023-07-09T00:00:00",
+      "description": "Ryza, Tao, and Lent set out on various tasks given to them by their new mentors. When Ryza cannot find the alchemy materials she needs on Kurken, she gathers up the gang to set out beyond the island once more.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 268515,
+      "title": "\u601d\u3044\u51fa\u306e\u9999\u308a",
+      "air_date": "2023-07-16T00:00:00",
+      "description": "After assisting an elderly villager with her alchemically-made medicine, Ryza becomes determined to find an unusual flower from her youth. Lila accompanies the group on another excursion away from the island to find the mysterious flower.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 268516,
+      "title": "\u6c34\u6ca1\u5751\u9053",
+      "air_date": "2023-07-23T00:00:00",
+      "description": "Empel sends Ryza, Lent, and Tao into the Sunken Mine as a test of their abilities. Tao begrudgingly agrees to go, Lent is determined to prove himself, and Ryza synthesizes something special in preparation for their adventure.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 268690,
+      "title": "Opening",
+      "air_date": "2023-07-02T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 268691,
+      "title": "Ending",
+      "air_date": "2023-07-02T00:00:00",
+      "description": null,
+      "length": 2
+    },
+    {
+      "episode_number": 269329,
+      "title": "\u6700\u9ad8\u306e\u30a2\u30a4\u30c7\u30a2",
+      "air_date": "2023-07-30T00:00:00",
+      "description": "After returning from the Sunken Mine, Lent, Ryza, and Tao all begin taking their training incredibly seriously. Klaudia becomes worried about her friends, and Empel and Lila devise a new training regimen to remedy the situation.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 269330,
+      "title": "\u96a0\u308c\u5bb6\u3092\u4f5c\u308d\u3046",
+      "air_date": "2023-08-06T00:00:00",
+      "description": "Ryza, Tao, Lent, and Klaudia all work together to build a hideout for their group. To help get the necessary resources, Klaudia helps develop a new recipe to trade to one of the villagers. Something lurking in the woods may threaten their new hideout.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 269331,
+      "title": "\u30af\u30e9\u30a6\u30c7\u30a3\u30a2\u306e\u52c7\u6c17",
+      "air_date": "2023-08-13T00:00:00",
+      "description": "Romy, a traveling merchant, enlists the help of Klaudia, Ryza, and Lila to showcase elegant dresses for a customer. Klaudia decides she`s tired of not joining Ryza and the gang on their adventures, so she trains hard and confronts her father.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 269332,
+      "title": "\u932c\u91d1\u8853\u306f\u7206\u767a\u3060!",
+      "air_date": "2023-08-20T00:00:00",
+      "description": "The eminent arrival of merchants from outside the island has several merchants in town eager to clean up the community dump. Ryza delves into new, more advanced alchemy to try to find a solution that doesn`t blow the village sky-high.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 270286,
+      "title": "\u6700\u5f8c\u306e\u8ab2\u984c",
+      "air_date": "2023-08-27T00:00:00",
+      "description": "Lubart issues Ryza, Tao, and Lent their final test: a race down the highway against Bos and Lubart! Will the group`s training and cohesion be enough to secure victory or will new threats prove too much for them to handle?\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 270287,
+      "title": "\u8a0e\u4f10\u968a\u3092\u8ffd\u3063\u3066",
+      "air_date": "2023-09-03T00:00:00",
+      "description": "After the incident on the highway, the village decides to send out a hunting party to face the threat of the dragon. As the hunting party begins its preparations, Ryza and the others gather their strength as well.\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 270288,
+      "title": "\u53e4\u57ce\u306e\u6c7a\u6226",
+      "air_date": "2023-09-10T00:00:00",
+      "description": "Ryza, Tao, Lent, and Klaudia tear through Pixie Forest in a race to catch up with the hunting party. After arriving, they scarcely have time to orient themselves before the dragon springs into action. Will their growth thus far be enough?\nSource: crunchyroll",
+      "length": 25
+    },
+    {
+      "episode_number": 270289,
+      "title": "\u5909\u308f\u308a\u3086\u304f\u65e5\u3005",
+      "air_date": "2023-09-17T00:00:00",
+      "description": "As everyone settles back into normalcy and routine, a chance encounter with an ancient map sends Ryza, Tao, Lent, and Klaudia on a treasure hunt. To find all the pieces of the map, they`ll need to call on the other villagers.\nSource: crunchyroll",
+      "length": 25
+    }
+  ],
+  "resources": {
+    "myanimelist": [
+      {
+        "type": "MyAnimeList",
+        "identifier": null,
+        "url": null
+      }
+    ],
+    "imdb": [],
+    "official_sites": [
+      {
+        "type": "Official Homepage",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Wikipedia (EN)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Wikipedia (JP)",
+        "identifier": null,
+        "url": null
+      }
+    ],
+    "other": [
+      {
+        "type": "AnimeNfo",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (8)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (9)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (10)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (23)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (26)",
+        "identifier": null,
+        "url": null
+      },
+      {
+        "type": "Unknown (28)",
+        "identifier": null,
+        "url": null
+      }
+    ]
+  },
+  "characters": [
+    {
+      "name": "Empel Vollmer",
+      "id": 131157,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Klaudia Valentz",
+      "id": 131158,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Tao Mongarten",
+      "id": 131159,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Reisalin Stout",
+      "id": 131160,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Lila Decyrus",
+      "id": 131161,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Lent Marslink",
+      "id": 131162,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Agatha Harmon",
+      "id": 133447,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Karl Stout",
+      "id": 133448,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Fressher",
+      "id": 133449,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Bos Brunnen",
+      "id": 133450,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Mio Stout",
+      "id": 133451,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Moritz Brunnen",
+      "id": 133452,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Lumbar Dorn",
+      "id": 133453,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Lubart Valentz",
+      "id": 133454,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Romy Vogel",
+      "id": 133455,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Samuel Marslink",
+      "id": 133751,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Barbara",
+      "id": 133966,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Pat",
+      "id": 133967,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Bascila",
+      "id": 135315,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Jonna",
+      "id": 135316,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Puni",
+      "id": 135317,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Korou",
+      "id": 136783,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    },
+    {
+      "name": "Edward",
+      "id": 136784,
+      "description": null,
+      "voice_actors": [],
+      "character_type": "Character"
+    }
+  ],
+  "tags": [
+    {
+      "id": 2628,
+      "name": "fictional location",
+      "description": "A fictional location is a place or world which is run by different set of rules than our common and ordinary world. This may include completely fictional worlds with no semblance of Earth, computer-generated worlds, fantasy worlds, magical worlds, parallel worlds accessible through portals, and so on. Or it may be fictional places like floating islands, dungeons or planets, which can co-exist with ordinary Earth, but are otherwise separate from it.\nA world that generally shares the characteristics of, and/or is generally indistinguishable from the real world (bar research on a \"more than cursory\" level), would NOT be considered a fictional world. A good example is http://anidb.net/a4521 [Code Geass]. It contains several real world nationalities, such as http://anidb.net/a4521 [China], http://anidb.net/t2672 [Japan] (now Area 11), http://anidb.net/t5091 [India], etc, along with fictional nationalities such as http://anidb.net/t2361 [Britannia]. China, Japan, and India are easily identified with a cursory look. The location is unmistakably the planet Earth, even though national borders have been redrawn.\nThe fictional world should only be tagged if it plays a materially important role in the plot and setting; generally, an episodic occurrence of a fictional world should not be tagged.\nA fantasy world is a type of fictional world, part of a fictional universe. Typical worlds involve, but are not limited to: magic or magical abilities, and/or a medieval theme. Some examples include: a parallel world tenuously connected to Earth via magical portals or items; a fictional Earth-like planet in the remote past or future; or an entirely independent world set in another universe. Many fantasy worlds draw heavily on real world history, geography, and sociology, and also on folklore.",
+      "weight": 600,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2613
+    },
+    {
+      "id": 2631,
+      "name": "island",
+      "description": "Part of this anime takes place on an island, a small landmass that is surrounded by the sea. Generally, an island setting involves interaction with \"island\" elements. Such elements could include (but is not limited towards): riding on a boat, fishing, foraging/hunting, beach scene, \"peaceful island life\", being \"shipwrecked\", island fever, lamenting isolation from the mainland, etc.\nAn island or isle is any piece of sub-continental land that is surrounded by water. Very small islands such as emergent land features on atolls can be called islets, cays or keys. An island in a river or lake may be called an eyot (also ait), or holm. A grouping of geographically or geologically related islands is called an archipelago.\n(Source: Wikipedia)",
+      "weight": 600,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2613
+    },
+    {
+      "id": 2850,
+      "name": "adventure",
+      "description": "Adventures are exciting stories, with new experiences or exotic locales. Adventures are designed to provide an action-filled, energetic experience for the viewer. Rather than the predominant emphasis on violence and fighting that is found in pure action anime, however, the viewer of adventures can live vicariously through the travels, conquests, explorations, creation of empires, struggles and situations that confront the main characters, actual historical figures or protagonists. Under the category of adventures, we can include traditional swashbucklers, serialized films, and historical spectacles, searches or expeditions for lost continents, \"jungle\" and \"desert\" epics, treasure hunts and quests, disaster films, and heroic journeys or searches for the unknown. Adventure films are often, but not always, set in an historical period, and may include adapted stories of historical or literary adventure heroes, kings, battles, rebellion, or piracy.",
+      "weight": 600,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2611
+    },
+    {
+      "id": 2790,
+      "name": "plot continuity",
+      "description": "Consistency of the characteristics of persons, plot, objects, places and events seen by the viewer.\nA single linear focused plot is highly continuous.\nA truly random plot is highly discontinuous.",
+      "weight": 500,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2605
+    },
+    {
+      "id": 2849,
+      "name": "fantasy",
+      "description": "Fantasy is a genre of fiction that uses magic and other supernatural phenomena as a primary element of plot, theme, or setting. Many works within the genre take place in fictional worlds where magic is common. Fantasy is generally distinguished from science fiction and horror by the expectation that it steers clear of (pseudo-)scientific and macabre themes, respectively, though there is a great deal of overlap between the three (which are subgenres of speculative fiction).\nIn popular culture, the genre of fantasy is dominated by its medievalist form, especially since the worldwide success of The Lord of the Rings books by J. R. R. Tolkien. In its broadest sense however, fantasy comprises works by many writers, artists, filmmakers, and musicians, from ancient myths and legends to many recent works embraced by a wide audience today.\nFantasy is a vibrant area of academic study in a number of disciplines (English, cultural studies, comparative literature, history, medieval studies). Work in this area ranges widely, from the structuralist theory of Tzvetan Todorov, which emphasizes the fantastic as a liminal space, to work on the connections (political, historical, literary) between medievalism and popular culture\nSource: Wiki",
+      "weight": 400,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 7050
+    },
+    {
+      "id": 2841,
+      "name": "action",
+      "description": "Action anime usually involve a fairly straightforward story of good guys versus bad guys, where most disputes are resolved by using physical force. It often contains a lot of shooting, explosions and fighting.",
+      "weight": 300,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2611
+    },
+    {
+      "id": 2622,
+      "name": "swordplay",
+      "description": "The act or art of using a sword or similar weapon skillfully.",
+      "weight": 200,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2841
+    },
+    {
+      "id": 2605,
+      "name": "dynamic",
+      "description": "Some of the central structural elements in anime are: \nPlot Continuity \nHow does the plot or several plots unfold. Are they a strictly linear retelling of one big continuing story, a serial, possibly with several side stories, or is the content chopped into a set of unconnected episodes, only sharing the same setting and characters?\nStereotype Characters\nThen there is the question of the character set presentation. Is it completely original, or is it your usual stereotypical character cast. Both choices have their merit, for example it would not really make much sense to reinvent the wheel for a harem anime. Fans of that genre come to expect their favourite stereotype protagonists.\nPlot Twists\nFinally there is the question of how complex the plot / the story unfolds. Are there side-plots that merge into the main plot leading to unexpected plot twists, or is the anime quite predictable? The latter would not be appropriate for detective stories. In harem anime on the other hand a foreseeable outcome is actually something the fans will come to expect.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 2609,
+      "name": "original work",
+      "description": "What the anime is based on! This is given as the original work credit in the OP. Mostly of academic interest, but a useful bit of info, hinting at the possible depth of story.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 2610,
+      "name": "setting",
+      "description": "The setting describes in what time and place an anime takes place. To a certain extent it describes what you can expect from the world in the anime.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 2611,
+      "name": "elements",
+      "description": "Next to Themes setting the backdrop for the protagonists in anime, there are the more detailed plot Elements that centre on character interactions: \"What do characters do to each other or what is done to them?\". Is it violent Action, an awe-inspiring Adventure in a foreign place, the gripping life of a Detective, a slapstick Comedy, an Ecchi Harem anime, a SciFi epic, or some Fantasy travelling adventure?",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 2613,
+      "name": "place",
+      "description": "The places the anime can take place in. Includes more specific places such as a country on Earth, as well as more general places such as a dystopia or a mirror world.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2610
+    },
+    {
+      "id": 2800,
+      "name": "game",
+      "description": "Based on an interactive (even if minimally so) form of entertainment software, generally available for PCs, consoles or arcade machines.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2609
+    },
+    {
+      "id": 2801,
+      "name": "RPG",
+      "description": "Any anime that is based on a role-playing game aka RPG. A role-playing video game is a video game which includes elements of non-electronic role-playing games. The player assumes control of one or several fictional characters (a party) who have joined forces in order to perform quests and overcome a great number of challenges and enemies, usually monsters inspired by fantasy, and, to a lesser extent, science fiction and classic mythology. During the course of the game the characters, or avatars, which are generally defined by quantized characteristics, evolve and improve in that their various attributes increase, as well as by gaining more powerful artefacts.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2800
+    },
+    {
+      "id": 3148,
+      "name": "open-ended",
+      "description": "The ending of this anime is left to the viewer`s imagination. There are no clear hints at a definite story outcome, several possibilities are presented without closure, or the story ends suddenly without explanation. There may also be room for a sequel.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6246
+    },
+    {
+      "id": 3671,
+      "name": "footage reuse",
+      "description": "Footage reuse is the employment of a sequence of frames many times, generally as a side effect of a constrained anime production budget. This can happen by using the same footage once at a time, but many times over the course of the show, or by directly looping it. Types of scenes that tend to get reused include: transformations, such as those typical of superheroes or magical girls, characters that change into powered-up versions of themselves, or robots changing shape; attacks, especially when involving a series of steps that must be followed before the attack can be launched; and any kind of action that involves repeating the same movement.\nThis tag does not apply if the footage changes significantly between iterations. An example of that is the infamous Endless Eight arc of http://anidb.net/a6367 [the 2009 iteration of Suzumiya Haruhi no Yuuutsu]; even as the plot repeated itself, each episode of the arc showed it in different ways.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6151
+    },
+    {
+      "id": 3683,
+      "name": "storytelling",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2605
+    },
+    {
+      "id": 3809,
+      "name": "character driven",
+      "description": "The main appeal of the show is the way the characters are portrayed and interact, focusing on dialogue, spending time together or getting to know each other. These anime are not \"story-less\" but story is secondary to character development and the characters themselves and what they experience.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2605
+    },
+    {
+      "id": 3909,
+      "name": "talking is a free action",
+      "description": "Time in comics is flexible. Each panel shows a single event, which is usually accompanied by a length of dialog, which must take some time to say. This disparity is usually accepted if it isn`t taken to extremes.\nBut often, characters will exposit when it`s most needed: at the story`s climax, when both the intricacies of the plot and the intensity of action hit their highest.\nWhile the Heroes Outrun the Fireball, Mr. Exposition might explain why the Evil Overlord`s death caused the explosion. The Action Girl can deliver impressive lectures on why the monster`s Achilles` Heel will work, while still engaging in Waif-Fu. The Superhero can quip to his heart`s content and explain his abilities while dueling one insignificant mobster, or deliver a Kirk Summation during the course of a single Finishing Move. Sometimes even apparent mere mortals can give a lecture on what is happening when it would be a much better idea to simply run like hell.\nWithout stopping to breathe, apparently.\nSource: TvTrope",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 3683
+    },
+    {
+      "id": 3977,
+      "name": "dialogue driven",
+      "description": "A dialogue driven show has its story advanced by dialogue, with action being of much lower priority, and relies heavily on conversations between characters.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 3683
+    },
+    {
+      "id": 4022,
+      "name": "strong female lead",
+      "description": "The lead female character has a strong personality and plays a part that is not the typical damsel-in-distress role. \nThis is the exact opposite of the \u201cdamsel in distress\u201d tag.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6230
+    },
+    {
+      "id": 4227,
+      "name": "detailed landscapes",
+      "description": "An amazing view of nature, of artificially sculpted landscapes (i.e. gardens), or of a cityscape.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6151
+    },
+    {
+      "id": 5851,
+      "name": "female protagonist",
+      "description": "The anime has a female protagonist.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6230
+    },
+    {
+      "id": 6151,
+      "name": "technical aspects",
+      "description": "It may sometimes be useful to know about technical aspects of a show, such as information about its broadcasting or censorship. Such information can be found here.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 6173,
+      "name": "origin",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": null
+    },
+    {
+      "id": 6230,
+      "name": "cast",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2605
+    },
+    {
+      "id": 6246,
+      "name": "ending",
+      "description": "This is a container tag to house meta-like tags relating to how endings of anime play out.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2605
+    },
+    {
+      "id": 7050,
+      "name": "speculative fiction",
+      "description": "Speculative fiction is an umbrella genre encompassing fiction with certain elements that do not exist in the real world, often in the context of supernatural, futuristic or other imaginative themes. This includes, but is not limited to, science fiction, fantasy, superhero fiction, horror, utopian and dystopian fiction, fairytale fantasy, supernatural fiction, as well as combinations thereof.\nSource: Wikipedia",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2611
+    },
+    {
+      "id": 7885,
+      "name": "Japanese production",
+      "description": null,
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 6173
+    },
+    {
+      "id": 8057,
+      "name": "medieval European aesthetic",
+      "description": "An anime with medieval European aesthetic is not set in the http://anidb.net/t8056 [European Middle Ages], at least not that we know of, but it often looks and feels that way.",
+      "weight": 0,
+      "spoiler": false,
+      "verified": true,
+      "parent_id": 2611
+    }
+  ],
+  "recommendations": []
+}

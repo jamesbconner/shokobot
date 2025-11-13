@@ -37,7 +37,7 @@ def _create_embeddings(config: ConfigService) -> OpenAIEmbeddings:
         f"Initializing embeddings with model={model}, timeout={timeout}s, max_retries={retries}"
     )
 
-    return OpenAIEmbeddings(model=model, request_timeout=timeout, max_retries=retries)
+    return OpenAIEmbeddings(model=model, timeout=timeout, max_retries=retries)
 
 
 def _validate_distance_function(vectorstore: Chroma, collection_name: str) -> None:

@@ -70,7 +70,7 @@ def mock_config() -> Mock:
         for part in parts:
             if not isinstance(ref, dict) or part not in ref:
                 return default
-            ref = ref[part]
+            ref = ref[part]  # type: ignore[assignment]
 
         return ref
 
