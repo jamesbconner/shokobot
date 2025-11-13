@@ -30,7 +30,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        poetry install --with dev
+        poetry install --extras dev
     
     - name: Run security checks with bandit
       run: |

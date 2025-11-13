@@ -28,7 +28,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        poetry install --with dev
+        poetry install --extras dev
     
     - name: Check code formatting with ruff
       run: |
