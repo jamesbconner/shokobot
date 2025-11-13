@@ -92,7 +92,7 @@ def main() -> None:
                     ):
                         title = metadata.get("title_main", "Unknown") if metadata else "Unknown"
                         norm = np.linalg.norm(embedding)
-                        print(f"  {i+1}. {title}")
+                        print(f"  {i + 1}. {title}")
                         print(f"     Dimension: {len(embedding)}")
                         print(f"     Norm: {norm:.6f}")
                         print(f"     Normalized: {'Yes' if abs(norm - 1.0) < 0.01 else 'No'}")

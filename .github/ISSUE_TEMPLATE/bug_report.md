@@ -10,10 +10,10 @@ assignees: ''
 <!-- A clear and concise description of what the bug is -->
 
 ## Steps to Reproduce
-1. 
-2. 
-3. 
-4. 
+1.
+2.
+3.
+4.
 
 ## Expected Behavior
 <!-- What you expected to happen -->
@@ -22,9 +22,9 @@ assignees: ''
 <!-- What actually happened -->
 
 ## Environment
-- Python Version: 
-- OS: 
-- ShokoBot Version/Commit: 
+- Python Version:
+- OS:
+- ShokoBot Version/Commit:
 
 ## Error Messages/Logs
 ```

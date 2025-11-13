@@ -75,10 +75,10 @@ def view_scores_basic(query: str) -> None:
     # Query with scores (returns list of (Document, score) tuples)
     results = vs.similarity_search_with_score(query, k=5)
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"Query: '{query}'")
     print(f"Found {len(results)} results")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     for i, (doc, score) in enumerate(results, 1):
         print(f"Result {i}:")
@@ -106,12 +106,12 @@ def view_scores_with_threshold(query: str, threshold: float = 0.5) -> None:
     # Filter by threshold (keep scores <= threshold, since lower = better)
     filtered_results = [(doc, score) for doc, score in results if score <= threshold]
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"Query: '{query}'")
     print(f"Threshold: {threshold}")
     print(f"Total results: {len(results)}")
     print(f"Results above threshold: {len(filtered_results)}")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     if filtered_results:
         best_score = min(score for _, score in filtered_results)
@@ -139,9 +139,9 @@ def view_scores_comparison(queries: list[str]) -> None:
     ctx = AppContext.create()
     vs = ctx.vectorstore
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print("Query Comparison")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     for query in queries:
         results = vs.similarity_search_with_score(query, k=3)
@@ -177,9 +177,9 @@ def view_scores_with_mcp_fallback(query: str) -> None:
 
     ctx = AppContext.create()
 
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"MCP Fallback Analysis for: '{query}'")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     # Get thresholds from config
     count_threshold = ctx.config.get_mcp_fallback_count_threshold()

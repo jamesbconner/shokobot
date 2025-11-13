@@ -132,20 +132,20 @@ Then create a Pull Request on GitHub using the PR template.
 ```python
 def search_anime(query: str, limit: int = 10) -> list[dict[str, Any]]:
     """Search for anime by title.
-    
+
     Args:
         query: Search query string.
         limit: Maximum number of results to return.
-    
+
     Returns:
         List of anime dictionaries with metadata.
-    
+
     Raises:
         ValueError: If query is empty or limit is invalid.
     """
     if not query:
         raise ValueError("Query cannot be empty")
-    
+
     # Implementation here
     return results
 ```
@@ -168,10 +168,10 @@ def test_search_anime_returns_results(mock_context: Mock) -> None:
     # Arrange
     query = "Cowboy Bebop"
     expected_count = 5
-    
+
     # Act
     results = search_anime(query, limit=expected_count)
-    
+
     # Assert
     assert len(results) == expected_count
     assert all("title" in r for r in results)

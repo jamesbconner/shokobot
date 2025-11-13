@@ -21,9 +21,9 @@ assignees: ''
 
 ## Use Cases
 <!-- Describe specific use cases for this feature -->
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Additional Context
 <!-- Add any other context, screenshots, or examples about the feature request -->

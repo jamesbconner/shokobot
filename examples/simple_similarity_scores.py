@@ -58,7 +58,7 @@ def main(query: str) -> None:
             print("\nScore Statistics (lower = better match):")
             print(f"  Best (lowest):  {min(scores):.4f}")
             print(f"  Worst (highest): {max(scores):.4f}")
-            print(f"  Average:        {sum(scores)/len(scores):.4f}")
+            print(f"  Average:        {sum(scores) / len(scores):.4f}")
 
     except FileNotFoundError as e:
         print(f"ERROR: {e}")
