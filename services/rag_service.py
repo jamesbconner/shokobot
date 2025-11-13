@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 def _extract_anime_title_regex(query: str) -> str | None:
     """Try to extract anime title using regex patterns.
-    
+
     Args:
         query: Natural language query.
-        
+
     Returns:
         Extracted anime title or None if no pattern matches.
     """
     import re
-    
+
     # Common question patterns
     patterns = [
         r"tell me about (?:the )?(?:anime )?(?:called )?['\"]?(.+?)['\"]?\.?$",
@@ -33,51 +33,52 @@ def _extract_anime_title_regex(query: str) -> str | None:
         r"(?:anime )?(?:called|named) ['\"]?(.+?)['\"]?\.?$",
         r"(?:best|worst|top) (?:episodes?|seasons?) (?:of|from) (?:the )?(?:anime )?['\"]?(.+?)['\"]?\.?$",
     ]
-    
+
     query_lower = query.lower().strip()
-    
+
     for pattern in patterns:
         match = re.search(pattern, query_lower, re.IGNORECASE)
         if match:
             title = match.group(1).strip()
             # Remove trailing punctuation
-            title = re.sub(r'[.!?]+$', '', title)
+            title = re.sub(r"[.!?]+$", "", title)
             logger.debug(f"Regex extracted title '{title}' from query '{query}'")
             return title
-    
+
     return None
 
 
 async def _extract_anime_title_llm(query: str, ctx: "AppContext") -> str:
     """Extract anime title using LLM when regex fails.
-    
+
     Args:
         query: Natural language query.
         ctx: Application context with LLM access.
-        
+
     Returns:
         Extracted anime title.
     """
     from langchain_openai import ChatOpenAI
+
     from prompts import build_title_extraction_prompt
-    
+
     logger.debug(f"Using LLM to extract title from query: '{query}'")
-    
+
     # Use configured GPT-5 model from context
     model_name = ctx.config.get("openai.model")
     if not model_name:
         logger.warning("No model configured, using original query")
         return query
-    
+
     # GPT-5 Responses API (no temperature/top_p parameters)
     llm = ChatOpenAI(
         model=model_name,
         max_completion_tokens=150,  # Anime titles can be very long (especially isekai)
     )
-    
+
     prompt = build_title_extraction_prompt()
     messages = prompt.format_messages(query=query)
-    
+
     try:
         # Use GPT-5 Responses API
         response = llm.invoke(
@@ -85,7 +86,7 @@ async def _extract_anime_title_llm(query: str, ctx: "AppContext") -> str:
             reasoning={"effort": "low"},  # Simple task, low reasoning
             text={"verbosity": "low"},  # Just the title, minimal verbosity
         )
-        
+
         # Extract text from GPT-5 response
         if isinstance(response.content, list):
             title = ""
@@ -97,7 +98,7 @@ async def _extract_anime_title_llm(query: str, ctx: "AppContext") -> str:
             title = title.strip()
         else:
             title = str(response.content).strip()
-        
+
         logger.info(f"LLM extracted title '{title}' from query '{query}'")
         return title
     except Exception as e:
@@ -107,15 +108,15 @@ async def _extract_anime_title_llm(query: str, ctx: "AppContext") -> str:
 
 async def _extract_anime_title(query: str, ctx: "AppContext") -> str:
     """Extract anime title from a natural language query.
-    
+
     Uses a hybrid approach:
     1. Try regex patterns first (fast, no API cost)
     2. Fall back to LLM if regex fails (handles any pattern)
-    
+
     Args:
         query: Natural language query.
         ctx: Application context with LLM access.
-        
+
     Returns:
         Extracted anime title.
     """
@@ -123,9 +124,9 @@ async def _extract_anime_title(query: str, ctx: "AppContext") -> str:
     title = _extract_anime_title_regex(query)
     if title:
         return title
-    
+
     # Fall back to LLM
-    logger.info(f"Regex patterns failed, using LLM for title extraction")
+    logger.info("Regex patterns failed, using LLM for title extraction")
     return await _extract_anime_title_llm(query, ctx)
 
 
@@ -172,7 +173,7 @@ async def search_with_mcp_fallback(
     # Evaluate results
     result_count = len(results)
     # For distance scores: lower = better, so we want the minimum (best) score
-    best_score = min((score for _, score in results), default=float('inf'))
+    best_score = min((score for _, score in results), default=float("inf"))
 
     logger.debug(
         f"Vector store returned {result_count} results, best score: {best_score:.3f} (lower=better)"
@@ -188,7 +189,7 @@ async def search_with_mcp_fallback(
         docs = [doc for doc, _ in results]
         # Store distance scores in document metadata
         for doc, distance in results:
-            doc.metadata['_distance_score'] = distance
+            doc.metadata["_distance_score"] = distance
         return docs
 
     # Check if MCP is enabled
@@ -197,7 +198,7 @@ async def search_with_mcp_fallback(
         docs = [doc for doc, _ in results]
         # Store distance scores in document metadata
         for doc, distance in results:
-            doc.metadata['_distance_score'] = distance
+            doc.metadata["_distance_score"] = distance
         return docs
 
     # Trigger MCP fallback
@@ -225,7 +226,7 @@ async def search_with_mcp_fallback(
             # Extract anime title from natural language query
             anime_title = await _extract_anime_title(query, ctx)
             logger.info(f"Searching MCP for anime title: '{anime_title}'")
-            
+
             # Search for anime
             search_results = await mcp.search_anime(anime_title)
 
@@ -234,7 +235,7 @@ async def search_with_mcp_fallback(
                 docs = [doc for doc, _ in results]
                 # Store distance scores in document metadata
                 for doc, distance in results:
-                    doc.metadata['_distance_score'] = distance
+                    doc.metadata["_distance_score"] = distance
                 return docs
 
             # Process first result
@@ -296,7 +297,7 @@ async def search_with_mcp_fallback(
                 anime_id = doc.metadata.get("anime_id")
                 if anime_id and anime_id not in seen_ids:
                     seen_ids.add(anime_id)
-                    doc.metadata['_distance_score'] = 0.0
+                    doc.metadata["_distance_score"] = 0.0
                     merged_docs.append(doc)
 
             # Add vector store docs with their distance scores
@@ -304,7 +305,7 @@ async def search_with_mcp_fallback(
                 anime_id = doc.metadata.get("anime_id")
                 if anime_id and anime_id not in seen_ids:
                     seen_ids.add(anime_id)
-                    doc.metadata['_distance_score'] = distance
+                    doc.metadata["_distance_score"] = distance
                     merged_docs.append(doc)
 
             logger.debug(f"Returning {len(merged_docs)} merged documents")
@@ -316,7 +317,7 @@ async def search_with_mcp_fallback(
         docs = [doc for doc, _ in results]
         # Store distance scores in document metadata
         for doc, distance in results:
-            doc.metadata['_distance_score'] = distance
+            doc.metadata["_distance_score"] = distance
         return docs
 
 
@@ -424,9 +425,7 @@ def _init_llm(
             max_completion_tokens=max_output_tokens,
             timeout=120,
             max_retries=3,
-            model_kwargs={
-                "response_format": {"type": "json_object"}
-            }
+            model_kwargs={"response_format": {"type": "json_object"}},
         )
         prompt = build_anime_rag_json_prompt()
     elif output_format == "text":
@@ -461,7 +460,7 @@ def build_rag_chain(
 
     Raises:
         ValueError: If required configuration is missing or invalid output format.
-        
+
     Note:
         The returned chain function is async and must be awaited.
     """
@@ -508,7 +507,7 @@ def build_rag_chain(
 
         Raises:
             Exception: If retrieval or LLM invocation fails.
-            
+
         Note:
             This function is async and must be awaited.
         """

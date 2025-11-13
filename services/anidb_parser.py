@@ -127,9 +127,7 @@ def parse_anidb_xml(xml_data: str) -> ShowDoc:
             rel_type = anime.get("type")
             rel_title = anime.text
             if rel_id and rel_type:
-                relations.append(
-                    {"id": rel_id, "type": rel_type, "title": rel_title or ""}
-                )
+                relations.append({"id": rel_id, "type": rel_type, "title": rel_title or ""})
 
     # Extract similar anime
     similar = []

@@ -32,8 +32,10 @@ def _create_embeddings(config: ConfigService) -> OpenAIEmbeddings:
         raise ValueError("openai.embedding_model not configured")
 
     timeout = float(config.get("openai.request_timeout_s", 60))
-    retries = int(config.get("openai.max_retries",3))
-    logger.info(f"Initializing embeddings with model={model}, timeout={timeout}s, max_retries={retries}")
+    retries = int(config.get("openai.max_retries", 3))
+    logger.info(
+        f"Initializing embeddings with model={model}, timeout={timeout}s, max_retries={retries}"
+    )
 
     return OpenAIEmbeddings(model=model, request_timeout=timeout, max_retries=retries)
 
@@ -54,11 +56,7 @@ def _validate_distance_function(vectorstore: Chroma, collection_name: str) -> No
             metadata = getattr(collection, "metadata", None)
 
             if metadata is None or metadata.get("hnsw:space") != "cosine":
-                actual = (
-                    metadata.get("hnsw:space", "default (L2)")
-                    if metadata
-                    else "none"
-                )
+                actual = metadata.get("hnsw:space", "default (L2)") if metadata else "none"
                 logger.warning(
                     f"Collection '{collection_name}' using {actual} distance instead of cosine. "
                     f"Run 'python scripts/migrate_chromadb_distance.py' to fix."
@@ -96,9 +94,7 @@ def get_chroma_vectorstore(config: ConfigService) -> Chroma:
             "Chroma configuration incomplete: missing persist_directory or collection_name"
         )
 
-    logger.info(
-        f"Initializing Chroma vectorstore: collection={collection_name}, dir={persist_dir}"
-    )
+    logger.info(f"Initializing Chroma vectorstore: collection={collection_name}, dir={persist_dir}")
 
     # Specify cosine distance for normalized embeddings
     collection_metadata = {"hnsw:space": "cosine"}

@@ -126,9 +126,7 @@ class TestFullIngestFlow:
         assert mock_upsert.call_count == 1
 
     @patch("services.ingest_service.upsert_documents")
-    def test_ingest_empty_file(
-        self, mock_upsert: Mock, tmp_path: Path, mock_context: Mock
-    ) -> None:
+    def test_ingest_empty_file(self, mock_upsert: Mock, tmp_path: Path, mock_context: Mock) -> None:
         """Test that ingestion completes without errors for empty file."""
         # Arrange: Create JSON with empty anime list
         json_file = tmp_path / "anime.json"
@@ -154,9 +152,7 @@ class TestFullIngestFlow:
         with pytest.raises(FileNotFoundError):
             list(iter_showdocs_from_json(mock_context, path=json_file))
 
-    def test_ingest_malformed_json(
-        self, tmp_path: Path, mock_context: Mock
-    ) -> None:
+    def test_ingest_malformed_json(self, tmp_path: Path, mock_context: Mock) -> None:
         """Test that malformed JSON raises appropriate error."""
         # Arrange: Create file with invalid JSON
         json_file = tmp_path / "invalid.json"

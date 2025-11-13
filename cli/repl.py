@@ -1,7 +1,6 @@
 """REPL command - Interactive query mode."""
 
 import asyncio
-import json
 from typing import TYPE_CHECKING, Any
 
 import rich_click as click
@@ -65,7 +64,9 @@ def repl(
     asyncio.run(_run_interactive(console, rag, show_context, output_format.lower()))
 
 
-async def _run_interactive(console: Console, rag: Any, show_context: bool, output_format: str) -> None:
+async def _run_interactive(
+    console: Console, rag: Any, show_context: bool, output_format: str
+) -> None:
     """Run interactive REPL."""
     if output_format != "json":
         console.print("[bold]Interactive RAG Mode[/]")
@@ -156,7 +157,7 @@ def _display_context(console: Console, docs: Any) -> None:
         year = str(doc.metadata.get("begin_year", "N/A"))
         episodes = str(doc.metadata.get("episode_count_normal", "N/A"))
         distance = doc.metadata.get("_distance_score")
-        
+
         # Format similarity score with quality indicator
         if distance is not None:
             if distance == 0.0:

@@ -171,9 +171,7 @@ class ConfigService:
         try:
             value = int(value)
         except (TypeError, ValueError) as e:
-            raise ValueError(
-                f"Invalid max_output_tokens '{value}'. Must be an integer."
-            ) from e
+            raise ValueError(f"Invalid max_output_tokens '{value}'. Must be an integer.") from e
 
         # Validate range
         if not _MIN_OUTPUT_TOKENS <= value <= _MAX_OUTPUT_TOKENS:
@@ -267,11 +265,11 @@ class ConfigService:
         Examples:
             >>> config.get_mcp_fallback_score_threshold()
             0.7
-        
+
         Notes:
             With cosine distance (lower=better):
             - 0.0-0.3: Excellent match
-            - 0.3-0.6: Very good match  
+            - 0.3-0.6: Very good match
             - 0.6-0.9: Good match
             - Default 0.7 means: skip MCP if best match is "good" or better
         """

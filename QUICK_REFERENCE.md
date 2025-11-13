@@ -103,11 +103,27 @@ OPENAI_OUTPUT_VERBOSITY='medium'    # low/medium/high
 OPENAI_MAX_OUTPUT_TOKENS='8192'
 INGEST_BATCH_SIZE='100'
 LOGGING_LEVEL='INFO'
+
+# MCP (optional - for AniDB fallback)
+MCP_ENABLED='true'
+MCP_FALLBACK_SCORE_THRESHOLD='0.5'  # 0.0-1.0, lower = stricter
+MCP_FALLBACK_COUNT_THRESHOLD='3'
 ```
 
 ### Config File Location
 
 `resources/config.json` - Edit for persistent settings
+
+### MCP Fallback (Optional)
+
+MCP provides automatic fallback to AniDB when vector store results are insufficient:
+
+- **Enabled by default** - Set `mcp.enabled: false` to disable
+- **Automatic triggering** - Activates when results are poor quality or too few
+- **Transparent** - MCP results show as "MCP" in context display
+- **Cached** - Fetched data is cached locally for future queries
+
+See [MCP Integration Guide](docs/MCP_INTEGRATION.md) for setup details.
 
 ## Common Workflows
 

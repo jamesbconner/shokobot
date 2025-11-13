@@ -33,5 +33,6 @@ python debug/check_chromadb_config.py
 
 ## See Also
 
-- [ChromaDB Distance Fix Documentation](../docs/chromadb_distance_fix.md)
-- [MCP Configuration Guide](../docs/mcp_configuration.md)
+- [User Guide](../docs/USER_GUIDE.md) - Complete usage guide including similarity scores
+- [MCP Integration Guide](../docs/MCP_INTEGRATION.md) - MCP configuration and troubleshooting
+- [ChromaDB Distance Fix](../docs/archive/chromadb_distance_fix.md) - Historical fix documentation

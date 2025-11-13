@@ -70,7 +70,7 @@ def ingest(
     console.print(f"  Batch size: [cyan]{batch_size}[/]")
     console.print(f"  ID field: [cyan]{id_field}[/]")
     if dry_run:
-        console.print(f"  Mode: [yellow]Validation only (no ingestion)[/]")
+        console.print("  Mode: [yellow]Validation only (no ingestion)[/]")
     console.print()
 
     try:
@@ -94,8 +94,8 @@ def ingest(
                 )
 
                 # Display statistics
-                console.print(f"\n[bold green]✓ Validation Complete[/]\n")
-                console.print(f"[bold]Statistics:[/]")
+                console.print("\n[bold green]✓ Validation Complete[/]\n")
+                console.print("[bold]Statistics:[/]")
                 console.print(f"  Total documents: [cyan]{stats['total']}[/]")
                 console.print(f"  Batches: [cyan]{stats['batch_count']}[/]")
 
@@ -111,7 +111,7 @@ def ingest(
                     )
 
                 if stats["sample_titles"]:
-                    console.print(f"\n[bold]Sample titles:[/]")
+                    console.print("\n[bold]Sample titles:[/]")
                     for title in stats["sample_titles"]:
                         console.print(f"  • {title}")
 
@@ -120,9 +120,7 @@ def ingest(
                     for error in stats["errors"][:10]:  # Show first 10 errors
                         console.print(f"  [yellow]⚠[/] {error}")
                     if len(stats["errors"]) > 10:
-                        console.print(
-                            f"  [dim]... and {len(stats['errors']) - 10} more errors[/]"
-                        )
+                        console.print(f"  [dim]... and {len(stats['errors']) - 10} more errors[/]")
 
                 console.print()
             else:

@@ -126,9 +126,7 @@ class TestGetChromaVectorstore:
 class TestValidateDistanceFunction:
     """Tests for _validate_distance_function."""
 
-    def test_logs_info_when_cosine_distance_correct(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_logs_info_when_cosine_distance_correct(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that info is logged when distance function is correct.
 
         Args:
@@ -171,9 +169,7 @@ class TestValidateDistanceFunction:
         assert "using l2 distance instead of cosine" in caplog.text
         assert "migrate_chromadb_distance.py" in caplog.text
 
-    def test_logs_warning_when_metadata_missing(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_logs_warning_when_metadata_missing(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that warning is logged when metadata is missing.
 
         Args:
@@ -193,9 +189,7 @@ class TestValidateDistanceFunction:
         # Assert
         assert "using none distance instead of cosine" in caplog.text
 
-    def test_logs_warning_when_hnsw_space_missing(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_logs_warning_when_hnsw_space_missing(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that warning is logged when hnsw:space key is missing.
 
         Args:
@@ -215,9 +209,7 @@ class TestValidateDistanceFunction:
         # Assert
         assert "using none distance instead of cosine" in caplog.text
 
-    def test_handles_exception_gracefully(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_handles_exception_gracefully(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test that exceptions are handled gracefully.
 
         Args:
@@ -239,7 +231,6 @@ class TestValidateDistanceFunction:
 
         # Assert - should not raise exception and should log debug message
         assert "Could not validate distance function" in caplog.text
-
 
 
 class TestCreateEmbeddings:

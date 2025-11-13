@@ -41,13 +41,29 @@ class TestMCPAnimeClient:
         assert client._session is None
 
     @pytest.mark.asyncio
+    @patch("services.mcp_client_service.ClientSession")
     @patch("services.mcp_client_service.stdio_client")
     async def test_connect_establishes_connection(
-        self, mock_stdio_client: Mock, sample_server_config: dict, mock_session: AsyncMock
+        self, mock_stdio_client: Mock, mock_client_session_class: Mock, sample_server_config: dict
     ) -> None:
         """Test that connect establishes MCP server connection."""
         # Arrange
-        mock_stdio_client.return_value = mock_session
+        mock_read = AsyncMock()
+        mock_write = AsyncMock()
+        
+        # Mock stdio_client context manager
+        mock_stdio_context = AsyncMock()
+        mock_stdio_context.__aenter__ = AsyncMock(return_value=(mock_read, mock_write))
+        mock_stdio_context.__aexit__ = AsyncMock()
+        mock_stdio_client.return_value = mock_stdio_context
+        
+        # Mock ClientSession
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock()
+        mock_session.initialize = AsyncMock()
+        mock_client_session_class.return_value = mock_session
+        
         client = MCPAnimeClient(sample_server_config)
 
         # Act
@@ -56,7 +72,9 @@ class TestMCPAnimeClient:
         # Assert
         assert client._session is not None
         mock_stdio_client.assert_called_once()
-        mock_session.__aenter__.assert_called_once()
+        mock_stdio_context.__aenter__.assert_called_once()
+        mock_client_session_class.assert_called_once_with(mock_read, mock_write)
+        mock_session.initialize.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("services.mcp_client_service.stdio_client")
@@ -89,9 +107,7 @@ class TestMCPAnimeClient:
         mock_session.__aexit__.assert_called_once_with(None, None, None)
 
     @pytest.mark.asyncio
-    async def test_disconnect_handles_none_session(
-        self, sample_server_config: dict
-    ) -> None:
+    async def test_disconnect_handles_none_session(self, sample_server_config: dict) -> None:
         """Test that disconnect handles None session gracefully."""
         # Arrange
         client = MCPAnimeClient(sample_server_config)
@@ -104,34 +120,57 @@ class TestMCPAnimeClient:
         assert client._session is None
 
     @pytest.mark.asyncio
+    @patch("services.mcp_client_service.ClientSession")
+    @patch("services.mcp_client_service.stdio_client")
     async def test_context_manager_connects_and_disconnects(
-        self, sample_server_config: dict, mock_session: AsyncMock
+        self, mock_stdio_client: Mock, mock_client_session_class: Mock, sample_server_config: dict
     ) -> None:
         """Test that context manager connects and disconnects properly."""
         # Arrange
+        mock_read = AsyncMock()
+        mock_write = AsyncMock()
+        
+        # Mock stdio_client context manager
+        mock_stdio_context = AsyncMock()
+        mock_stdio_context.__aenter__ = AsyncMock(return_value=(mock_read, mock_write))
+        mock_stdio_context.__aexit__ = AsyncMock()
+        mock_stdio_client.return_value = mock_stdio_context
+        
+        # Mock ClientSession
+        mock_session = AsyncMock()
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock()
+        mock_session.initialize = AsyncMock()
+        mock_client_session_class.return_value = mock_session
+        
         client = MCPAnimeClient(sample_server_config)
 
-        with patch("services.mcp_client_service.stdio_client", return_value=mock_session):
-            # Act
-            async with client as ctx_client:
-                # Assert: Connected
-                assert ctx_client is client
-                assert client._session is not None
+        # Act
+        async with client as ctx_client:
+            # Assert: Connected
+            assert ctx_client is client
+            assert client._session is not None
 
-            # Assert: Disconnected
-            assert client._session is None
+        # Assert: Disconnected
+        assert client._session is None
 
     @pytest.mark.asyncio
     async def test_search_anime_returns_results(
         self, sample_server_config: dict, mock_session: AsyncMock
     ) -> None:
         """Test that search_anime returns search results."""
+        import json
+        
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
 
+        # Mock MCP response structure
+        mock_text_content = Mock()
+        mock_text_content.text = json.dumps([{"aid": 12345, "title": "Test Anime"}])
+        
         mock_result = Mock()
-        mock_result.content = {"aid": 12345, "title": "Test Anime"}
+        mock_result.content = [mock_text_content]
         mock_session.call_tool = AsyncMock(return_value=mock_result)
 
         # Act
@@ -141,14 +180,10 @@ class TestMCPAnimeClient:
         assert len(results) == 1
         assert results[0]["aid"] == 12345
         assert results[0]["title"] == "Test Anime"
-        mock_session.call_tool.assert_called_once_with(
-            "anidb_search", {"query": "test"}
-        )
+        mock_session.call_tool.assert_called_once_with("anidb_search", {"query": "test"})
 
     @pytest.mark.asyncio
-    async def test_search_anime_raises_when_not_connected(
-        self, sample_server_config: dict
-    ) -> None:
+    async def test_search_anime_raises_when_not_connected(self, sample_server_config: dict) -> None:
         """Test that search_anime raises when not connected."""
         # Arrange
         client = MCPAnimeClient(sample_server_config)
@@ -208,9 +243,7 @@ class TestMCPAnimeClient:
 
         # Assert
         assert xml_data == '<?xml version="1.0"?><anime id="12345"></anime>'
-        mock_session.call_tool.assert_called_once_with(
-            "anidb_details", {"aid": 12345}
-        )
+        mock_session.call_tool.assert_called_once_with("anidb_details", {"aid": 12345})
 
     @pytest.mark.asyncio
     async def test_get_anime_details_raises_when_not_connected(
@@ -243,19 +276,21 @@ class TestMCPAnimeClient:
         self, sample_server_config: dict, mock_session: AsyncMock
     ) -> None:
         """Test that get_anime_details handles empty response."""
+        import json
+        
         # Arrange
         client = MCPAnimeClient(sample_server_config)
         client._session = mock_session
 
         mock_result = Mock()
-        mock_result.content = None
+        mock_result.content = []  # Empty list instead of None
         mock_session.call_tool = AsyncMock(return_value=mock_result)
 
         # Act
-        xml_data = await client.get_anime_details(12345)
+        json_data = await client.get_anime_details(12345)
 
         # Assert
-        assert xml_data == ""
+        assert json_data == "[]"  # Empty list converts to string "[]"
 
 
 class TestCreateMCPClient:
@@ -303,10 +338,283 @@ class TestCreateMCPClient:
         """Test that create_mcp_client raises when server not configured."""
         # Arrange
         mock_context = Mock()
-        mock_context.config.get_mcp_server_config.side_effect = ValueError(
-            "Server not configured"
-        )
+        mock_context.config.get_mcp_server_config.side_effect = ValueError("Server not configured")
 
         # Act & Assert
         with pytest.raises(ValueError, match="Server not configured"):
             await create_mcp_client(mock_context, "nonexistent")
+
+
+
+class TestMCPClientErrorHandling:
+    """Tests for MCP client error handling scenarios."""
+
+    @pytest.mark.asyncio
+    async def test_disconnect_handles_session_error(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that disconnect handles session error gracefully."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+        mock_session.__aexit__ = AsyncMock(side_effect=Exception("Session error"))
+
+        # Act (should not raise)
+        await client.disconnect()
+
+        # Assert - session is NOT cleaned up on error (stays as is)
+        assert client._session is mock_session
+        mock_session.__aexit__.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_disconnect_handles_stdio_error(
+        self, sample_server_config: dict
+    ) -> None:
+        """Test that disconnect handles stdio context error gracefully."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = None
+        
+        mock_stdio = AsyncMock()
+        mock_stdio.__aexit__ = AsyncMock(side_effect=Exception("Stdio error"))
+        client._stdio_context = mock_stdio
+
+        # Act (should not raise)
+        await client.disconnect()
+
+        # Assert - stdio context is NOT cleaned up on error (stays as is)
+        assert client._stdio_context is mock_stdio
+        mock_stdio.__aexit__.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_list_tools_raises_when_not_connected(
+        self, sample_server_config: dict
+    ) -> None:
+        """Test that list_tools raises when not connected."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+
+        # Act & Assert
+        with pytest.raises(RuntimeError, match="Not connected to MCP server"):
+            await client.list_tools()
+
+    @pytest.mark.asyncio
+    async def test_list_tools_raises_on_api_error(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that list_tools raises on API error."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+        mock_session.list_tools = AsyncMock(side_effect=Exception("API error"))
+
+        # Act & Assert
+        with pytest.raises(RuntimeError, match="MCP list tools failed"):
+            await client.list_tools()
+
+    @pytest.mark.asyncio
+    async def test_list_tools_handles_response_without_tools_attribute(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that list_tools handles response without tools attribute."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+        
+        mock_result = Mock(spec=[])  # Explicitly no 'tools' attribute
+        mock_session.list_tools = AsyncMock(return_value=mock_result)
+
+        # Act
+        tools = await client.list_tools()
+
+        # Assert
+        assert tools == []
+
+    @pytest.mark.asyncio
+    async def test_search_anime_handles_empty_content_list(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that search_anime handles empty content list."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_result = Mock()
+        mock_result.content = []  # Empty list
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        results = await client.search_anime("test")
+
+        # Assert
+        assert results == []
+
+    @pytest.mark.asyncio
+    async def test_search_anime_handles_content_without_text_attribute(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that search_anime handles content without text attribute."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_content = Mock(spec=[])  # No 'text' attribute
+        mock_result = Mock()
+        mock_result.content = [mock_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        results = await client.search_anime("test")
+
+        # Assert
+        assert results == []
+
+    @pytest.mark.asyncio
+    async def test_search_anime_handles_invalid_json(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that search_anime handles invalid JSON gracefully."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_text_content = Mock()
+        mock_text_content.text = "{invalid json"
+        
+        mock_result = Mock()
+        mock_result.content = [mock_text_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        results = await client.search_anime("test")
+
+        # Assert
+        assert results == []
+
+    @pytest.mark.asyncio
+    async def test_search_anime_handles_dict_result(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that search_anime wraps dict result in list."""
+        import json
+        
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_text_content = Mock()
+        mock_text_content.text = json.dumps({"aid": 12345, "title": "Test Anime"})
+        
+        mock_result = Mock()
+        mock_result.content = [mock_text_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        results = await client.search_anime("test")
+
+        # Assert
+        assert len(results) == 1
+        assert results[0]["aid"] == 12345
+
+    @pytest.mark.asyncio
+    async def test_search_anime_handles_unexpected_data_type(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that search_anime handles unexpected data types."""
+        import json
+        
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_text_content = Mock()
+        mock_text_content.text = json.dumps("unexpected string")
+        
+        mock_result = Mock()
+        mock_result.content = [mock_text_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        results = await client.search_anime("test")
+
+        # Assert
+        assert results == []
+
+    @pytest.mark.asyncio
+    async def test_get_anime_details_handles_json_decode_error(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that get_anime_details returns string on JSON decode error."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_text_content = Mock()
+        mock_text_content.text = "not valid json"
+        
+        mock_result = Mock()
+        mock_result.content = [mock_text_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        result = await client.get_anime_details(12345)
+
+        # Assert
+        assert result == "not valid json"
+
+    @pytest.mark.asyncio
+    async def test_get_anime_details_handles_content_without_text(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that get_anime_details handles content without text attribute."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_content = Mock(spec=[])  # No 'text' attribute
+        mock_result = Mock()
+        mock_result.content = [mock_content]
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        result = await client.get_anime_details(12345)
+
+        # Assert
+        assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    async def test_get_anime_details_handles_no_content_attribute(
+        self, sample_server_config: dict, mock_session: AsyncMock
+    ) -> None:
+        """Test that get_anime_details handles result without content attribute."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        client._session = mock_session
+
+        mock_result = Mock(spec=[])  # No 'content' attribute
+        mock_session.call_tool = AsyncMock(return_value=mock_result)
+
+        # Act
+        result = await client.get_anime_details(12345)
+
+        # Assert
+        assert result == ""
+
+    @pytest.mark.asyncio
+    async def test_context_manager_handles_exception_during_exit(
+        self, sample_server_config: dict
+    ) -> None:
+        """Test that context manager handles exception during exit."""
+        # Arrange
+        client = MCPAnimeClient(sample_server_config)
+        
+        mock_session = AsyncMock()
+        mock_session.__aexit__ = AsyncMock(side_effect=Exception("Exit error"))
+        client._session = mock_session
+
+        # Act - disconnect is called which handles the exception
+        await client.disconnect()
+
+        # Assert - session is NOT cleaned up on error (stays as is)
+        assert client._session is mock_session
+        mock_session.__aexit__.assert_called_once()

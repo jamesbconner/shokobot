@@ -1,34 +1,125 @@
 # ShokoBot Documentation
 
-## Architecture Documentation
+Complete documentation for ShokoBot, an anime RAG (Retrieval-Augmented Generation) system.
 
-### [Modular CLI Architecture](MODULAR_CLI_ARCHITECTURE.md)
-Comprehensive guide to the modular CLI architecture, including:
+## For Users
+
+### [User Guide](USER_GUIDE.md) 📖
+Complete guide to using ShokoBot for anime queries and recommendations.
+
+**Topics:**
+- Quick start and CLI commands
+- Context display with similarity scores
+- Understanding distance scores and MCP fallback
+- Configuration and troubleshooting
+- Advanced usage and batch processing
+
+## For Developers
+
+### [Modular CLI Architecture](MODULAR_CLI_ARCHITECTURE.md) 🏗️
+Comprehensive guide to the CLI architecture.
+
+**Topics:**
 - Auto-loading command discovery
-- Rich-Click integration for beautiful output
-- Dependency injection patterns
-- How to add new commands
+- Rich-Click integration
+- Adding new commands
 - Testing strategies
 - Best practices
 
-## Quick Links
+### [AppContext Usage Guide](APPCONTEXT_USAGE.md) 💉
+Dependency injection with AppContext.
 
-### For Users
-- [Main README](../README.md) - Getting started and usage
-- [Quick Reference](../QUICK_REFERENCE.md) - Common commands
-- [Setup Guide](../SETUP_GUIDE.md) - Installation instructions
+**Topics:**
+- Creating and using AppContext
+- Lazy-loaded services
+- Testing with mocks
+- Best practices and patterns
+- Migration examples
 
-### For Developers
-- [Modular CLI Architecture](MODULAR_CLI_ARCHITECTURE.md) - CLI design and patterns
-- [AppContext Usage Guide](APPCONTEXT_USAGE.md) - **Dependency injection with AppContext** ⭐
-- [Async Opportunities](ASYNC_OPPORTUNITIES_ANALYSIS.md) - Performance optimization opportunities
+### [MCP Integration Guide](MCP_INTEGRATION.md) 🔌
+Model Context Protocol integration for anime data fallback.
 
-## Contributing
+**Topics:**
+- Configuration and thresholds
+- Title extraction (regex + LLM)
+- Fallback logic
+- Monitoring and troubleshooting
+- Performance considerations
 
-When adding new CLI commands:
-1. Create a new file in `cli/` directory
-2. Use `@click.command()` decorator
-3. Follow the patterns in existing commands
-4. The command will be auto-discovered
+### [Testing Strategy](TESTING_STRATEGY.md) ✅
+Testing philosophy and best practices.
 
-See [Modular CLI Architecture](MODULAR_CLI_ARCHITECTURE.md) for detailed guidance.
+**Topics:**
+- What to test (and what not to)
+- Test organization and fixtures
+- AAA pattern and best practices
+- Coverage goals
+- Pre-commit hooks and CI/CD
+
+## Reference
+
+### [ShowDoc JSON Format](SHOWDOC_JSON_EXAMPLE.md) 📄
+Data format reference for ShowDoc persistence.
+
+**Topics:**
+- JSON structure and fields
+- Usage examples
+- Cache management
+- Integration workflow
+
+## Quick Start
+
+```bash
+# Set your OpenAI API key
+export OPENAI_API_KEY="your-api-key"
+
+# Basic query
+poetry run shokobot query -q "What is Cowboy Bebop about?"
+
+# With context display
+poetry run shokobot query -q "Tell me about mecha anime" --show-context
+
+# Interactive mode
+poetry run shokobot repl --show-context
+```
+
+## Key Features
+
+- ✅ **Vector Store Search**: Fast local anime database queries
+- ✅ **MCP Fallback**: Automatic AniDB integration for comprehensive coverage
+- ✅ **Smart Title Extraction**: Regex + LLM hybrid for natural language queries
+- ✅ **Rich Context Display**: Color-coded similarity scores and source indicators
+- ✅ **GPT-5 Integration**: Latest model with Responses API support
+
+## System Requirements
+
+- Python 3.11+
+- OpenAI API key (GPT-5 access)
+- uvx (for MCP server)
+- 4GB+ RAM (for vector store)
+
+## Documentation Structure
+
+```
+docs/
+├── README.md                      # This file
+├── USER_GUIDE.md                  # User-facing guide
+├── MCP_INTEGRATION.md             # MCP integration guide
+├── MODULAR_CLI_ARCHITECTURE.md    # CLI architecture
+├── APPCONTEXT_USAGE.md            # Dependency injection guide
+├── TESTING_STRATEGY.md            # Testing guidelines
+├── SHOWDOC_JSON_EXAMPLE.md        # Data format reference
+└── archive/                       # Historical documentation
+```
+
+## Support
+
+- **Debug Scripts**: `debug/` directory contains troubleshooting tools
+- **Configuration**: `resources/config.json` for system settings
+- **Examples**: `examples/` directory for usage examples
+
+---
+
+**Status**: ✅ All systems operational
+**Last Updated**: 2024-11-13
+**Version**: Latest

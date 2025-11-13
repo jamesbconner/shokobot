@@ -21,6 +21,25 @@ Edit `.env` and add your OpenAI API key:
 OPENAI_API_KEY='sk-...'
 ```
 
+### 2.5. (Optional) Setup MCP Server
+For AniDB fallback integration:
+
+```bash
+# Clone mcp-server-anime
+git clone https://github.com/jamesbconner/mcp-server-anime.git
+cd mcp-server-anime
+
+# Install
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+# Update config.json with paths
+# See docs/MCP_INTEGRATION.md for details
+```
+
+**Note:** MCP is optional. The system works without it using only the vector store.
+
 ### 3. Prepare Data
 Place your anime data JSON file at:
 ```
@@ -151,6 +170,7 @@ Pre-commit hook configuration:
 Application configuration:
 - ChromaDB settings
 - OpenAI model selection
+- MCP fallback settings (optional)
 - Batch sizes
 - Logging levels
 

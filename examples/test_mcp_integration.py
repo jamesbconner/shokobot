@@ -34,7 +34,7 @@ async def test_good_query():
 
     print(f"Answer: {answer[:200]}...")
     print(f"\nUsed {len(docs)} documents")
-    print(f"Document titles:")
+    print("Document titles:")
     for i, doc in enumerate(docs[:3], 1):
         title = doc.metadata.get("title_main", "Unknown")
         print(f"  {i}. {title}")
@@ -55,13 +55,11 @@ async def test_poor_query():
     chain = ctx.rag_chain
 
     # This should trigger MCP fallback due to poor matches
-    answer, docs = await chain(
-        "Tell me about Atelier Ryza anime that was released in 2024"
-    )
+    answer, docs = await chain("Tell me about Atelier Ryza anime that was released in 2024")
 
     print(f"Answer: {answer[:200]}...")
     print(f"\nUsed {len(docs)} documents")
-    print(f"Document titles:")
+    print("Document titles:")
     for i, doc in enumerate(docs[:3], 1):
         title = doc.metadata.get("title_main", "Unknown")
         anime_id = doc.metadata.get("anime_id", "N/A")

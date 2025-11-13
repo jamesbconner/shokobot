@@ -1,7 +1,6 @@
 """Query command - Query the anime database with natural language."""
 
 import asyncio
-import json
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -92,9 +91,13 @@ def query(
 
     # Handle different input modes
     if question:
-        asyncio.run(_run_single_question(console, rag, question, show_context, output_format.lower()))
+        asyncio.run(
+            _run_single_question(console, rag, question, show_context, output_format.lower())
+        )
     elif input_file:
-        asyncio.run(_run_file_questions(console, rag, input_file, show_context, output_format.lower()))
+        asyncio.run(
+            _run_file_questions(console, rag, input_file, show_context, output_format.lower())
+        )
     elif stdin:
         asyncio.run(_run_stdin_questions(console, rag, show_context, output_format.lower()))
     elif interactive:
@@ -176,7 +179,9 @@ async def _run_stdin_questions(
                 console.print()
 
 
-async def _run_interactive(console: Console, rag: Any, show_context: bool, output_format: str) -> None:
+async def _run_interactive(
+    console: Console, rag: Any, show_context: bool, output_format: str
+) -> None:
     """Run interactive REPL."""
     if output_format != "json":
         console.print("[bold]Interactive RAG Mode[/]")
@@ -227,7 +232,7 @@ def _display_context(console: Console, docs: Any) -> None:
         year = str(doc.metadata.get("begin_year", "N/A"))
         episodes = str(doc.metadata.get("episode_count_normal", "N/A"))
         distance = doc.metadata.get("_distance_score")
-        
+
         # Format similarity score with quality indicator
         if distance is not None:
             if distance == 0.0:

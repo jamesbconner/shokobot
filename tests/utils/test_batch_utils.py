@@ -82,6 +82,7 @@ class TestChunked:
 
     def test_chunked_generator(self) -> None:
         """Test chunking with generator input."""
+
         # Arrange
         def number_generator() -> int:
             """Generate numbers 1 through 10."""

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from services.anidb_parser import parse_anidb_xml, _parse_date
+from services.anidb_parser import _parse_date, parse_anidb_xml
 
 
 class TestParseAnidbXml:

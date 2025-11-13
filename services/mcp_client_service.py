@@ -56,15 +56,16 @@ class MCPAnimeClient:
                 read, write = await self._stdio_context.__aenter__()
                 self._session = ClientSession(read, write)
                 await self._session.__aenter__()
-                
+
                 # Wait for initialization to complete
                 logger.debug("Waiting for MCP server initialization...")
                 await self._session.initialize()
-                
+
                 # Give the server a moment to fully start up
                 import asyncio
+
                 await asyncio.sleep(0.5)
-                
+
                 logger.info("Connected to MCP anime server and initialized")
             except Exception as e:
                 logger.error(f"Failed to connect to MCP server: {e}")
@@ -78,7 +79,7 @@ class MCPAnimeClient:
                 self._session = None
             except Exception as e:
                 logger.warning(f"Error during session disconnect: {e}")
-        
+
         if self._stdio_context:
             try:
                 await self._stdio_context.__aexit__(None, None, None)
@@ -102,7 +103,7 @@ class MCPAnimeClient:
         try:
             tools = await self._session.list_tools()
             logger.debug(f"Available tools: {tools}")
-            return tools.tools if hasattr(tools, 'tools') else []
+            return tools.tools if hasattr(tools, "tools") else []
         except Exception as e:
             logger.error(f"Failed to list tools: {e}")
             raise RuntimeError(f"MCP list tools failed: {e}") from e
@@ -133,24 +134,25 @@ class MCPAnimeClient:
         try:
             logger.debug(f"Searching anime: {query}")
             result = await self._session.call_tool("anidb_search", {"query": query})
-            
+
             logger.debug(f"MCP search result type: {type(result)}")
-            
+
             # Parse MCP tool response
-            if result and hasattr(result, 'content'):
+            if result and hasattr(result, "content"):
                 content = result.content
                 logger.debug(f"Result content type: {type(content)}")
-                
+
                 # Content is a list of TextContent items
                 if isinstance(content, list) and len(content) > 0:
                     first_content = content[0]
-                    if hasattr(first_content, 'text'):
+                    if hasattr(first_content, "text"):
                         # Parse JSON from text
                         import json
+
                         try:
                             data = json.loads(first_content.text)
                             logger.debug(f"Parsed search data: {data}")
-                            
+
                             # MCP server returns a list of search results
                             if isinstance(data, list):
                                 logger.info(f"Found {len(data)} search results")
@@ -162,12 +164,12 @@ class MCPAnimeClient:
                             else:
                                 logger.warning(f"Unexpected data type: {type(data)}")
                                 return []
-                                
+
                         except json.JSONDecodeError as e:
                             logger.error(f"Failed to parse MCP response as JSON: {e}")
                             logger.error(f"Response text: {first_content.text[:200]}")
                             return []
-            
+
             logger.warning("No valid content in MCP search result")
             return []
         except Exception as e:
@@ -192,24 +194,25 @@ class MCPAnimeClient:
         try:
             logger.debug(f"Fetching anime details: {aid}")
             result = await self._session.call_tool("anidb_details", {"aid": aid})
-            
+
             logger.debug(f"MCP details result type: {type(result)}")
-            
+
             # Parse MCP tool response
-            if result and hasattr(result, 'content'):
+            if result and hasattr(result, "content"):
                 content = result.content
                 logger.debug(f"Result content type: {type(content)}")
-                
+
                 # Content is a list of TextContent items
                 if isinstance(content, list) and len(content) > 0:
                     first_content = content[0]
-                    if hasattr(first_content, 'text'):
+                    if hasattr(first_content, "text"):
                         json_text = first_content.text
                         logger.debug(f"Received JSON data length: {len(json_text)}")
-                        
+
                         # Try to parse as JSON
                         try:
                             import json
+
                             json_data = json.loads(json_text)
                             logger.debug(f"Successfully parsed JSON with {len(json_data)} keys")
                             return json_data
@@ -217,11 +220,11 @@ class MCPAnimeClient:
                             # Return as string if not valid JSON
                             logger.warning("Response is not valid JSON, returning as string")
                             return json_text
-                
+
                 # Fallback: try to convert content directly to string
                 logger.warning("Unexpected content format, attempting string conversion")
                 return str(content)
-            
+
             logger.warning("No valid content in MCP details result")
             return ""
         except Exception as e:
@@ -229,9 +232,7 @@ class MCPAnimeClient:
             raise RuntimeError(f"MCP anime details fetch failed: {e}") from e
 
 
-async def create_mcp_client(
-    ctx: "AppContext", server_name: str = "anime"
-) -> MCPAnimeClient:
+async def create_mcp_client(ctx: "AppContext", server_name: str = "anime") -> MCPAnimeClient:
     """Factory function to create and configure MCP client.
 
     Args:

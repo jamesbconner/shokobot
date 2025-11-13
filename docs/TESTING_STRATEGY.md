@@ -121,10 +121,10 @@ def test_example():
     # Arrange - Set up test data and preconditions
     data = {"key": "value"}
     expected = "processed_value"
-    
+
     # Act - Execute the code under test
     result = process(data)
-    
+
     # Assert - Verify the expected outcome
     assert result == expected
 ```

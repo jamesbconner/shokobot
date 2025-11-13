@@ -77,9 +77,7 @@ class TestCleanDescription:
             ("Text with tabs", "Text with tabs"),
         ],
     )
-    def test_clean_description_whitespace_variations(
-        self, input_text: str, expected: str
-    ) -> None:
+    def test_clean_description_whitespace_variations(self, input_text: str, expected: str) -> None:
         """Test whitespace normalization with various whitespace types."""
         # Act
         result = clean_description(input_text)
@@ -175,9 +173,7 @@ class TestSplitPipe:
             ("action  |  comedy  |  drama", ["action", "comedy", "drama"]),
         ],
     )
-    def test_split_pipe_whitespace_variations(
-        self, input_text: str, expected: list[str]
-    ) -> None:
+    def test_split_pipe_whitespace_variations(self, input_text: str, expected: list[str]) -> None:
         """Test whitespace handling with various spacing patterns."""
         # Act
         result = split_pipe(input_text)

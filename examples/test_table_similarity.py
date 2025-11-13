@@ -43,9 +43,7 @@ async def main():
 
     # Display context table with similarity scores
     if docs:
-        table = Table(
-            title="Retrieved Context", show_header=True, header_style="bold magenta"
-        )
+        table = Table(title="Retrieved Context", show_header=True, header_style="bold magenta")
         table.add_column("Title", style="cyan", no_wrap=False)
         table.add_column("ID", style="dim", width=10)
         table.add_column("Year", style="yellow", width=10)

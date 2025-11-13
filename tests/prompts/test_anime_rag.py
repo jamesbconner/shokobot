@@ -59,9 +59,7 @@ class TestBuildAnimeRagPrompt:
         prompt = build_anime_rag_prompt()
 
         # Act
-        messages = prompt.format_messages(
-            question="Test question", context="Test context"
-        )
+        messages = prompt.format_messages(question="Test question", context="Test context")
 
         # Assert
         assert len(messages) == 2
@@ -74,9 +72,7 @@ class TestBuildAnimeRagPrompt:
         prompt = build_anime_rag_prompt()
 
         # Act
-        messages = prompt.format_messages(
-            question="Test question", context="Test context"
-        )
+        messages = prompt.format_messages(question="Test question", context="Test context")
         system_content = str(messages[0].content)
 
         # Assert
@@ -104,7 +100,7 @@ class TestBuildAnimeRagPrompt:
         prompt = build_anime_rag_prompt()
         question = "Compare these anime"
         context = """Anime 1: Title, Description
-        
+
 Anime 2: Title, Description
 
 Anime 3: Title, Description"""
@@ -165,12 +161,8 @@ class TestBuildDetailedAnimePrompt:
         detailed_prompt = build_detailed_anime_prompt()
 
         # Act
-        basic_messages = basic_prompt.format_messages(
-            question="test", context="test"
-        )
-        detailed_messages = detailed_prompt.format_messages(
-            question="test", context="test"
-        )
+        basic_messages = basic_prompt.format_messages(question="test", context="test")
+        detailed_messages = detailed_prompt.format_messages(question="test", context="test")
 
         # Assert
         basic_system = str(basic_messages[0].content)
@@ -224,9 +216,7 @@ class TestBuildRecommendationPrompt:
         prompt = build_recommendation_prompt()
 
         # Act
-        messages = prompt.format_messages(
-            question="test", context="test"
-        )
+        messages = prompt.format_messages(question="test", context="test")
         system_content = str(messages[0].content).lower()
 
         # Assert
@@ -243,9 +233,7 @@ class TestBuildRecommendationPrompt:
 
         # Act & Assert
         for prompt in prompts:
-            messages = prompt.format_messages(
-                question="test question", context="test context"
-            )
+            messages = prompt.format_messages(question="test question", context="test context")
             # All should have 2 messages: system and human
             assert len(messages) == 2
             assert messages[0].type == "system"

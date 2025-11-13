@@ -6,8 +6,6 @@ caching behavior, and cache management operations.
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from services.app_context import AppContext
 
 
@@ -56,9 +54,7 @@ class TestVectorstoreLazyLoading:
     """Tests for vectorstore lazy loading and caching."""
 
     @patch("services.vectorstore_service.get_chroma_vectorstore")
-    def test_vectorstore_lazy_loading(
-        self, mock_get_vectorstore: Mock, mock_config: Mock
-    ) -> None:
+    def test_vectorstore_lazy_loading(self, mock_get_vectorstore: Mock, mock_config: Mock) -> None:
         """Test that vectorstore is created on first access."""
         # Arrange
         mock_vectorstore = Mock()
@@ -76,9 +72,7 @@ class TestVectorstoreLazyLoading:
         mock_get_vectorstore.assert_called_once_with(mock_config)
 
     @patch("services.vectorstore_service.get_chroma_vectorstore")
-    def test_vectorstore_caching(
-        self, mock_get_vectorstore: Mock, mock_config: Mock
-    ) -> None:
+    def test_vectorstore_caching(self, mock_get_vectorstore: Mock, mock_config: Mock) -> None:
         """Test that vectorstore instance is reused (cached)."""
         # Arrange
         mock_vectorstore = Mock()
@@ -101,9 +95,7 @@ class TestRagChainLazyLoading:
     """Tests for RAG chain lazy loading and caching."""
 
     @patch("services.rag_service.build_rag_chain")
-    def test_rag_chain_lazy_loading(
-        self, mock_build_chain: Mock, mock_config: Mock
-    ) -> None:
+    def test_rag_chain_lazy_loading(self, mock_build_chain: Mock, mock_config: Mock) -> None:
         """Test that RAG chain is created on first access."""
         # Arrange
         mock_chain = Mock()
@@ -144,9 +136,7 @@ class TestCacheManagement:
     """Tests for cache reset operations."""
 
     @patch("services.vectorstore_service.get_chroma_vectorstore")
-    def test_reset_vectorstore(
-        self, mock_get_vectorstore: Mock, mock_config: Mock
-    ) -> None:
+    def test_reset_vectorstore(self, mock_get_vectorstore: Mock, mock_config: Mock) -> None:
         """Test that reset_vectorstore() clears vectorstore cache."""
         # Arrange
         mock_vectorstore1 = Mock()
@@ -327,7 +317,6 @@ class TestIndependentCaching:
         assert chain1 is chain2
         assert mock_get_vectorstore.call_count == 2
         assert mock_build_chain.call_count == 1
-
 
 
 class TestGetRagChainMethod:

@@ -57,7 +57,7 @@ def parse_anidb_json(json_data: str | dict) -> ShowDoc:
                 title_alts.append(title_text)
 
     # Extract description/synopsis
-    description = data.get("synopsis", "")
+    description = data.get("synopsis", "") or ""
 
     # Extract tags from tags array
     tags = []
@@ -101,7 +101,7 @@ def parse_anidb_json(json_data: str | dict) -> ShowDoc:
         permanent_rating = ratings.get("permanent", 0.0)
         rating = int(permanent_rating * 100) if permanent_rating else 0
         vote_count = ratings.get("permanent_count", 0) or 0
-        
+
         # Review ratings
         review_rating = ratings.get("review")
         avg_review_rating = int(review_rating * 100) if review_rating else 0
@@ -150,7 +150,7 @@ def parse_anidb_json(json_data: str | dict) -> ShowDoc:
             relations=relations,
             similar=similar,
         )
-        
+
         logger.info(f"Successfully parsed anime: {title_main} (AID: {anidb_anime_id})")
         return show_doc
 

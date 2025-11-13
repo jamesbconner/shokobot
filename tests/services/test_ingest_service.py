@@ -89,7 +89,6 @@ class TestPickId:
         assert result == "67890"
 
 
-
 class TestTitles:
     """Tests for _titles function."""
 
@@ -246,7 +245,6 @@ class TestTags:
         assert "comedy" in result
 
 
-
 class TestParseDatetime:
     """Tests for _parse_datetime function."""
 
@@ -395,7 +393,6 @@ class TestSafeStr:
         assert _safe_str(3.14) == "3.14"
 
 
-
 class TestIterShowdocsFromJson:
     """Tests for iter_showdocs_from_json function."""
 
@@ -466,9 +463,7 @@ class TestIterShowdocsFromJson:
         with pytest.raises(FileNotFoundError):
             list(iter_showdocs_from_json(mock_context))
 
-    def test_iter_showdocs_from_json_invalid_json(
-        self, tmp_path: Path, mock_context: Mock
-    ) -> None:
+    def test_iter_showdocs_from_json_invalid_json(self, tmp_path: Path, mock_context: Mock) -> None:
         """Test error handling with malformed JSON."""
         # Arrange
         json_file = tmp_path / "invalid.json"
@@ -478,9 +473,7 @@ class TestIterShowdocsFromJson:
         with pytest.raises(json.JSONDecodeError):
             list(iter_showdocs_from_json(mock_context, path=json_file))
 
-    def test_iter_showdocs_from_json_empty_list(
-        self, tmp_path: Path, mock_context: Mock
-    ) -> None:
+    def test_iter_showdocs_from_json_empty_list(self, tmp_path: Path, mock_context: Mock) -> None:
         """Test handling of empty anime list."""
         # Arrange
         json_file = tmp_path / "empty.json"
@@ -703,7 +696,7 @@ class TestIngestShowdocsStreaming:
         from models.show_doc import ShowDoc
 
         docs = [ShowDoc(**sample_show_doc_dict) for _ in range(3)]
-        
+
         # Make vectorstore.add_documents raise an exception
         mock_context.vectorstore.add_documents.side_effect = RuntimeError(
             "Database connection failed"
@@ -721,7 +714,7 @@ class TestIngestShowdocsStreaming:
         from models.show_doc import ShowDoc
 
         docs = [ShowDoc(**sample_show_doc_dict) for _ in range(5)]
-        
+
         # Make vectorstore fail on the second batch
         mock_context.vectorstore.add_documents.side_effect = [
             None,  # First batch succeeds
@@ -731,7 +724,6 @@ class TestIngestShowdocsStreaming:
         # Act & Assert
         with pytest.raises(RuntimeError, match="Network error"):
             ingest_showdocs_streaming(docs, mock_context, batch_size=2)
-
 
 
 class TestValidateShowdocsDryRun:
@@ -848,9 +840,10 @@ class TestValidateShowdocsDryRun:
 
     def test_validate_showdocs_dry_run_conversion_error(self) -> None:
         """Test dry-run captures conversion errors."""
+        from unittest.mock import Mock, patch
+
         from models.show_doc import ShowDoc
         from services.ingest_service import validate_showdocs_dry_run
-        from unittest.mock import Mock, patch
 
         # Arrange
         docs = [

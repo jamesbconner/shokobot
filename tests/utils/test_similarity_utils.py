@@ -1,6 +1,5 @@
 """Tests for similarity_utils module."""
 
-from io import StringIO
 from unittest.mock import Mock
 
 import pytest
@@ -34,11 +33,26 @@ def sample_results():
         List of (Document, distance) tuples.
     """
     return [
-        (Document(page_content="Content 1", metadata={"title_main": "Anime 1", "anime_id": "1"}), 0.2),
-        (Document(page_content="Content 2", metadata={"title_main": "Anime 2", "anime_id": "2"}), 0.4),
-        (Document(page_content="Content 3", metadata={"title_main": "Anime 3", "anime_id": "3"}), 0.6),
-        (Document(page_content="Content 4", metadata={"title_main": "Anime 4", "anime_id": "4"}), 0.8),
-        (Document(page_content="Content 5", metadata={"title_main": "Anime 5", "anime_id": "5"}), 1.0),
+        (
+            Document(page_content="Content 1", metadata={"title_main": "Anime 1", "anime_id": "1"}),
+            0.2,
+        ),
+        (
+            Document(page_content="Content 2", metadata={"title_main": "Anime 2", "anime_id": "2"}),
+            0.4,
+        ),
+        (
+            Document(page_content="Content 3", metadata={"title_main": "Anime 3", "anime_id": "3"}),
+            0.6,
+        ),
+        (
+            Document(page_content="Content 4", metadata={"title_main": "Anime 4", "anime_id": "4"}),
+            0.8,
+        ),
+        (
+            Document(page_content="Content 5", metadata={"title_main": "Anime 5", "anime_id": "5"}),
+            1.0,
+        ),
     ]
 
 
@@ -75,12 +89,18 @@ class TestSearchWithScores:
         """
         # Arrange
         results = [
-            (Document(page_content="Test", metadata={"title_main": "Test Anime", "anime_id": "123"}), 0.3)
+            (
+                Document(
+                    page_content="Test", metadata={"title_main": "Test Anime", "anime_id": "123"}
+                ),
+                0.3,
+            )
         ]
         mock_context.vectorstore.similarity_search_with_score.return_value = results
 
         # Act
         import logging
+
         with caplog.at_level(logging.INFO):
             search_with_scores("test query", mock_context, k=5, log_results=True)
 
@@ -102,9 +122,7 @@ class TestSearchWithScores:
         search_with_scores("test", mock_context, k=20, log_results=False)
 
         # Assert
-        mock_context.vectorstore.similarity_search_with_score.assert_called_once_with(
-            "test", k=20
-        )
+        mock_context.vectorstore.similarity_search_with_score.assert_called_once_with("test", k=20)
 
 
 class TestGetScoreStatistics:
@@ -305,9 +323,7 @@ class TestPrintScoreTable:
     def test_print_score_table_handles_missing_metadata(self, capsys):
         """Test that print_score_table handles missing metadata gracefully."""
         # Arrange
-        results = [
-            (Document(page_content="Test", metadata={}), 0.3)
-        ]
+        results = [(Document(page_content="Test", metadata={}), 0.3)]
 
         # Act
         print_score_table(results, max_results=10)

@@ -1,6 +1,12 @@
 # ShokoBot
 
-RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI GPT-5.
+Retrival Augmented Generation (RAG) enabled anime recommendation system using LangChain, ChromaDB Vectorstore, Model Context Protocol, and OpenAI GPT-5.
+
+## Overview
+
+The [Shoko](https://shokoanime.com/) anime management system by default uses a SQLite database on the backend.  Extracting the AniDB information from that database with a simple [SQL query](resources/shoko_db_extract.sql) allows the user to create an input file for this RAG enabled LLM service.  Queries can be executed either as a one-shot or via a REPL/Chat interface, and if the RAG doesn't have enough information to satisfy a question, it will use a custom [MCP server](https://github.com/jamesbconner/mcp-server-anime) to fetch specific show information from AniDB to fill in the gap.
+
+This service was built using Python 3.13, and uses standard tooling like poetry, pytest, ruff, mypy, and bandit as the dev stack, and uses a pre-commit configuration to ensure proper code hygine.
 
 ## Features
 
@@ -12,6 +18,7 @@ RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI GPT-
 - 📤 **JSON output format** - Structured output for programmatic usage and API integration
 - ⚙️ **Flexible configuration** - JSON config with environment variable overrides
 - 🤖 **GPT-5 integration** - Responses API with configurable reasoning effort
+- 🔌 **MCP fallback** - Automatic AniDB integration via Model Context Protocol for comprehensive coverage
 - 🏗️ **Modular architecture** - Auto-loading CLI commands with dependency injection
 - ✅ **Type-safe** - Full Pydantic validation and mypy strict mode
 - 📝 **Well-documented** - Comprehensive guides and architecture documentation
@@ -21,6 +28,7 @@ RAG-based anime recommendation system using LangChain, ChromaDB, and OpenAI GPT-
 - Python 3.12+
 - Poetry (for build system) or uv (for dependency management)
 - OpenAI API key
+- mcp-server-anime (optional, for AniDB fallback)
 
 ## Quick Start
 
@@ -112,6 +120,23 @@ Edit `resources/config.json` to customize:
     "output_verbosity": "medium",
     "max_output_tokens": 8192
   },
+  "mcp": {
+    "enabled": true,
+    "cache_dir": "data/mcp_cache",
+    "fallback_count_threshold": 3,
+    "fallback_score_threshold": 0.5,
+    "timeout": 30,
+    "servers": {
+      "anime": {
+        "command": "/path/to/mcp-server-anime/.venv/bin/python",
+        "args": ["-m", "mcp_server_anime.server"],
+        "cwd": "/path/to/mcp-server-anime",
+        "env": {
+          "PYTHONPATH": "/path/to/mcp-server-anime/src"
+        }
+      }
+    }
+  },
   "ingest": {
     "batch_size": 100
   },
@@ -120,6 +145,13 @@ Edit `resources/config.json` to customize:
   }
 }
 ```
+
+**MCP Configuration (Optional):**
+- Set `mcp.enabled` to `false` to disable AniDB fallback
+- Adjust `fallback_score_threshold` (0.0-1.0) to control when fallback to MCP triggers
+- A score of 0.0 is a perfect match, while a score of 1.0 is no match
+- Lower thresholds = stricter (more MCP calls), higher = more lenient
+- See [MCP Integration Guide](docs/MCP_INTEGRATION.md) for detailed setup
 
 ## Usage
 
@@ -261,8 +293,8 @@ import subprocess
 import json
 
 result = subprocess.run(
-    ["poetry", "run", "shokobot", "query", 
-     "-q", "Recommend a sci-fi anime", 
+    ["poetry", "run", "shokobot", "query",
+     "-q", "Recommend a sci-fi anime",
      "--output-format", "json"],
     capture_output=True,
     text=True
@@ -368,26 +400,35 @@ shokobot/
 │   ├── app_context.py          # Application context
 │   ├── config_service.py       # Configuration management
 │   ├── ingest_service.py       # Data ingestion logic
-│   ├── rag_service.py          # RAG chain with GPT-5
-│   └── vectorstore_service.py  # ChromaDB operations
+│   ├── rag_service.py          # RAG chain with GPT-5 and MCP fallback
+│   ├── vectorstore_service.py  # ChromaDB operations
+│   ├── mcp_client_service.py   # MCP client for AniDB integration
+│   ├── mcp_anime_json_parser.py # MCP response parser
+│   └── showdoc_persistence.py  # ShowDoc caching
 ├── models/                      # Pydantic data models
 │   └── show_doc.py             # ShowDoc model (21 fields)
 ├── prompts/                     # LLM prompt templates (versioned)
 │   ├── __init__.py             # Prompt exports
 │   ├── anime_rag.py            # Anime RAG prompts
+│   ├── title_extraction.py     # Title extraction prompt (for MCP)
 │   └── README.md               # Prompt engineering guide
 ├── utils/                       # Utility functions
 │   ├── batch_utils.py          # Batch processing helpers
 │   └── text_utils.py           # Text cleaning utilities
 ├── docs/                        # Documentation
 │   ├── README.md               # Documentation index
+│   ├── USER_GUIDE.md           # Complete usage guide
+│   ├── MCP_INTEGRATION.md      # MCP fallback guide
 │   ├── MODULAR_CLI_ARCHITECTURE.md
 │   ├── APPCONTEXT_USAGE.md     # Dependency injection guide
-│   └── ASYNC_OPPORTUNITIES_ANALYSIS.md
+│   ├── TESTING_STRATEGY.md     # Testing approach
+│   └── SHOWDOC_JSON_EXAMPLE.md # Data format reference
 ├── resources/                   # Configuration files
 │   └── config.json             # Main configuration
 ├── input/                       # Data files
 │   └── shoko_tvshows.json      # Anime data (1,458 records)
+├── data/                        # Runtime data
+│   └── mcp_cache/              # MCP response cache
 ├── tests/                       # Test suite
 │   ├── config/                 # Config service tests
 │   ├── ingest/                 # Ingestion tests
@@ -513,16 +554,28 @@ ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
       │              Service Layer                          │
       │  ┌────────────────┐  ┌──────────────────┐           │
       │  │ IngestService  │  │   RAGService     │           │
+      │  │                │  │  (with MCP       │           │
+      │  │                │  │   fallback)      │           │
       │  └────────────────┘  └──────────────────┘           │
       └─────────────────────────────────────────────────────┘
                      │
       ┌──────────────┴──────────────────────────────────────┐
       │            Data & External                          │
-      │  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
-      │  │ ChromaDB │  │ OpenAI   │  │ ShowDoc  │           │
-      │  └──────────┘  └──────────┘  └──────────┘           │
+      │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────┐ │
+      │  │ ChromaDB │  │ OpenAI   │  │ ShowDoc  │  │ MCP │ │
+      │  │          │  │          │  │          │  │     │ │
+      │  │ (Vector  │  │ (GPT-5 + │  │ (Pydantic│  │(Ani-│ │
+      │  │  Store)  │  │Embedding)│  │  Model)  │  │ DB) │ │
+      │  └──────────┘  └──────────┘  └──────────┘  └─────┘ │
       └─────────────────────────────────────────────────────┘
 ```
+
+**MCP Fallback Flow:**
+1. User query → RAG Service
+2. Vector store search (ChromaDB)
+3. If results insufficient or poor quality → MCP fallback
+4. MCP fetches from AniDB → Caches locally
+5. Combined results returned to user
 
 ### Design Patterns
 
@@ -546,12 +599,14 @@ ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
 - [README.md](README.md) - This file (project overview)
 - [SETUP_GUIDE.md](SETUP_GUIDE.md) - Detailed setup instructions
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Command reference and examples
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) - Complete usage guide with examples
 
 ### Architecture Documentation
 - [docs/README.md](docs/README.md) - Documentation index
 - [docs/MODULAR_CLI_ARCHITECTURE.md](docs/MODULAR_CLI_ARCHITECTURE.md) - CLI design patterns
 - [docs/APPCONTEXT_USAGE.md](docs/APPCONTEXT_USAGE.md) - Dependency injection guide
-- [docs/ASYNC_OPPORTUNITIES_ANALYSIS.md](docs/ASYNC_OPPORTUNITIES_ANALYSIS.md) - Performance analysis
+- [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md) - MCP fallback configuration and usage
+- [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) - Testing approach and best practices
 
 ## Troubleshooting
 

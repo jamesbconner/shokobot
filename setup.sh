@@ -78,7 +78,7 @@ fi
 
 # Create necessary directories
 echo "Creating directories..."
-mkdir -p .chroma logs input
+mkdir -p .chroma logs input data/mcp_cache
 echo "✓ Directories created"
 echo ""
 
@@ -104,23 +104,27 @@ echo "Next steps:"
 echo "1. Edit .env and add your OPENAI_API_KEY"
 echo "   export OPENAI_API_KEY='your-key-here'"
 echo ""
-echo "2. Verify configuration:"
+echo "2. (Optional) Setup MCP server for AniDB fallback:"
+echo "   See docs/MCP_INTEGRATION.md for instructions"
+echo "   Note: System works without MCP using only vector store"
+echo ""
+echo "3. Verify configuration:"
 if [ "$PKG_MANAGER" = "poetry" ]; then
     echo "   poetry run shokobot info"
 elif [ "$PKG_MANAGER" = "uv" ]; then
     echo "   uv run shokobot info"
 fi
 echo ""
-echo "3. Place your anime data in input/shoko_tvshows.json (if not already present)"
+echo "4. Place your anime data in input/shoko_tvshows.json (if not already present)"
 echo ""
-echo "4. Run ingestion:"
+echo "5. Run ingestion:"
 if [ "$PKG_MANAGER" = "poetry" ]; then
     echo "   poetry run shokobot ingest"
 elif [ "$PKG_MANAGER" = "uv" ]; then
     echo "   uv run shokobot ingest"
 fi
 echo ""
-echo "5. Start querying:"
+echo "6. Start querying:"
 if [ "$PKG_MANAGER" = "poetry" ]; then
     echo "   poetry run shokobot repl          # Interactive REPL mode"
     echo "   poetry run shokobot query -q \"...\" # Single question"

@@ -70,7 +70,7 @@ class AppContext:
 
         Raises:
             ValueError: If RAG chain configuration is invalid.
-            
+
         Note:
             The returned chain is async and must be awaited.
         """
@@ -80,7 +80,9 @@ class AppContext:
             self._rag_chain = build_rag_chain(self, output_format="text")
         return self._rag_chain
 
-    def get_rag_chain(self, output_format: str = "text") -> Callable[[str], Awaitable[tuple[str, list]]]:
+    def get_rag_chain(
+        self, output_format: str = "text"
+    ) -> Callable[[str], Awaitable[tuple[str, list]]]:
         """Get or create RAG chain with specified output format.
 
         Args:

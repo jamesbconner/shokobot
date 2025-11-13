@@ -242,7 +242,7 @@ def test_get_max_output_tokens_invalid_type(tmp_path: Path) -> None:
 def test_get_mcp_enabled_default(tmp_path: Path) -> None:
     """Test get_mcp_enabled returns False by default."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_enabled() is False
@@ -269,7 +269,7 @@ def test_get_mcp_enabled_false(tmp_path: Path) -> None:
 def test_get_mcp_servers_default(tmp_path: Path) -> None:
     """Test get_mcp_servers returns empty dict by default."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_servers() == {}
@@ -320,7 +320,7 @@ def test_get_mcp_server_config_missing(tmp_path: Path) -> None:
 def test_get_mcp_cache_dir_default(tmp_path: Path) -> None:
     """Test get_mcp_cache_dir returns default value."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_cache_dir() == "data/mcp_cache"
@@ -338,7 +338,7 @@ def test_get_mcp_cache_dir_custom(tmp_path: Path) -> None:
 def test_get_mcp_fallback_count_threshold_default(tmp_path: Path) -> None:
     """Test get_mcp_fallback_count_threshold returns default value."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_fallback_count_threshold() == 3
@@ -356,7 +356,7 @@ def test_get_mcp_fallback_count_threshold_custom(tmp_path: Path) -> None:
 def test_get_mcp_fallback_score_threshold_default(tmp_path: Path) -> None:
     """Test get_mcp_fallback_score_threshold returns default value."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_fallback_score_threshold() == 0.7
@@ -374,7 +374,7 @@ def test_get_mcp_fallback_score_threshold_custom(tmp_path: Path) -> None:
 def test_get_mcp_timeout_default(tmp_path: Path) -> None:
     """Test get_mcp_timeout returns default value."""
     cfgfile = tmp_path / "config.json"
-    cfgfile.write_text('{}', encoding="utf-8")
+    cfgfile.write_text("{}", encoding="utf-8")
 
     cfg = ConfigService(str(cfgfile))
     assert cfg.get_mcp_timeout() == 30

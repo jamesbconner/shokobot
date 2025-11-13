@@ -31,7 +31,7 @@ def search_with_scores(
 
     Returns:
         List of (Document, distance) tuples sorted by distance (lowest/best first).
-        
+
     Note:
         Returns DISTANCE scores where LOWER = BETTER match.
         - 0.0-0.3: Excellent match
@@ -58,9 +58,7 @@ def search_with_scores(
     return results
 
 
-def get_score_statistics(
-    results: list[tuple[Document, float]]
-) -> dict[str, float]:
+def get_score_statistics(results: list[tuple[Document, float]]) -> dict[str, float]:
     """Calculate statistics for distance scores.
 
     Args:
@@ -68,7 +66,7 @@ def get_score_statistics(
 
     Returns:
         Dictionary with min (best), max (worst), avg, and median distances.
-        
+
     Note:
         For distance scores: min = best match, max = worst match
 
@@ -107,7 +105,7 @@ def filter_by_score(
 
     Returns:
         Filtered list of (Document, distance) tuples with good matches.
-        
+
     Note:
         For distance scores: LOWER = BETTER, so we keep scores <= threshold.
 
@@ -153,7 +151,7 @@ def print_score_table(
         print(f"\n... and {len(results) - max_results} more results")
 
     stats = get_score_statistics(results)
-    print(f"\nDistance Statistics (lower = better):")
+    print("\nDistance Statistics (lower = better):")
     print(f"  Best (lowest):  {stats['min']:.4f}")
     print(f"  Worst (highest): {stats['max']:.4f}")
     print(f"  Average:        {stats['avg']:.4f}")

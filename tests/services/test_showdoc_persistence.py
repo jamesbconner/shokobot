@@ -63,9 +63,7 @@ class TestShowDocPersistence:
         assert "created" in index
         assert index["anime"] == {}
 
-    def test_save_showdoc_creates_json_file(
-        self, tmp_path: Path, sample_showdoc: ShowDoc
-    ) -> None:
+    def test_save_showdoc_creates_json_file(self, tmp_path: Path, sample_showdoc: ShowDoc) -> None:
         """Test that save_showdoc creates JSON file with correct structure."""
         # Arrange
         persistence = ShowDocPersistence(storage_dir=str(tmp_path))
@@ -87,9 +85,7 @@ class TestShowDocPersistence:
         assert data["_metadata"]["source"] == "mcp_anidb"
         assert "fetched_at" in data["_metadata"]
 
-    def test_save_showdoc_updates_index(
-        self, tmp_path: Path, sample_showdoc: ShowDoc
-    ) -> None:
+    def test_save_showdoc_updates_index(self, tmp_path: Path, sample_showdoc: ShowDoc) -> None:
         """Test that save_showdoc updates the index file."""
         # Arrange
         persistence = ShowDocPersistence(storage_dir=str(tmp_path))
@@ -240,9 +236,7 @@ class TestShowDocPersistence:
         # Assert
         assert loaded is None
 
-    def test_handles_corrupt_json_gracefully(
-        self, tmp_path: Path, sample_showdoc: ShowDoc
-    ) -> None:
+    def test_handles_corrupt_json_gracefully(self, tmp_path: Path, sample_showdoc: ShowDoc) -> None:
         """Test that load_showdoc handles corrupt JSON gracefully."""
         # Arrange
         persistence = ShowDocPersistence(storage_dir=str(tmp_path))
@@ -256,9 +250,7 @@ class TestShowDocPersistence:
         with pytest.raises(json.JSONDecodeError):
             persistence.load_showdoc(12345)
 
-    def test_multiple_saves_update_existing(
-        self, tmp_path: Path, sample_showdoc: ShowDoc
-    ) -> None:
+    def test_multiple_saves_update_existing(self, tmp_path: Path, sample_showdoc: ShowDoc) -> None:
         """Test that saving the same anime multiple times updates it."""
         # Arrange
         persistence = ShowDocPersistence(storage_dir=str(tmp_path))

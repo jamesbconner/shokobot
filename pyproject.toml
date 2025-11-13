@@ -121,6 +121,10 @@ addopts = [
 ]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+    "ignore::RuntimeWarning:_pytest.unraisableexception",
+    "ignore:coroutine.*AsyncMockMixin.*was never awaited:RuntimeWarning",
+]
 
 [tool.coverage.run]
 source = ["services", "models", "utils"]
