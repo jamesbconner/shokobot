@@ -1,5 +1,6 @@
 """Query command - Query the anime database with natural language."""
 
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -74,6 +75,9 @@ def query(
     """
     console = Console()
 
+    # Set retrieval k from CLI parameter
+    ctx.retrieval_k = k
+
     # Build RAG chain with specified output format
     with Progress(
         SpinnerColumn(),
@@ -88,19 +92,19 @@ def query(
 
     # Handle different input modes
     if question:
-        _run_single_question(console, rag, question, show_context, output_format.lower())
+        asyncio.run(_run_single_question(console, rag, question, show_context, output_format.lower()))
     elif input_file:
-        _run_file_questions(console, rag, input_file, show_context, output_format.lower())
+        asyncio.run(_run_file_questions(console, rag, input_file, show_context, output_format.lower()))
     elif stdin:
-        _run_stdin_questions(console, rag, show_context, output_format.lower())
+        asyncio.run(_run_stdin_questions(console, rag, show_context, output_format.lower()))
     elif interactive:
-        _run_interactive(console, rag, show_context, output_format.lower())
+        asyncio.run(_run_interactive(console, rag, show_context, output_format.lower()))
     else:
         # Default to interactive if no input specified
-        _run_interactive(console, rag, show_context, output_format.lower())
+        asyncio.run(_run_interactive(console, rag, show_context, output_format.lower()))
 
 
-def _run_single_question(
+async def _run_single_question(
     console: Console, rag: Any, question: str, show_context: bool, output_format: str
 ) -> None:
     """Run a single question."""
@@ -108,7 +112,7 @@ def _run_single_question(
         # For JSON output, skip fancy formatting
         import json
 
-        answer, docs = rag(question)
+        answer, docs = await rag(question)
         output = {"question": question, "answer": answer}
         if show_context:
             output["context"] = [
@@ -131,7 +135,7 @@ def _run_single_question(
             console=console,
         ) as progress:
             task = progress.add_task("Thinking...", total=None)
-            answer, docs = rag(question)
+            answer, docs = await rag(question)
             progress.update(task, description="[green]✓[/] Answer ready")
 
         console.print(f"\n[bold green]A:[/] {answer}\n")
@@ -140,7 +144,7 @@ def _run_single_question(
             _display_context(console, docs)
 
 
-def _run_file_questions(
+async def _run_file_questions(
     console: Console, rag: Any, file_path: Path, show_context: bool, output_format: str
 ) -> None:
     """Run questions from a file."""
@@ -151,7 +155,7 @@ def _run_file_questions(
         for i, q in enumerate(questions, 1):
             if output_format != "json":
                 console.print(f"[dim]Question {i}/{len(questions)}[/]")
-            _run_single_question(console, rag, q, show_context, output_format)
+            await _run_single_question(console, rag, q, show_context, output_format)
             if i < len(questions) and output_format != "json":
                 console.print("\n" + "─" * 80 + "\n")
 
@@ -160,19 +164,19 @@ def _run_file_questions(
         sys.exit(1)
 
 
-def _run_stdin_questions(
+async def _run_stdin_questions(
     console: Console, rag: Any, show_context: bool, output_format: str
 ) -> None:
     """Run questions from stdin."""
     for line in sys.stdin:
         q = line.strip()
         if q:
-            _run_single_question(console, rag, q, show_context, output_format)
+            await _run_single_question(console, rag, q, show_context, output_format)
             if output_format != "json":
                 console.print()
 
 
-def _run_interactive(console: Console, rag: Any, show_context: bool, output_format: str) -> None:
+async def _run_interactive(console: Console, rag: Any, show_context: bool, output_format: str) -> None:
     """Run interactive REPL."""
     if output_format != "json":
         console.print("[bold]Interactive RAG Mode[/]")
@@ -194,7 +198,7 @@ def _run_interactive(console: Console, rag: Any, show_context: bool, output_form
             if question.lower() in ("exit", "quit", "q"):
                 break
 
-            _run_single_question(console, rag, question, show_context, output_format)
+            await _run_single_question(console, rag, question, show_context, output_format)
             if output_format != "json":
                 console.print()
 
@@ -215,14 +219,31 @@ def _display_context(console: Console, docs: Any) -> None:
     table.add_column("ID", style="dim", width=10)
     table.add_column("Year", style="yellow", width=10)
     table.add_column("Episodes", style="green", width=10)
+    table.add_column("Similarity", style="blue", width=12)
 
     for doc in docs:
         title = doc.metadata.get("title_main", "Unknown")
         anime_id = str(doc.metadata.get("anime_id", "N/A"))
         year = str(doc.metadata.get("begin_year", "N/A"))
         episodes = str(doc.metadata.get("episode_count_normal", "N/A"))
+        distance = doc.metadata.get("_distance_score")
+        
+        # Format similarity score with quality indicator
+        if distance is not None:
+            if distance == 0.0:
+                similarity = "[green]MCP[/]"
+            elif distance <= 0.3:
+                similarity = f"[green]{distance:.3f}[/]"
+            elif distance <= 0.6:
+                similarity = f"[blue]{distance:.3f}[/]"
+            elif distance <= 0.9:
+                similarity = f"[yellow]{distance:.3f}[/]"
+            else:
+                similarity = f"[red]{distance:.3f}[/]"
+        else:
+            similarity = "[dim]N/A[/]"
 
-        table.add_row(title, anime_id, year, episodes)
+        table.add_row(title, anime_id, year, episodes, similarity)
 
     console.print(table)
     console.print()

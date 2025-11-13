@@ -1,6 +1,6 @@
 """Application context for dependency injection."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from langchain_chroma import Chroma
@@ -17,11 +17,13 @@ class AppContext:
 
     Attributes:
         config: Configuration service instance.
+        retrieval_k: Number of documents to retrieve (can be set by CLI).
     """
 
     config: ConfigService
+    retrieval_k: int = 10  # Default number of documents to retrieve
     _vectorstore: Chroma | None = field(default=None, init=False, repr=False)
-    _rag_chain: Callable[[str], tuple[str, list]] | None = field(
+    _rag_chain: Callable[[str], Awaitable[tuple[str, list]]] | None = field(
         default=None, init=False, repr=False
     )
 
@@ -59,14 +61,18 @@ class AppContext:
         return self._vectorstore
 
     @property
-    def rag_chain(self) -> Callable[[str], tuple[str, list]]:
+    def rag_chain(self) -> Callable[[str], Awaitable[tuple[str, list]]]:
         """Get or create RAG chain with default text output (lazy initialization).
 
         Returns:
-            Callable that takes a question and returns (answer, context_docs).
+            Async callable that takes a question and returns (answer, context_docs).
+            Must be awaited: answer, docs = await ctx.rag_chain(question)
 
         Raises:
             ValueError: If RAG chain configuration is invalid.
+            
+        Note:
+            The returned chain is async and must be awaited.
         """
         if self._rag_chain is None:
             from services.rag_service import build_rag_chain
@@ -74,7 +80,7 @@ class AppContext:
             self._rag_chain = build_rag_chain(self, output_format="text")
         return self._rag_chain
 
-    def get_rag_chain(self, output_format: str = "text") -> Callable[[str], tuple[str, list]]:
+    def get_rag_chain(self, output_format: str = "text") -> Callable[[str], Awaitable[tuple[str, list]]]:
         """Get or create RAG chain with specified output format.
 
         Args:

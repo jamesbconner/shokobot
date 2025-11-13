@@ -17,7 +17,7 @@
     "enabled": true,
     "cache_dir": "data/mcp_cache",
     "fallback_count_threshold": 3,
-    "fallback_score_threshold": 0.6,
+    "fallback_score_threshold": 0.5,
     "timeout": 30,
     "servers": {
       "anime": {
@@ -34,6 +34,6 @@
     "batch_size": 100
   },
   "logging": {
-    "level": "INFO"
+    "level": "DEBUG"
   }
 }
