@@ -527,7 +527,6 @@ ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
 - `medium` - Balanced (default)
 - `high` - Detailed explanations
 
-**Note:** GPT-5 models use `max_output_tokens` instead of `max_tokens` and do not support `temperature`, `top_p`, or `logprobs` parameters.
 
 ## Architecture
 
@@ -561,12 +560,12 @@ ShokoBot uses OpenAI's GPT-5 Responses API with reasoning capabilities:
                      │
       ┌──────────────┴──────────────────────────────────────┐
       │            Data & External                          │
-      │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────┐ │
-      │  │ ChromaDB │  │ OpenAI   │  │ ShowDoc  │  │ MCP │ │
-      │  │          │  │          │  │          │  │     │ │
-      │  │ (Vector  │  │ (GPT-5 + │  │ (Pydantic│  │(Ani-│ │
-      │  │  Store)  │  │Embedding)│  │  Model)  │  │ DB) │ │
-      │  └──────────┘  └──────────┘  └──────────┘  └─────┘ │
+      │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────┐  │
+      │  │ ChromaDB │  │ OpenAI   │  │ ShowDoc  │  │ MCP │  │
+      │  │          │  │          │  │          │  │     │  │
+      │  │ (Vector  │  │ (GPT-5 + │  │ (Pydantic│  │(Ani-│  │
+      │  │  Store)  │  │Embedding)│  │  Model)  │  │ DB) │  │
+      │  └──────────┘  └──────────┘  └──────────┘  └─────┘  │
       └─────────────────────────────────────────────────────┘
 ```
 
