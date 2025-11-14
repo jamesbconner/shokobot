@@ -20,7 +20,7 @@ This service was built using Python 3.13, and uses standard tooling like poetry,
 - 🔍 **Vector-based semantic search** - Find anime using natural language queries
 - 🎯 **Comprehensive metadata** - 21 fields per anime including ratings, episodes, dates, and relationships
 - 📊 **Efficient ingestion** - Batch processing with progress indicators (1,458 anime records)
-- 💬 **Multiple query modes** - Interactive REPL, single questions, file input, or stdin
+- 💬 **Multiple query modes** - Web UI, interactive REPL, single questions, file input, or stdin
 - 🎨 **Beautiful CLI** - Rich formatting with tables, colors, and progress bars
 - 📤 **JSON output format** - Structured output for programmatic usage and API integration
 - ⚙️ **Flexible configuration** - JSON config with environment variable overrides
@@ -248,6 +248,45 @@ poetry run shokobot repl --k 15
 **REPL Commands:**
 - Type your question and press Enter
 - `exit`, `quit`, or `q` to leave
+
+#### Web Interface
+```bash
+# Start on default port (7860)
+poetry run shokobot web
+
+# Start on custom port
+poetry run shokobot web --port 8080
+
+# Create a public shareable link
+poetry run shokobot web --share
+
+# Enable debug logging
+poetry run shokobot web --debug
+```
+
+**Features:**
+- 💬 **Chat Interface** - Natural language conversation with your anime collection
+- ⚙️ **Customizable Settings** - Adjust retrieval count (k) and context display
+- 📚 **Context Display** - See which anime were used to generate recommendations
+- 🎯 **Example Queries** - Click pre-made examples to get started quickly
+- 📱 **Mobile Responsive** - Works on desktop, tablet, and mobile devices
+
+**Options:**
+- `--port INTEGER` - Port to run the server on (default: 7860)
+- `--share` - Create a public shareable link via Gradio (expires after 72 hours)
+- `--debug` - Enable debug mode with verbose logging
+
+**Access:**
+Once started, open your browser to `http://localhost:7860` (or your custom port).
+The interface provides an intuitive chat experience with:
+- Real-time responses from the RAG system
+- Adjustable number of documents to retrieve (1-20)
+- Optional context display showing source anime
+- Example queries to help you get started
+
+**Sharing:**
+Use the `--share` flag to create a temporary public URL that you can share with others.
+This is useful for demos or remote access. The link expires after 72 hours.
 - Questions are processed with cached RAG chain for efficiency
 
 #### JSON Output Format
