@@ -1,6 +1,5 @@
 """Main Gradio application for ShokoBot web interface."""
 
-import asyncio
 import logging
 from collections.abc import Callable
 
@@ -213,7 +212,7 @@ def create_app() -> gr.Blocks:
             """Add user message to history."""
             return "", history + [{"role": "user", "content": user_msg}]
 
-        def bot_response(
+        async def bot_response(
             history: list[dict[str, str]],
             k: int,
             show_context: bool,
@@ -231,10 +230,8 @@ def create_app() -> gr.Blocks:
                 if msg.get("role") == "user" and i + 1 < len(history)
             ]
 
-            # Run async query handler
-            answer, context_html = asyncio.run(
-                query_handler(user_msg, tuple_history, k, show_context)
-            )
+            # Await async query handler directly (Gradio handles the event loop)
+            answer, context_html = await query_handler(user_msg, tuple_history, k, show_context)
 
             # Add assistant response to history
             history.append({"role": "assistant", "content": answer})
