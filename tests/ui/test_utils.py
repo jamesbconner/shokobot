@@ -36,8 +36,9 @@ class TestValidateEnvironment:
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
         # Ensure .chroma doesn't exist
-        with patch("pathlib.Path.exists", return_value=False), pytest.raises(
-            OSError, match="Vector store not found"
+        with (
+            patch("pathlib.Path.exists", return_value=False),
+            pytest.raises(OSError, match="Vector store not found"),
         ):
             validate_environment()
 
