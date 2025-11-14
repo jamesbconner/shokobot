@@ -1,7 +1,5 @@
 """Unit tests for UI utility functions."""
 
-import os
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,7 +25,7 @@ class TestValidateEnvironment:
         # Ensure API key is not set
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
-        with pytest.raises(EnvironmentError, match="OPENAI_API_KEY"):
+        with pytest.raises(OSError, match="OPENAI_API_KEY"):
             validate_environment()
 
     def test_validate_environment_missing_vector_store(
@@ -38,9 +36,10 @@ class TestValidateEnvironment:
         monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
         # Ensure .chroma doesn't exist
-        with patch("pathlib.Path.exists", return_value=False):
-            with pytest.raises(EnvironmentError, match="Vector store not found"):
-                validate_environment()
+        with patch("pathlib.Path.exists", return_value=False), pytest.raises(
+            OSError, match="Vector store not found"
+        ):
+            validate_environment()
 
 
 class TestInitializeRagChain:

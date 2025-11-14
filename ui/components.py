@@ -11,7 +11,7 @@ def create_header() -> gr.Markdown:
     """
     header_text = """
     # 🎌 ShokoBot - Anime Recommendations
-    
+
     Ask me anything about anime from your collection! I use semantic search and AI
     to help you discover new shows based on your preferences.
     """

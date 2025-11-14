@@ -17,7 +17,7 @@ def validate_environment() -> None:
         EnvironmentError: If required variables are missing.
     """
     if not os.getenv("OPENAI_API_KEY"):
-        raise EnvironmentError(
+        raise OSError(
             "OPENAI_API_KEY environment variable not set. "
             "Please set it in your .env file or environment."
         )
@@ -25,7 +25,7 @@ def validate_environment() -> None:
     # Check if vector store exists
     chroma_path = Path(".chroma")
     if not chroma_path.exists():
-        raise EnvironmentError(
+        raise OSError(
             "Vector store not found. Please run 'shokobot ingest' first to initialize the database."
         )
 

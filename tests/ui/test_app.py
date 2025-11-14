@@ -1,6 +1,5 @@
 """Integration tests for the main Gradio application."""
 
-import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import gradio as gr
@@ -149,14 +148,16 @@ class TestQueryHandler:
             ],
         )
 
-        with patch("ui.app.get_or_create_chain", return_value=mock_chain):
-            with patch("ui.app.get_or_create_context", return_value=mock_context):
-                answer, context = await query_handler(
-                    "What anime are similar to Cowboy Bebop?", [], 10, False
-                )
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler(
+                "What anime are similar to Cowboy Bebop?", [], 10, False
+            )
 
-                assert answer == "Test answer"
-                assert context == ""  # Context not shown when show_context=False
+            assert answer == "Test answer"
+            assert context == ""  # Context not shown when show_context=False
 
     @pytest.mark.asyncio
     async def test_query_handler_with_context_display(self, mock_context: Mock) -> None:
@@ -177,15 +178,17 @@ class TestQueryHandler:
             ],
         )
 
-        with patch("ui.app.get_or_create_chain", return_value=mock_chain):
-            with patch("ui.app.get_or_create_context", return_value=mock_context):
-                answer, context = await query_handler(
-                    "What anime are similar to Cowboy Bebop?", [], 10, True
-                )
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler(
+                "What anime are similar to Cowboy Bebop?", [], 10, True
+            )
 
-                assert answer == "Test answer"
-                assert context != ""  # Context should be shown
-                assert "Test Anime" in context
+            assert answer == "Test answer"
+            assert context != ""  # Context should be shown
+            assert "Test Anime" in context
 
     @pytest.mark.asyncio
     async def test_query_handler_updates_retrieval_k(self, mock_context: Mock) -> None:
@@ -193,11 +196,13 @@ class TestQueryHandler:
         mock_chain = AsyncMock()
         mock_chain.return_value = ("Test answer", [])
 
-        with patch("ui.app.get_or_create_chain", return_value=mock_chain):
-            with patch("ui.app.get_or_create_context", return_value=mock_context):
-                await query_handler("Test question", [], 15, False)
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            await query_handler("Test question", [], 15, False)
 
-                assert mock_context.retrieval_k == 15
+            assert mock_context.retrieval_k == 15
 
     @pytest.mark.asyncio
     async def test_query_handler_value_error(self, mock_context: Mock) -> None:
@@ -206,13 +211,15 @@ class TestQueryHandler:
         mock_chain = AsyncMock()
         mock_chain.side_effect = ValueError("Invalid input")
 
-        with patch("ui.app.get_or_create_chain", return_value=mock_chain):
-            with patch("ui.app.get_or_create_context", return_value=mock_context):
-                answer, context = await query_handler("Test question", [], 10, False)
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("Test question", [], 10, False)
 
-                assert "❌" in answer
-                assert "Invalid input" in answer or "check your query" in answer
-                assert context == ""
+            assert "❌" in answer
+            assert "Invalid input" in answer or "check your query" in answer
+            assert context == ""
 
     @pytest.mark.asyncio
     async def test_query_handler_generic_error(self, mock_context: Mock) -> None:
@@ -221,12 +228,14 @@ class TestQueryHandler:
         mock_chain = AsyncMock()
         mock_chain.side_effect = RuntimeError("Unexpected error")
 
-        with patch("ui.app.get_or_create_chain", return_value=mock_chain):
-            with patch("ui.app.get_or_create_context", return_value=mock_context):
-                answer, context = await query_handler("Test question", [], 10, False)
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("Test question", [], 10, False)
 
-                assert "❌" in answer
-                assert context == ""
+            assert "❌" in answer
+            assert context == ""
 
 
 class TestGetOrCreateContext:
@@ -234,11 +243,10 @@ class TestGetOrCreateContext:
 
     def test_get_or_create_context_creates_new(self) -> None:
         """Test that get_or_create_context creates a new context."""
-        from ui.app import _app_context, get_or_create_context
+        import ui.app
+        from ui.app import get_or_create_context
 
         # Reset global state
-        import ui.app
-
         ui.app._app_context = None
 
         with patch("ui.app.AppContext.create") as mock_create:
@@ -252,11 +260,10 @@ class TestGetOrCreateContext:
 
     def test_get_or_create_context_reuses_existing(self) -> None:
         """Test that get_or_create_context reuses existing context."""
+        import ui.app
         from ui.app import get_or_create_context
 
         # Set up existing context
-        import ui.app
-
         mock_ctx = Mock()
         ui.app._app_context = mock_ctx
 
@@ -270,30 +277,30 @@ class TestGetOrCreateChain:
 
     def test_get_or_create_chain_creates_new(self, mock_context: Mock) -> None:
         """Test that get_or_create_chain creates a new chain."""
+        import ui.app
         from ui.app import get_or_create_chain
 
         # Reset global state
-        import ui.app
-
         ui.app._rag_chain = None
         ui.app._app_context = None
 
         mock_chain = Mock()
         mock_context.rag_chain = mock_chain
 
-        with patch("ui.app.get_or_create_context", return_value=mock_context):
-            with patch("ui.app.initialize_rag_chain", return_value=mock_chain):
-                result = get_or_create_chain()
+        with (
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+            patch("ui.app.initialize_rag_chain", return_value=mock_chain),
+        ):
+            result = get_or_create_chain()
 
-                assert result == mock_chain
+            assert result == mock_chain
 
     def test_get_or_create_chain_reuses_existing(self) -> None:
         """Test that get_or_create_chain reuses existing chain."""
+        import ui.app
         from ui.app import get_or_create_chain
 
         # Set up existing chain
-        import ui.app
-
         mock_chain = Mock()
         ui.app._rag_chain = mock_chain
 
@@ -323,7 +330,7 @@ class TestCreateApp:
         """Test that create_app handles validation errors gracefully."""
         with patch(
             "ui.app.validate_environment",
-            side_effect=EnvironmentError("Test error"),
+            side_effect=OSError("Test error"),
         ):
             app = create_app()
 

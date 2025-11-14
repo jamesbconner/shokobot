@@ -1,7 +1,6 @@
 """Unit tests for UI components."""
 
 import gradio as gr
-import pytest
 
 from ui.components import create_examples, create_header, create_settings_panel
 

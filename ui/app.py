@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from collections.abc import Callable
-from typing import Any
 
 import gradio as gr
 from langchain_core.documents import Document
@@ -149,7 +148,7 @@ def create_app() -> gr.Blocks:
     # Validate environment before creating app
     try:
         validate_environment()
-    except EnvironmentError as e:
+    except OSError as e:
         logger.error(f"Environment validation failed: {e}")
         # Create a simple error app
         with gr.Blocks(title="🎌 ShokoBot - Configuration Error") as error_app:

@@ -71,12 +71,12 @@ def web(port: int, share: bool, debug: bool) -> None:
         console.print("[dim]Validating environment...[/]")
         validate_environment()
         console.print("[green]✓[/] Environment validated")
-    except EnvironmentError as e:
+    except OSError as e:
         console.print(f"\n[red]✗ Configuration Error:[/] {e}\n")
         console.print("[yellow]Please ensure:[/]")
         console.print("  1. OPENAI_API_KEY is set in your .env file")
         console.print("  2. You have run 'shokobot ingest' to initialize the database\n")
-        raise click.Abort()
+        raise click.Abort() from e
 
     # Create and launch app
     try:
@@ -108,4 +108,4 @@ def web(port: int, share: bool, debug: bool) -> None:
         console.print(f"\n[red]✗ Error starting server:[/] {e}\n")
         if debug:
             raise
-        raise click.Abort()
+        raise click.Abort() from e
