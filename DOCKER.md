@@ -39,6 +39,13 @@ The Docker image uses **pip** to install from `pyproject.toml`:
 - No need to manually update Dockerfile when dependencies change
 - Compatible with both Poetry and uv for local development
 
+### Security
+
+**Important:** The `.dockerignore` file excludes all `.env` files to prevent secrets from being baked into the image:
+- `.env` files are never copied into the Docker image
+- Secrets are passed at runtime via `docker-compose.yml` env_file directive
+- This prevents API keys from being exposed in image layers
+
 ### Environment Variables
 
 Required:
@@ -54,10 +61,16 @@ Optional (see `config.json` for defaults):
 The docker-compose.yml defines several volumes:
 
 - `./data:/app/data` - Data directory for MCP cache and other runtime data
-- `chroma_data:/app/.chroma` - Vector database (persistent named volume)
-- `./resources:/app/resources` - Configuration files (read-only)
+- `chroma_data:/app/.chroma` - Vector database (Docker-managed named volume)
+- `./resources:/app/resources` - Configuration files including `config.json` (read-only)
 - `./input:/app/input` - Input data files for ingestion (read-only)
-- `mcp_cache:/app/data/mcp_cache` - MCP cache (optional named volume)
+- `mcp_cache:/app/data/mcp_cache` - MCP cache (Docker-managed named volume)
+
+**Named Volumes vs Bind Mounts:**
+- Named volumes (`chroma_data`, `mcp_cache`) are managed by Docker and persist independently
+- Bind mounts (`./resources`, `./input`) map directly to host directories
+- Named volumes are better for data that doesn't need direct host access
+- Use `docker volume ls` to see all volumes and `docker volume inspect <name>` for details
 
 ## Usage
 
@@ -102,7 +115,7 @@ docker-compose logs --tail=100 shokobot
 
 ### View Image Metadata
 
-The Docker image includes OCI-compliant labels with build information:
+The Docker image includes OCI-compliant labels with build information (version, git commit, build date):
 
 ```bash
 # View all image labels
@@ -114,6 +127,11 @@ docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels."or
 docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels."org.opencontainers.image.created"'
 ```
 
+These labels are automatically populated during CI/CD builds and help with:
+- Version tracking and auditing
+- Identifying which git commit an image was built from
+- Debugging production issues
+
 ### Execute Commands
 
 ```bash
@@ -123,12 +141,25 @@ docker-compose exec shokobot shokobot --help
 # Ingest data
 docker-compose exec shokobot shokobot ingest input/shoko_tvshows.json
 
+# Query the database
+docker-compose exec shokobot shokobot query -q "Best mecha anime"
+
 # Interactive shell
 docker-compose exec shokobot bash
 
 # Run REPL
 docker-compose exec shokobot shokobot repl
+
+# Run as root (for troubleshooting)
+docker-compose exec -u root shokobot bash
 ```
+
+**Available CLI commands:**
+- `shokobot web` - Start web interface (supports `--port`, `--share`, `--debug`)
+- `shokobot ingest` - Ingest anime data from JSON file
+- `shokobot query` - Query the database from command line
+- `shokobot repl` - Interactive REPL mode
+- `shokobot info` - Display system information
 
 ## Advanced Configuration
 
@@ -202,10 +233,17 @@ make dev
 docker-compose -f docker-compose.yml -f docker-compose.override.yml up
 ```
 
-**Note:** For dependency changes, rebuild the image:
-```bash
-docker-compose build
-```
+**Development workflow:**
+1. Make code changes in your editor
+2. Restart the container to see changes: `docker-compose restart shokobot`
+3. For dependency changes, rebuild: `docker-compose build`
+
+**Note:** The `shokobot web` command supports these flags:
+- `--port <number>` - Port to run on (default: 7860)
+- `--share` - Create public Gradio link
+- `--debug` - Enable verbose logging
+
+The server always listens on `0.0.0.0` (all interfaces) by default.
 
 ### Resource Limits
 
@@ -323,6 +361,41 @@ docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
 make restore BACKUP=backups/chroma_20240101_120000.tar.gz
 ```
 
+## Common Issues
+
+### Development Mode Setup
+
+If `make dev` fails with "file not found":
+```bash
+# Create the override file from the example
+cp docker-compose.override.yml.example docker-compose.override.yml
+# Then try again
+make dev
+```
+
+### Volume Naming
+
+Docker Compose prefixes volume names with the project directory name. If backup/restore commands fail:
+```bash
+# List actual volume names
+docker volume ls | grep chroma
+
+# Use the Makefile commands which auto-detect volumes
+make backup
+make restore BACKUP=backups/chroma_20240101_120000.tar.gz
+```
+
+### CLI Command Errors
+
+The `shokobot web` command only supports these flags:
+- `--port` - Port number (default: 7860)
+- `--share` - Create public link
+- `--debug` - Enable debug logging
+
+**Invalid flags** (will cause errors):
+- `--host` - Not supported (always listens on 0.0.0.0)
+- `--reload` - Not supported (use volume mounts for hot reload)
+
 ## Troubleshooting
 
 ### Container won't start
@@ -344,8 +417,8 @@ docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels'
 ### Permission issues
 
 ```bash
-# Fix volume permissions
-docker-compose exec shokobot chown -R shokobot:shokobot /app/data /app/.chroma
+# Fix volume permissions (requires root)
+docker-compose exec -u root shokobot chown -R shokobot:shokobot /app/data /app/.chroma
 ```
 
 ### Out of memory
@@ -385,42 +458,34 @@ docker buildx build \
 
 ## CI/CD Integration
 
-### GitHub Actions Example
+### GitHub Actions Workflow
 
-```yaml
-name: Docker Build
+This project includes a complete GitHub Actions workflow (`.github/workflows/docker.yml`) that:
 
-on:
-  push:
-    branches: [main]
-    tags: ['v*']
+1. **Builds and scans images** for security vulnerabilities using Trivy
+2. **Publishes to GitHub Container Registry** (ghcr.io) on push to main/develop
+3. **Supports multi-platform builds** (linux/amd64, linux/arm64)
+4. **Uses GitHub Actions cache** for faster builds
+5. **Runs tests** on pull requests before merging
 
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+**Key features:**
+- Single-platform build for security scanning (Trivy can't scan multi-platform manifests)
+- Multi-platform build for production deployment
+- Automatic tagging based on branch/tag/commit
+- Security scan results uploaded to GitHub Security tab
+- Build cache shared across workflows for speed
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+**Workflow triggers:**
+- Push to `main` or `develop` branches
+- Push tags matching `v*` pattern
+- Pull requests to `main` branch
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            yourusername/shokobot:latest
-            yourusername/shokobot:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-```
+**Published images:**
+- `ghcr.io/jamesbconner/shokobot:latest` - Latest main branch
+- `ghcr.io/jamesbconner/shokobot:main` - Main branch
+- `ghcr.io/jamesbconner/shokobot:develop` - Develop branch
+- `ghcr.io/jamesbconner/shokobot:sha-<commit>` - Specific commit
+- `ghcr.io/jamesbconner/shokobot:v1.0.0` - Version tags
 
 ## Performance Tuning
 
@@ -430,13 +495,21 @@ Current image size: ~500MB (slim base + dependencies)
 
 The Dockerfile uses:
 - Multi-stage build to separate build and runtime dependencies
-- Poetry for dependency management (reads from pyproject.toml and poetry.lock)
+- pip for dependency management (reads from pyproject.toml and poetry.lock)
 - Python 3.13.9-slim base image
 - Only production dependencies (no dev dependencies)
+- Proper `.dockerignore` to exclude unnecessary files
+
+**Image layers:**
+1. Base Python image (~150MB)
+2. System dependencies (build-essential, curl)
+3. Python packages (~300MB)
+4. Application code (~50MB)
 
 To reduce further:
 - Use `python:3.13-alpine` (adds complexity with build deps)
 - Remove unnecessary dependencies from pyproject.toml
+- Use `--no-cache-dir` with pip (already done)
 
 ### Optimize Runtime
 

@@ -24,9 +24,10 @@ services:
       # Keep these from the image (don't mount)
       # - .chroma, data, resources, input are already mounted in base compose
 
-    # Override command for development with reload
-    # Note: --reload flag may not be supported by all commands
-    command: shokobot web --host 0.0.0.0 --port 7860
+    # Override command for development with debug mode
+    # Note: The server already listens on 0.0.0.0 by default
+    # Gradio doesn't support hot reload, but mounted volumes allow code changes
+    command: shokobot web --port 7860 --debug
 
     # Development environment variables
     environment:
