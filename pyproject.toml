@@ -24,6 +24,8 @@ dependencies = [
     "rich>=13.9.4,<14.0.0",
     "rich-click>=1.8.5,<2.0.0",
     "mcp>=1.0.0,<2.0.0",
+    "gradio (>=5.0.0)",
+    "fastapi (>=0.100.0)",
 ]
 
 [project.optional-dependencies]
@@ -41,7 +43,7 @@ dev = [
 shokobot = "cli:cli"
 
 [tool.poetry]
-packages = [{include = "cli"}, {include = "services"}, {include = "models"}, {include = "utils"}, {include = "prompts"}]
+packages = [{include = "cli"}, {include = "services"}, {include = "models"}, {include = "utils"}, {include = "prompts"}, {include = "ui"}]
 
 [build-system]
 requires = ["poetry-core"]
@@ -116,6 +118,7 @@ addopts = [
     "--cov=models",
     "--cov=utils",
     "--cov=prompts",
+    "--cov=ui",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
@@ -127,7 +130,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["services", "models", "utils"]
+source = ["services", "models", "utils", "ui"]
 omit = ["tests/*", "**/__pycache__/*"]
 
 [tool.coverage.report]

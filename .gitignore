@@ -71,3 +71,7 @@ input/
 data/mcp_cache/
 docs/archive/
 resources/debug/
+
+# Gradio
+gradio_cached_examples/
+flagged/
