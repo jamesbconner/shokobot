@@ -26,10 +26,19 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
 WORKDIR /app
 
 # Copy dependency files
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml poetry.lock ./
 
-# Install dependencies only (no dev dependencies, no root package)
-RUN poetry install --only main --no-root --no-directory
+# Copy source code needed for installation
+COPY cli ./cli
+COPY services ./services
+COPY models ./models
+COPY utils ./utils
+COPY prompts ./prompts
+COPY ui ./ui
+COPY README.md ./
+
+# Install dependencies and the package itself (no dev dependencies)
+RUN poetry install --only main --no-ansi
 
 # Stage 2: Runtime
 FROM python:3.13.9-slim
@@ -72,5 +81,5 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:7860/ || exit 1
 
-# Default command (can be overridden)
-CMD ["python", "-m", "cli.web", "--host", "0.0.0.0", "--port", "7860"]
+# Default command - use shokobot CLI entry point
+CMD ["shokobot", "web", "--port", "7860"]
