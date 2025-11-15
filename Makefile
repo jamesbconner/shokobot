@@ -1,5 +1,8 @@
-.PHONY: help install install-dev clean format lint type-check security test test-cov ingest rag setup
-.PHONY: docker-help docker-build docker-up docker-down docker-logs docker-shell docker-test docker-clean docker-ingest
+.PHONY: help install install-dev setup clean format lint type-check security test test-cov pre-commit check
+.PHONY: ingest ingest-dry-run rag rag-question update lock shell zip zip-manual
+.PHONY: docker-help docker-build docker-up docker-up-nginx docker-down docker-restart docker-logs docker-shell
+.PHONY: docker-test docker-ingest docker-clean docker-rebuild docker-dev docker-format docker-lint
+.PHONY: docker-status docker-stats docker-backup docker-restore
 
 # Default target
 help:  ## Show this help message
