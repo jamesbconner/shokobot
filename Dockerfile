@@ -72,7 +72,7 @@ COPY --chown=shokobot:shokobot . .
 USER shokobot
 
 # Create volume mount points
-VOLUME ["/data", "/app/.chroma"]
+VOLUME ["/data", "/app/.chroma, /resources", "/input"]
 
 # Expose port for web UI
 EXPOSE 7860
