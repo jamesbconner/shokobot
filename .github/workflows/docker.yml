@@ -83,7 +83,7 @@ jobs:
 
           # Test that the CLI is available
           echo "Testing CLI..."
-          docker run --rm $IMAGE_TAG python -m cli.main --help
+          docker run --rm $IMAGE_TAG shokobot --help
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
