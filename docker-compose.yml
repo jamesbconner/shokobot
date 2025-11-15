@@ -25,11 +25,13 @@ services:
     # Volume mounts
     volumes:
       # Persistent data directory
-      - ./data:/data
+      - ./data:/app/data
       # ChromaDB vector store
       - chroma_data:/app/.chroma
       # Configuration
-      - ./config.json:/app/config.json:ro
+      - ./resources:/app/resources:ro
+      # Input data files
+      - ./input:/app/input:ro
       # MCP cache (optional)
       - mcp_cache:/app/data/mcp_cache
 

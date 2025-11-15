@@ -59,7 +59,7 @@ test:
 # Run data ingestion
 ingest:
 	@if [ -z "$(FILE)" ]; then \
-		echo "Usage: make ingest FILE=data/anime.json"; \
+		echo "Usage: make ingest FILE=input/shoko_tvshows.json"; \
 		exit 1; \
 	fi
 	docker-compose exec shokobot shokobot ingest $(FILE)

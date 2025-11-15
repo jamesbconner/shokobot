@@ -387,7 +387,7 @@ make logs
 docker-compose exec shokobot shokobot query -q "Best mecha anime"
 
 # Ingest data
-make ingest FILE=data/anime.json
+make ingest FILE=input/shoko_tvshows.json
 
 # Stop services
 make down

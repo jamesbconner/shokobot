@@ -48,8 +48,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create non-root user
 RUN useradd -m -u 1000 shokobot && \
-    mkdir -p /app /data /app/.chroma && \
-    chown -R shokobot:shokobot /app /data
+    mkdir -p /app /app/data /app/.chroma /app/resources /app/input && \
+    chown -R shokobot:shokobot /app
 
 # Set working directory
 WORKDIR /app
@@ -65,7 +65,7 @@ COPY --chown=shokobot:shokobot . .
 USER shokobot
 
 # Create volume mount points
-VOLUME ["/data", "/app/.chroma", "/resources", "/input"]
+VOLUME ["/app/data", "/app/.chroma", "/app/resources", "/app/input"]
 
 # Expose port for web UI
 EXPOSE 7860

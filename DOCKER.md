@@ -53,10 +53,11 @@ Optional (see `config.json` for defaults):
 
 The docker-compose.yml defines several volumes:
 
-- `./data:/data` - Anime data files
-- `chroma_data:/app/.chroma` - Vector database (persistent)
-- `./config.json:/app/config.json` - Configuration file
-- `mcp_cache:/app/data/mcp_cache` - MCP cache (optional)
+- `./data:/app/data` - Data directory for MCP cache and other runtime data
+- `chroma_data:/app/.chroma` - Vector database (persistent named volume)
+- `./resources:/app/resources` - Configuration files (read-only)
+- `./input:/app/input` - Input data files for ingestion (read-only)
+- `mcp_cache:/app/data/mcp_cache` - MCP cache (optional named volume)
 
 ## Usage
 
@@ -106,7 +107,7 @@ docker-compose logs --tail=100 shokobot
 docker-compose exec shokobot shokobot --help
 
 # Ingest data
-docker-compose exec shokobot shokobot ingest data/anime.json
+docker-compose exec shokobot shokobot ingest input/shoko_tvshows.json
 
 # Interactive shell
 docker-compose exec shokobot bash
@@ -278,7 +279,7 @@ docker inspect shokobot
 
 ```bash
 # Fix volume permissions
-docker-compose exec shokobot chown -R shokobot:shokobot /data /app/.chroma
+docker-compose exec shokobot chown -R shokobot:shokobot /app/data /app/.chroma
 ```
 
 ### Out of memory
