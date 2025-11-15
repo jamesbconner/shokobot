@@ -353,3 +353,370 @@ class TestCreateApp:
 
             # Should have a theme set
             assert app.theme is not None
+
+
+class TestFormatContextEdgeCases:
+    """Additional edge case tests for format_context function."""
+
+    def test_format_context_with_missing_title_main(self) -> None:
+        """Test formatting when title_main is missing from metadata."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "anime_id": "123",
+                "_distance_score": 0.1,
+            },
+        )
+
+        result = format_context([doc])
+
+        assert "Unknown Title" in result
+        assert "123" in result
+
+    def test_format_context_with_missing_anime_id(self) -> None:
+        """Test formatting when anime_id is missing from metadata."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test Anime",
+                "_distance_score": 0.1,
+            },
+        )
+
+        result = format_context([doc])
+
+        assert "Test Anime" in result
+        assert "N/A" in result
+
+    def test_format_context_with_missing_distance_score(self) -> None:
+        """Test formatting when distance score is missing."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test Anime",
+                "anime_id": "123",
+            },
+        )
+
+        result = format_context([doc])
+
+        # Should handle gracefully with default distance of 0.0
+        assert "Test Anime" in result
+        assert "100" in result or "Similarity" in result
+
+    def test_format_context_with_high_distance_score(self) -> None:
+        """Test formatting with high distance score (low similarity)."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test Anime",
+                "anime_id": "123",
+                "_distance_score": 0.9,  # High distance = low similarity
+            },
+        )
+
+        result = format_context([doc])
+
+        # Distance 0.9 should show as ~10% similarity
+        assert "10" in result or "Similarity" in result
+
+    def test_format_context_with_zero_distance_score(self) -> None:
+        """Test formatting with zero distance score (perfect match)."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test Anime",
+                "anime_id": "123",
+                "_distance_score": 0.0,  # Perfect match
+            },
+        )
+
+        result = format_context([doc])
+
+        # Distance 0.0 should show as 100% similarity
+        assert "100" in result
+
+    def test_format_context_with_special_characters_in_title(self) -> None:
+        """Test formatting with special characters in title."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test <Anime> & \"Special\" 'Chars'",
+                "anime_id": "123",
+                "_distance_score": 0.1,
+            },
+        )
+
+        result = format_context([doc])
+
+        # HTML should be properly escaped or handled
+        assert "Test" in result
+        assert "Anime" in result
+
+    def test_format_context_with_empty_page_content(self) -> None:
+        """Test formatting with empty page content."""
+        doc = Document(
+            page_content="",
+            metadata={
+                "title_main": "Test Anime",
+                "anime_id": "123",
+                "_distance_score": 0.1,
+            },
+        )
+
+        result = format_context([doc])
+
+        assert "Test Anime" in result
+        # Should handle empty content gracefully
+
+    def test_format_context_html_structure(self) -> None:
+        """Test that formatted context has proper HTML structure."""
+        doc = Document(
+            page_content="Test content",
+            metadata={
+                "title_main": "Test Anime",
+                "anime_id": "123",
+                "_distance_score": 0.1,
+            },
+        )
+
+        result = format_context([doc])
+
+        # Should contain HTML elements
+        assert "<div" in result
+        assert "<details" in result
+        assert "<summary" in result
+        assert "</div>" in result
+
+    def test_format_context_multiple_docs_ordering(self) -> None:
+        """Test that multiple documents are numbered correctly."""
+        docs = [
+            Document(
+                page_content=f"Content {i}",
+                metadata={
+                    "title_main": f"Anime {i}",
+                    "anime_id": str(i),
+                    "_distance_score": 0.1 * i,
+                },
+            )
+            for i in range(1, 6)
+        ]
+
+        result = format_context(docs)
+
+        # Should have numbered entries
+        for i in range(1, 6):
+            assert f"{i}." in result
+            assert f"Anime {i}" in result
+
+
+class TestQueryHandlerEdgeCases:
+    """Additional edge case tests for query_handler function."""
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_very_long_message(self, mock_context: Mock) -> None:
+        """Test handling of very long messages."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer", [])
+
+        long_message = "A" * 10000  # Very long message
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler(long_message, [], 10, False)
+
+            # Should handle without error
+            assert isinstance(answer, str)
+            mock_chain.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_special_characters(self, mock_context: Mock) -> None:
+        """Test handling of special characters in message."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer", [])
+
+        message = "What about anime with <tags> & 'quotes' and \"special\" chars?"
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler(message, [], 10, False)
+
+            assert isinstance(answer, str)
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_unicode_message(self, mock_context: Mock) -> None:
+        """Test handling of unicode characters in message."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer", [])
+
+        message = "進撃の巨人について教えてください"
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler(message, [], 10, False)
+
+            assert isinstance(answer, str)
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_conversation_history(self, mock_context: Mock) -> None:
+        """Test query handler with conversation history."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer", [])
+
+        history = [
+            ("Previous question 1", "Previous answer 1"),
+            ("Previous question 2", "Previous answer 2"),
+        ]
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("New question", history, 10, False)
+
+            assert isinstance(answer, str)
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_different_k_values(self, mock_context: Mock) -> None:
+        """Test query handler with different k values."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer", [])
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            # Test with k=1
+            await query_handler("Test question", [], 1, False)
+            assert mock_context.retrieval_k == 1
+
+            # Test with k=20
+            await query_handler("Test question", [], 20, False)
+            assert mock_context.retrieval_k == 20
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_empty_document_list(self, mock_context: Mock) -> None:
+        """Test query handler when no documents are retrieved."""
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("No relevant anime found.", [])
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("Test question", [], 10, True)
+
+            assert answer == "No relevant anime found."
+            assert context == ""  # Empty docs should result in empty context
+
+    @pytest.mark.asyncio
+    async def test_query_handler_error_message_format(self, mock_context: Mock) -> None:
+        """Test that error messages are properly formatted."""
+        mock_chain = AsyncMock()
+        mock_chain.side_effect = ValueError("Specific error message")
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("Test question", [], 10, False)
+
+            # Should have error indicator
+            assert "❌" in answer
+            # Should be a string
+            assert isinstance(answer, str)
+            assert context == ""
+
+    @pytest.mark.asyncio
+    async def test_query_handler_with_multiple_documents(self, mock_context: Mock) -> None:
+        """Test query handler with multiple retrieved documents."""
+        docs = [
+            Document(
+                page_content=f"Content {i}",
+                metadata={
+                    "title_main": f"Anime {i}",
+                    "anime_id": str(i),
+                    "_distance_score": 0.1,
+                },
+            )
+            for i in range(5)
+        ]
+
+        mock_chain = AsyncMock()
+        mock_chain.return_value = ("Test answer with multiple anime", docs)
+
+        with (
+            patch("ui.app.get_or_create_chain", return_value=mock_chain),
+            patch("ui.app.get_or_create_context", return_value=mock_context),
+        ):
+            answer, context = await query_handler("Test question", [], 10, True)
+
+            assert answer == "Test answer with multiple anime"
+            # Context should contain all anime
+            for i in range(5):
+                assert f"Anime {i}" in context
+
+
+class TestAppGlobalState:
+    """Tests for global state management in app module."""
+
+    def test_global_state_isolation(self) -> None:
+        """Test that global state can be reset between tests."""
+        import ui.app
+
+        # Reset global state
+        ui.app._app_context = None
+        ui.app._rag_chain = None
+
+        assert ui.app._app_context is None
+        assert ui.app._rag_chain is None
+
+    def test_context_singleton_behavior(self) -> None:
+        """Test that context follows singleton pattern."""
+        import ui.app
+        from ui.app import get_or_create_context
+
+        # Reset state
+        ui.app._app_context = None
+
+        with patch("ui.app.AppContext.create") as mock_create:
+            mock_ctx = Mock()
+            mock_create.return_value = mock_ctx
+
+            # First call creates
+            ctx1 = get_or_create_context()
+            # Second call reuses
+            ctx2 = get_or_create_context()
+
+            assert ctx1 is ctx2
+            mock_create.assert_called_once()
+
+    def test_chain_singleton_behavior(self) -> None:
+        """Test that chain follows singleton pattern."""
+        import ui.app
+        from ui.app import get_or_create_chain
+
+        # Reset state
+        ui.app._rag_chain = None
+        ui.app._app_context = None
+
+        mock_ctx = Mock()
+        mock_chain = Mock()
+
+        with (
+            patch("ui.app.get_or_create_context", return_value=mock_ctx),
+            patch("ui.app.initialize_rag_chain", return_value=mock_chain) as mock_init,
+        ):
+            # First call creates
+            chain1 = get_or_create_chain()
+            # Second call reuses
+            chain2 = get_or_create_chain()
+
+            assert chain1 is chain2
+            mock_init.assert_called_once()

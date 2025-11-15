@@ -470,3 +470,328 @@ class TestParseAnidbJsonExternalIds:
         assert result.ann_id is None
         assert result.crunchyroll_id is None
         assert result.wikipedia_id is None
+
+
+class TestParseAnidbJsonComplexScenarios:
+    """Tests for complex real-world scenarios."""
+
+    def test_parse_anime_with_mixed_valid_invalid_titles(self) -> None:
+        """Test parsing anime with mix of valid and invalid title entries."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "titles": [
+                {"title": "Test Anime", "type": "main"},
+                {"title": "", "type": "official"},  # Empty title
+                {"title": "Valid Alt", "type": "synonym"},
+                {},  # Missing fields
+                {"type": "official"},  # Missing title
+                {"title": "Another Valid", "type": "short"},
+            ],
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should only include valid non-main titles
+        assert "Valid Alt" in result.title_alts
+        assert "Another Valid" in result.title_alts
+        assert len(result.title_alts) == 2
+
+    def test_parse_anime_with_mixed_valid_invalid_tags(self) -> None:
+        """Test parsing anime with mix of valid and invalid tag entries."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "tags": [
+                {"name": "action", "weight": 600},
+                {"name": "", "weight": 400},  # Empty name
+                {"name": "sci-fi", "weight": 300},
+                {},  # Missing fields
+                {"weight": 200},  # Missing name
+            ],
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should only include valid tags
+        assert "action" in result.tags
+        assert "sci-fi" in result.tags
+        assert len(result.tags) == 2
+
+    def test_parse_anime_with_non_dict_ratings(self) -> None:
+        """Test parsing anime when ratings is not a dict."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "ratings": "not a dict",  # Invalid type
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should use default values
+        assert result.rating == 0
+        assert result.vote_count == 0
+        assert result.avg_review_rating == 0
+        assert result.review_count == 0
+
+    def test_parse_anime_with_zero_ratings(self) -> None:
+        """Test parsing anime with zero ratings."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "ratings": {
+                "permanent": 0.0,
+                "permanent_count": 0,
+                "review": 0.0,
+                "review_count": 0,
+            },
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        assert result.rating == 0
+        assert result.vote_count == 0
+        assert result.avg_review_rating == 0
+        assert result.review_count == 0
+
+    def test_parse_anime_with_none_review_rating(self) -> None:
+        """Test parsing anime when review rating is None."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "ratings": {
+                "permanent": 8.5,
+                "permanent_count": 1000,
+                "review": None,  # No review rating
+                "review_count": 0,
+            },
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        assert result.rating == 850
+        assert result.vote_count == 1000
+        assert result.avg_review_rating == 0
+        assert result.review_count == 0
+
+    def test_parse_anime_with_fractional_ratings(self) -> None:
+        """Test parsing anime with fractional ratings."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "ratings": {
+                "permanent": 7.89,
+                "permanent_count": 500,
+                "review": 6.54,
+                "review_count": 25,
+            },
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        assert result.rating == 789  # 7.89 * 100
+        assert result.avg_review_rating == 654  # 6.54 * 100
+
+    def test_parse_anime_with_non_list_titles(self) -> None:
+        """Test parsing anime when titles is not a list."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "titles": "not a list",  # Invalid type
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should handle gracefully with empty alts
+        assert result.title_alts == []
+
+    def test_parse_anime_with_non_list_tags(self) -> None:
+        """Test parsing anime when tags is not a list."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "tags": "not a list",  # Invalid type
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should handle gracefully with empty tags
+        assert result.tags == []
+
+    def test_parse_anime_with_string_episode_counts(self) -> None:
+        """Test parsing anime with string episode counts."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "episode_count_normal": "24",  # String instead of int
+            "episode_count_special": "2",
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # ShowDoc should handle type conversion or use defaults
+        assert isinstance(result.episode_count_normal, int)
+        assert isinstance(result.episode_count_special, int)
+
+    def test_parse_anime_with_negative_episode_counts(self) -> None:
+        """Test parsing anime with negative episode counts."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "episode_count_normal": -1,
+            "episode_count_special": -1,
+        }
+
+        # Act & Assert
+        # ShowDoc validation should reject negative episode counts
+        with pytest.raises(ValueError, match="Failed to create ShowDoc"):
+            parse_anidb_json(json_data)
+
+    def test_parse_anime_with_future_dates(self) -> None:
+        """Test parsing anime with future air dates."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "start_date": "2030-01-01",
+            "end_date": "2030-12-31",
+            "begin_year": 2030,
+            "end_year": 2030,
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        assert result.air_date is not None
+        assert result.end_date is not None
+        assert result.begin_year == 2030
+        assert result.end_year == 2030
+
+    def test_parse_anime_with_mismatched_years_and_dates(self) -> None:
+        """Test parsing anime where years don't match date years."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "start_date": "2023-01-01",
+            "end_date": "2023-12-31",
+            "begin_year": 2022,  # Doesn't match date
+            "end_year": 2024,  # Doesn't match date
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        # Should accept both values as provided
+        assert result.begin_year == 2022
+        assert result.end_year == 2024
+        assert result.air_date.year == 2023  # type: ignore[union-attr]
+        assert result.end_date.year == 2023  # type: ignore[union-attr]
+
+    def test_parse_anime_with_complex_relations(self) -> None:
+        """Test parsing anime with complex related anime structure."""
+        # Arrange
+        relations_data = [
+            {"id": 123, "type": "sequel", "title": "Test Anime 2"},
+            {"id": 124, "type": "prequel", "title": "Test Anime 0"},
+            {"id": 125, "type": "side story", "title": "Test Anime Side"},
+            {"id": 126, "type": "parent story", "title": "Test Anime Origin"},
+        ]
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "related_anime": relations_data,
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        parsed_relations = json.loads(result.relations)
+        assert len(parsed_relations) == 4
+        assert any(r["type"] == "sequel" for r in parsed_relations)
+        assert any(r["type"] == "prequel" for r in parsed_relations)
+
+    def test_parse_anime_with_unicode_in_all_fields(self) -> None:
+        """Test parsing anime with unicode characters in various fields."""
+        # Arrange
+        json_data = {
+            "aid": 12345,
+            "title": "進撃の巨人",
+            "titles": [
+                {"title": "進撃の巨人", "type": "main"},
+                {"title": "Attack on Titan", "type": "official"},
+            ],
+            "synopsis": "人類と巨人の戦い。壁の中で暮らす人々の物語。",
+            "tags": [{"name": "アクション", "weight": 600}],
+        }
+
+        # Act
+        result = parse_anidb_json(json_data)
+
+        # Assert
+        assert result.title_main == "進撃の巨人"
+        assert "Attack on Titan" in result.title_alts
+        assert "人類と巨人の戦い" in result.description
+        assert "アクション" in result.tags
+
+    def test_parse_anime_creates_valid_showdoc_instance(
+        self, valid_complete_anime_json: dict
+    ) -> None:
+        """Test that parsing creates a valid ShowDoc that can be used."""
+        # Act
+        result = parse_anidb_json(valid_complete_anime_json)
+
+        # Assert
+        # Should be able to access all ShowDoc properties
+        assert hasattr(result, "anime_id")
+        assert hasattr(result, "title_main")
+        assert hasattr(result, "anidb_anime_id")
+        # Should be able to convert to dict
+        result_dict = result.model_dump()
+        assert isinstance(result_dict, dict)
+        assert result_dict["anime_id"] == "12345"
+
+    def test_parse_anime_with_showdoc_creation_failure(self) -> None:
+        """Test handling when ShowDoc creation fails."""
+        # Arrange - Create data that will pass initial validation but fail ShowDoc creation
+        json_data = {
+            "aid": 12345,
+            "title": "Test Anime",
+            "episode_count_normal": "invalid",  # This might cause ShowDoc validation to fail
+        }
+
+        # Act & Assert
+        # Should raise ValueError with descriptive message
+        with pytest.raises(ValueError, match="Failed to create ShowDoc"):
+            parse_anidb_json(json_data)

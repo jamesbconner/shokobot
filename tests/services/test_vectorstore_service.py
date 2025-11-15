@@ -236,14 +236,22 @@ class TestValidateDistanceFunction:
 class TestCreateEmbeddings:
     """Tests for _create_embeddings function."""
 
-    def test_creates_embeddings_with_valid_config(self, mock_config: ConfigService) -> None:
+    @patch("services.vectorstore_service.OpenAIEmbeddings")
+    def test_creates_embeddings_with_valid_config(
+        self, mock_embeddings_class: Mock, mock_config: ConfigService
+    ) -> None:
         """Test that embeddings are created with valid configuration.
 
         Args:
+            mock_embeddings_class: Mock OpenAIEmbeddings class.
             mock_config: Mock configuration service.
         """
         # Arrange
         from services.vectorstore_service import _create_embeddings
+
+        mock_embeddings = Mock()
+        mock_embeddings.model = "text-embedding-3-small"
+        mock_embeddings_class.return_value = mock_embeddings
 
         # Act
         embeddings = _create_embeddings(mock_config)
@@ -251,6 +259,7 @@ class TestCreateEmbeddings:
         # Assert
         assert embeddings is not None
         assert embeddings.model == "text-embedding-3-small"
+        mock_embeddings_class.assert_called_once()
 
     def test_raises_error_when_model_not_configured(self) -> None:
         """Test that error is raised when embedding model is not configured."""
@@ -264,7 +273,8 @@ class TestCreateEmbeddings:
         with pytest.raises(ValueError, match="openai.embedding_model not configured"):
             _create_embeddings(config)
 
-    def test_uses_default_timeout_and_retries(self) -> None:
+    @patch("services.vectorstore_service.OpenAIEmbeddings")
+    def test_uses_default_timeout_and_retries(self, mock_embeddings_class: Mock) -> None:
         """Test that default timeout and retries are used when not configured."""
         # Arrange
         from services.vectorstore_service import _create_embeddings
@@ -276,12 +286,19 @@ class TestCreateEmbeddings:
             "openai.max_retries": 3,
         }.get(key, default)
 
+        mock_embeddings = Mock()
+        mock_embeddings.request_timeout = 60
+        mock_embeddings.max_retries = 3
+        mock_embeddings_class.return_value = mock_embeddings
+
         # Act
         embeddings = _create_embeddings(config)
 
         # Assert
         assert embeddings.request_timeout == 60
         assert embeddings.max_retries == 3
+        # Verify OpenAIEmbeddings was called with correct parameters
+        mock_embeddings_class.assert_called_once()
 
 
 class TestDeleteByAnimeIds:
