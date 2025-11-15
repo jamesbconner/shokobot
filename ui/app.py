@@ -1,7 +1,7 @@
 """Main Gradio application for ShokoBot web interface."""
 
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 import gradio as gr
 from langchain_core.documents import Document
@@ -13,7 +13,7 @@ from ui.utils import format_error_message, initialize_rag_chain, validate_enviro
 logger = logging.getLogger(__name__)
 
 # Global state for RAG chain (initialized once)
-_rag_chain: Callable[[str], tuple[str, list[Document]]] | None = None
+_rag_chain: Callable[[str], Awaitable[tuple[str, list[Document]]]] | None = None
 _app_context: AppContext | None = None
 
 
@@ -29,11 +29,11 @@ def get_or_create_context() -> AppContext:
     return _app_context
 
 
-def get_or_create_chain() -> Callable[[str], tuple[str, list[Document]]]:
+def get_or_create_chain() -> Callable[[str], Awaitable[tuple[str, list[Document]]]]:
     """Get or create RAG chain (singleton).
 
     Returns:
-        RAG chain callable.
+        RAG chain callable that returns an awaitable.
     """
     global _rag_chain
     if _rag_chain is None:
@@ -160,7 +160,7 @@ def create_app() -> gr.Blocks:
                 2. You have run `shokobot ingest` to initialize the vector database
                 """
             )
-        return error_app
+        return error_app  # type: ignore[no-any-return]
 
     # Create main application
     with gr.Blocks(
@@ -262,7 +262,7 @@ def create_app() -> gr.Blocks:
 
         clear.click(lambda: ([], ""), outputs=[chatbot, context_display], queue=False)
 
-    return demo
+    return demo  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":

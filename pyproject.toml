@@ -105,6 +105,7 @@ module = [
     "langchain_openai.*",
     "langchain_chroma.*",
     "chromadb.*",
+    "gradio.*",
 ]
 ignore_missing_imports = true
 
@@ -130,7 +131,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["services", "models", "utils", "ui"]
+source = ["services", "models", "utils", "prompts", "ui"]
 omit = ["tests/*", "**/__pycache__/*"]
 
 [tool.coverage.report]
@@ -149,7 +150,7 @@ exclude_lines = [
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "venv"]
-skips = ["B101"]  # Allow assert statements
+skips = ["B101", "B104"]  # B101: Allow assert statements, B104: Allow binding to all interfaces (0.0.0.0)
 
 [tool.bandit.assert_used]
 skips = ["*_test.py", "test_*.py"]

@@ -34,8 +34,8 @@ jobs:
 
     - name: Run security checks with bandit
       run: |
-        poetry run bandit -r services/ utils/ models/ -f json -o bandit-report.json || true
-        poetry run bandit -r services/ utils/ models/
+        poetry run bandit -r cli/ services/ utils/ models/ prompts/ ui/ -f json -o bandit-report.json || true
+        poetry run bandit -r cli/ services/ utils/ models/ prompts/ ui/
       continue-on-error: true
 
     - name: Upload bandit report

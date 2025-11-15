@@ -4,7 +4,7 @@ This module tests retriever building, alias prefiltering, and RAG chain
 construction with various query patterns and configurations.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -1037,6 +1037,7 @@ class TestSearchWithMCPFallback:
         assert result[0] == mock_doc1
 
     @pytest.mark.asyncio
+    @patch("services.rag_service._extract_anime_title")
     @patch("services.mcp_client_service.create_mcp_client")
     @patch("services.showdoc_persistence.ShowDocPersistence")
     @patch("services.mcp_anime_json_parser.parse_anidb_json")
@@ -1045,6 +1046,7 @@ class TestSearchWithMCPFallback:
         mock_parse: Mock,
         mock_persistence_class: Mock,
         mock_create_client: Mock,
+        mock_extract_title: AsyncMock,
         mock_context: Mock,
     ) -> None:
         """Test that MCP fallback handles JSON parsing failures gracefully."""
@@ -1066,6 +1068,9 @@ class TestSearchWithMCPFallback:
             (mock_doc1, 0.5),
         ]
         mock_context.vectorstore = mock_vectorstore
+
+        # Mock title extraction
+        mock_extract_title.return_value = "Test Anime"
 
         # Mock MCP client
         from unittest.mock import AsyncMock
@@ -1173,12 +1178,14 @@ class TestSearchWithMCPFallback:
         mock_upsert.assert_not_called()
 
     @pytest.mark.asyncio
+    @patch("services.rag_service._extract_anime_title")
     @patch("services.mcp_client_service.create_mcp_client")
     @patch("services.showdoc_persistence.ShowDocPersistence")
     async def test_search_with_mcp_fallback_search_result_with_attribute(
         self,
         mock_persistence_class: Mock,
         mock_create_client: Mock,
+        mock_extract_title: AsyncMock,
         mock_context: Mock,
     ) -> None:
         """Test MCP fallback with search result that has aid as attribute."""
@@ -1201,6 +1208,9 @@ class TestSearchWithMCPFallback:
             (mock_doc1, 0.5),
         ]
         mock_context.vectorstore = mock_vectorstore
+
+        # Mock title extraction
+        mock_extract_title.return_value = "Test Anime"
 
         # Mock MCP client with search result that has aid as attribute
         mock_client = AsyncMock()
@@ -1582,3 +1592,455 @@ class TestExtractAnimeTitle:
         # Assert
         assert result == "Cowboy Bebop"
         mock_llm_extract.assert_called_once_with(query, mock_context)
+
+
+class TestExtractAnimeTitleLLM:
+    """Tests for _extract_anime_title_llm function."""
+
+    @pytest.mark.asyncio
+    @patch("langchain_openai.ChatOpenAI")
+    @patch("prompts.build_title_extraction_prompt")
+    async def test_extract_title_llm_success(
+        self, mock_build_prompt: Mock, mock_chat_openai: Mock, mock_context: Mock
+    ) -> None:
+        """Test successful LLM title extraction."""
+        from services.rag_service import _extract_anime_title_llm
+
+        # Arrange
+        mock_context.config.get.return_value = "gpt-5-nano"
+
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_build_prompt.return_value = mock_prompt
+
+        mock_llm = Mock()
+        mock_response = Mock()
+        mock_response.content = "Cowboy Bebop"
+        mock_llm.invoke.return_value = mock_response
+        mock_chat_openai.return_value = mock_llm
+
+        # Act
+        result = await _extract_anime_title_llm("space cowboy anime", mock_context)
+
+        # Assert
+        assert result == "Cowboy Bebop"
+        mock_chat_openai.assert_called_once()
+        mock_llm.invoke.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_extract_title_llm_no_model_configured(self, mock_context: Mock) -> None:
+        """Test LLM extraction when no model is configured."""
+        from services.rag_service import _extract_anime_title_llm
+
+        # Arrange
+        # Mock config.get to return None for "openai.model"
+        mock_context.config.get.side_effect = lambda key, default=None: None
+        query = "space cowboy anime"
+
+        # Act
+        result = await _extract_anime_title_llm(query, mock_context)
+
+        # Assert
+        assert result == query  # Should return original query
+
+    @pytest.mark.asyncio
+    @patch("langchain_openai.ChatOpenAI")
+    @patch("prompts.build_title_extraction_prompt")
+    async def test_extract_title_llm_with_list_content(
+        self, mock_build_prompt: Mock, mock_chat_openai: Mock, mock_context: Mock
+    ) -> None:
+        """Test LLM extraction with list content response."""
+        from services.rag_service import _extract_anime_title_llm
+
+        # Arrange
+        mock_context.config.get.return_value = "gpt-5-nano"
+
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_build_prompt.return_value = mock_prompt
+
+        mock_llm = Mock()
+        mock_response = Mock()
+        # Simulate GPT-5 response with list of content blocks
+        mock_response.content = [
+            {"type": "reasoning", "text": "thinking..."},
+            {"type": "text", "text": "Attack on Titan"},
+        ]
+        mock_llm.invoke.return_value = mock_response
+        mock_chat_openai.return_value = mock_llm
+
+        # Act
+        result = await _extract_anime_title_llm("giant anime", mock_context)
+
+        # Assert
+        assert result == "Attack on Titan"
+
+    @pytest.mark.asyncio
+    @patch("langchain_openai.ChatOpenAI")
+    @patch("prompts.build_title_extraction_prompt")
+    async def test_extract_title_llm_exception_handling(
+        self, mock_build_prompt: Mock, mock_chat_openai: Mock, mock_context: Mock
+    ) -> None:
+        """Test LLM extraction handles exceptions gracefully."""
+        from services.rag_service import _extract_anime_title_llm
+
+        # Arrange
+        mock_context.config.get.return_value = "gpt-5-nano"
+
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_build_prompt.return_value = mock_prompt
+
+        mock_llm = Mock()
+        mock_llm.invoke.side_effect = Exception("API Error")
+        mock_chat_openai.return_value = mock_llm
+
+        query = "space anime"
+
+        # Act
+        result = await _extract_anime_title_llm(query, mock_context)
+
+        # Assert
+        assert result == query  # Should return original query on error
+
+
+class TestSearchWithMCPFallbackEdgeCases:
+    """Additional edge case tests for search_with_mcp_fallback."""
+
+    @pytest.mark.asyncio
+    async def test_search_with_mcp_fallback_empty_query(self, mock_context: Mock) -> None:
+        """Test that empty query raises ValueError."""
+        from services.rag_service import search_with_mcp_fallback
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Query cannot be empty"):
+            await search_with_mcp_fallback("", mock_context)
+
+    @pytest.mark.asyncio
+    async def test_search_with_mcp_fallback_whitespace_query(self, mock_context: Mock) -> None:
+        """Test that whitespace-only query raises ValueError."""
+        from services.rag_service import search_with_mcp_fallback
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Query cannot be empty"):
+            await search_with_mcp_fallback("   ", mock_context)
+
+    @pytest.mark.asyncio
+    async def test_search_with_mcp_fallback_mcp_disabled(self, mock_context: Mock) -> None:
+        """Test fallback when MCP is disabled."""
+        from langchain_core.documents import Document
+
+        from services.rag_service import search_with_mcp_fallback
+
+        # Arrange
+        mock_context.config.get_mcp_fallback_count_threshold.return_value = 5
+        mock_context.config.get_mcp_fallback_score_threshold.return_value = 0.5
+        mock_context.config.get_mcp_enabled.return_value = False
+        mock_context.retrieval_k = 10
+
+        mock_doc = Document(page_content="Content", metadata={"anime_id": "1"})
+        mock_vectorstore = Mock()
+        mock_vectorstore.similarity_search_with_score.return_value = [(mock_doc, 0.8)]
+        mock_context.vectorstore = mock_vectorstore
+
+        # Act
+        result = await search_with_mcp_fallback("test query", mock_context)
+
+        # Assert
+        assert len(result) == 1
+        assert result[0].metadata["_distance_score"] == 0.8
+
+    @pytest.mark.asyncio
+    @patch("services.rag_service._extract_anime_title")
+    @patch("services.mcp_client_service.create_mcp_client")
+    async def test_search_with_mcp_fallback_no_mcp_results(
+        self, mock_create_client: Mock, mock_extract_title: AsyncMock, mock_context: Mock
+    ) -> None:
+        """Test fallback when MCP returns no results."""
+        from langchain_core.documents import Document
+
+        from services.rag_service import search_with_mcp_fallback
+
+        # Arrange
+        mock_context.config.get_mcp_fallback_count_threshold.return_value = 5
+        mock_context.config.get_mcp_fallback_score_threshold.return_value = 0.5
+        mock_context.config.get_mcp_enabled.return_value = True
+        mock_context.config.get_mcp_cache_dir.return_value = "data/mcp_cache"
+        mock_context.retrieval_k = 10
+
+        mock_doc = Document(page_content="Content", metadata={"anime_id": "1"})
+        mock_vectorstore = Mock()
+        mock_vectorstore.similarity_search_with_score.return_value = [(mock_doc, 0.8)]
+        mock_context.vectorstore = mock_vectorstore
+
+        mock_extract_title.return_value = "Test Anime"
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__.return_value = mock_client
+        mock_client.__aexit__.return_value = None
+        mock_client.search_anime.return_value = []  # No results
+        mock_create_client.return_value = mock_client
+
+        # Act
+        result = await search_with_mcp_fallback("test query", mock_context)
+
+        # Assert
+        assert len(result) == 1
+        assert result[0] == mock_doc
+
+
+class TestInitLLM:
+    """Tests for _init_llm function."""
+
+    @patch("services.rag_service.ChatOpenAI")
+    @patch("services.rag_service.build_anime_rag_prompt")
+    def test_init_llm_text_format(self, mock_build_prompt: Mock, mock_chat_openai: Mock) -> None:
+        """Test LLM initialization with text format."""
+        from services.rag_service import _init_llm
+
+        # Arrange
+        mock_llm = Mock()
+        mock_chat_openai.return_value = mock_llm
+        mock_prompt = Mock()
+        mock_build_prompt.return_value = mock_prompt
+
+        # Act
+        llm, prompt = _init_llm("gpt-5-nano", 4096, "text")
+
+        # Assert
+        assert llm == mock_llm
+        assert prompt == mock_prompt
+        mock_chat_openai.assert_called_once()
+        mock_build_prompt.assert_called_once()
+
+    @patch("services.rag_service.ChatOpenAI")
+    @patch("services.rag_service.build_anime_rag_json_prompt")
+    def test_init_llm_json_format(
+        self, mock_build_json_prompt: Mock, mock_chat_openai: Mock
+    ) -> None:
+        """Test LLM initialization with JSON format."""
+        from services.rag_service import _init_llm
+
+        # Arrange
+        mock_llm = Mock()
+        mock_chat_openai.return_value = mock_llm
+        mock_prompt = Mock()
+        mock_build_json_prompt.return_value = mock_prompt
+
+        # Act
+        llm, prompt = _init_llm("gpt-5-nano", 4096, "json")
+
+        # Assert
+        assert llm == mock_llm
+        assert prompt == mock_prompt
+        mock_chat_openai.assert_called_once()
+        # Verify JSON response format was set
+        call_kwargs = mock_chat_openai.call_args[1]
+        assert "model_kwargs" in call_kwargs
+        assert call_kwargs["model_kwargs"]["response_format"]["type"] == "json_object"
+
+    def test_init_llm_invalid_format(self) -> None:
+        """Test that invalid output format raises ValueError."""
+        from services.rag_service import _init_llm
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="output_format must be"):
+            _init_llm("gpt-5-nano", 4096, "invalid")
+
+
+class TestBuildRAGChainEdgeCases:
+    """Additional edge case tests for build_rag_chain."""
+
+    def test_build_rag_chain_invalid_output_format(self, mock_context: Mock) -> None:
+        """Test that invalid output format raises ValueError."""
+        # Act & Assert
+        with pytest.raises(ValueError, match="output_format must be"):
+            build_rag_chain(mock_context, output_format="invalid")
+
+    def test_build_rag_chain_no_model_configured(self, mock_context: Mock) -> None:
+        """Test that missing model configuration raises ValueError."""
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: None
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="openai.model not configured"):
+            build_rag_chain(mock_context)
+
+    def test_build_rag_chain_non_gpt5_model(self, mock_context: Mock) -> None:
+        """Test that non-GPT-5 model raises ValueError."""
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: {
+            "openai.model": "gpt-4",
+        }.get(key, default)
+        mock_context.config.get_reasoning_effort.return_value = "medium"
+        mock_context.config.get_output_verbosity.return_value = "medium"
+        mock_context.config.get_max_output_tokens.return_value = 4096
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="requires a GPT-5 model"):
+            build_rag_chain(mock_context)
+
+    @pytest.mark.asyncio
+    @patch("services.rag_service._init_llm")
+    @patch("services.rag_service.alias_prefilter")
+    @patch("services.rag_service.search_with_mcp_fallback")
+    async def test_rag_chain_empty_question(
+        self,
+        mock_search: AsyncMock,
+        mock_prefilter: Mock,
+        mock_init_llm: Mock,
+        mock_context: Mock,
+    ) -> None:
+        """Test that RAG chain raises error for empty question."""
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: {
+            "openai.model": "gpt-5-nano",
+        }.get(key, default)
+        mock_context.config.get_reasoning_effort.return_value = "medium"
+        mock_context.config.get_output_verbosity.return_value = "medium"
+        mock_context.config.get_max_output_tokens.return_value = 4096
+
+        mock_llm = Mock()
+        mock_prompt = Mock()
+        mock_init_llm.return_value = (mock_llm, mock_prompt)
+
+        # Act
+        chain = build_rag_chain(mock_context)
+
+        # Assert
+        with pytest.raises(ValueError, match="Question cannot be empty"):
+            await chain("")
+
+    @pytest.mark.asyncio
+    @patch("services.rag_service._init_llm")
+    @patch("services.rag_service.alias_prefilter")
+    @patch("services.rag_service.search_with_mcp_fallback")
+    async def test_rag_chain_json_output_format(
+        self,
+        mock_search: AsyncMock,
+        mock_prefilter: Mock,
+        mock_init_llm: Mock,
+        mock_context: Mock,
+    ) -> None:
+        """Test RAG chain with JSON output format."""
+        from langchain_core.documents import Document
+
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: {
+            "openai.model": "gpt-5-nano",
+        }.get(key, default)
+        mock_context.config.get_reasoning_effort.return_value = "medium"
+        mock_context.config.get_output_verbosity.return_value = "medium"
+        mock_context.config.get_max_output_tokens.return_value = 4096
+
+        mock_llm = Mock()
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_init_llm.return_value = (mock_llm, mock_prompt)
+
+        mock_response = Mock()
+        mock_response.content = '{"answer": "Test answer from JSON"}'
+        mock_llm.invoke.return_value = mock_response
+
+        mock_doc = Document(page_content="Test content", metadata={"anime_id": "1"})
+        mock_prefilter.return_value = []
+        mock_search.return_value = [mock_doc]
+
+        # Act
+        chain = build_rag_chain(mock_context, output_format="json")
+        answer, docs = await chain("test question")
+
+        # Assert
+        assert answer == "Test answer from JSON"
+        assert len(docs) == 1
+
+    @pytest.mark.asyncio
+    @patch("services.rag_service._init_llm")
+    @patch("services.rag_service.alias_prefilter")
+    @patch("services.rag_service.search_with_mcp_fallback")
+    async def test_rag_chain_json_parse_failure(
+        self,
+        mock_search: AsyncMock,
+        mock_prefilter: Mock,
+        mock_init_llm: Mock,
+        mock_context: Mock,
+    ) -> None:
+        """Test RAG chain handles JSON parse failure gracefully."""
+        from langchain_core.documents import Document
+
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: {
+            "openai.model": "gpt-5-nano",
+        }.get(key, default)
+        mock_context.config.get_reasoning_effort.return_value = "medium"
+        mock_context.config.get_output_verbosity.return_value = "medium"
+        mock_context.config.get_max_output_tokens.return_value = 4096
+
+        mock_llm = Mock()
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_init_llm.return_value = (mock_llm, mock_prompt)
+
+        mock_response = Mock()
+        mock_response.content = "Invalid JSON response"  # Not valid JSON
+        mock_llm.invoke.return_value = mock_response
+
+        mock_doc = Document(page_content="Test content", metadata={"anime_id": "1"})
+        mock_prefilter.return_value = []
+        mock_search.return_value = [mock_doc]
+
+        # Act
+        chain = build_rag_chain(mock_context, output_format="json")
+        answer, docs = await chain("test question")
+
+        # Assert
+        assert answer == "Invalid JSON response"  # Should use raw text on parse failure
+        assert len(docs) == 1
+
+    @pytest.mark.asyncio
+    @patch("services.rag_service._init_llm")
+    @patch("services.rag_service.alias_prefilter")
+    @patch("services.rag_service.search_with_mcp_fallback")
+    async def test_rag_chain_with_list_response_content(
+        self,
+        mock_search: AsyncMock,
+        mock_prefilter: Mock,
+        mock_init_llm: Mock,
+        mock_context: Mock,
+    ) -> None:
+        """Test RAG chain with GPT-5 list response format."""
+        from langchain_core.documents import Document
+
+        # Arrange
+        mock_context.config.get.side_effect = lambda key, default=None: {
+            "openai.model": "gpt-5-nano",
+        }.get(key, default)
+        mock_context.config.get_reasoning_effort.return_value = "medium"
+        mock_context.config.get_output_verbosity.return_value = "medium"
+        mock_context.config.get_max_output_tokens.return_value = 4096
+
+        mock_llm = Mock()
+        mock_prompt = Mock()
+        mock_prompt.format_messages.return_value = ["test message"]
+        mock_init_llm.return_value = (mock_llm, mock_prompt)
+
+        mock_response = Mock()
+        # Simulate GPT-5 response with list of content blocks
+        mock_response.content = [
+            {"type": "reasoning", "text": "thinking..."},
+            {"type": "text", "text": "This is the answer"},
+            "additional text",
+        ]
+        mock_llm.invoke.return_value = mock_response
+
+        mock_doc = Document(page_content="Test content", metadata={"anime_id": "1"})
+        mock_prefilter.return_value = []
+        mock_search.return_value = [mock_doc]
+
+        # Act
+        chain = build_rag_chain(mock_context)
+        answer, docs = await chain("test question")
+
+        # Assert
+        assert answer == "This is the answeradditional text"
+        assert len(docs) == 1

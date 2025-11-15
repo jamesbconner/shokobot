@@ -452,8 +452,11 @@ All PRs must pass:
 
 The project uses pre-commit hooks for automated quality checks:
 
-- **ruff** - Code formatting and linting
+- **ruff** - Code linting with auto-fix
+- **ruff-format** - Code formatting (matches GitHub Actions)
 - **mypy** - Type checking
+- **bandit** - Security scanning
+- **pytest** - Run test suite
 - **trailing-whitespace** - Remove trailing whitespace
 - **end-of-file-fixer** - Ensure files end with newline
 - **check-yaml** - Validate YAML files
@@ -462,7 +465,14 @@ The project uses pre-commit hooks for automated quality checks:
 Hooks run automatically on `git commit`. To run manually:
 
 ```bash
+# Run all hooks
 pre-commit run --all-files
+
+# Update hook versions to match GitHub Actions
+pre-commit autoupdate
+
+# Run specific hook
+pre-commit run ruff-format --all-files
 ```
 
 ## Project Structure
