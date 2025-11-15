@@ -39,7 +39,27 @@ This service was built using Python 3.13, and uses standard tooling like poetry,
 
 ## Quick Start
 
-### Automated Setup
+### 🐳 Docker (Recommended for Production)
+
+```bash
+# 1. Clone and setup
+git clone https://github.com/yourusername/shokobot.git
+cd shokobot
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
+
+# 3. Start with Docker Compose
+docker-compose up -d
+
+# 4. Access web UI
+open http://localhost:7860
+```
+
+See [DOCKER.md](DOCKER.md) for detailed Docker deployment guide.
+
+### 💻 Local Development Setup
 
 ```bash
 # Run the setup script
@@ -351,6 +371,44 @@ print(f"Answer: {data['answer']}")
 if 'context' in data:
     print(f"Found {len(data['context'])} relevant anime")
 ```
+
+### Docker Deployment
+
+ShokoBot includes full Docker support for easy deployment:
+
+```bash
+# Quick start
+make up
+
+# View logs
+make logs
+
+# Run commands
+docker-compose exec shokobot shokobot query -q "Best mecha anime"
+
+# Ingest data
+make ingest FILE=input/shoko_tvshows.json
+
+# Stop services
+make down
+```
+
+**Available Make commands:**
+- `make build` - Build Docker image
+- `make up` - Start services
+- `make down` - Stop services
+- `make logs` - View logs
+- `make shell` - Open shell in container
+- `make test` - Run tests
+- `make backup` - Backup vector database
+- `make clean` - Remove containers and volumes
+
+See [DOCKER.md](DOCKER.md) for comprehensive Docker deployment guide including:
+- Production deployment with Nginx
+- SSL/TLS configuration
+- Resource limits and scaling
+- Backup and restore procedures
+- CI/CD integration
 
 ### Using with uv
 

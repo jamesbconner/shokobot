@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  shokobot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shokobot:latest
+    container_name: shokobot
+    restart: unless-stopped
+
+    # Environment variables
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PYTHONUNBUFFERED=1
+
+    # Load additional env vars from .env file
+    env_file:
+      - .env
+
+    # Port mapping
+    ports:
+      - "7860:7860"
+
+    # Volume mounts
+    volumes:
+      # Persistent data directory
+      - ./data:/app/data
+      # ChromaDB vector store
+      - chroma_data:/app/.chroma
+      # Configuration
+      - ./resources:/app/resources:ro
+      # Input data files
+      - ./input:/app/input:ro
+      # MCP cache (optional)
+      - mcp_cache:/app/data/mcp_cache
+
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network
+    networks:
+      - shokobot-network
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: shokobot-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - shokobot
+    networks:
+      - shokobot-network
+    profiles:
+      - with-nginx
+
+volumes:
+  chroma_data:
+    driver: local
+  mcp_cache:
+    driver: local
+
+networks:
+  shokobot-network:
+    driver: bridge

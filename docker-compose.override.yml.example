@@ -1,0 +1,52 @@
+# Docker Compose Override Example
+# Copy this file to docker-compose.override.yml for local development
+# This file is automatically loaded by docker-compose and overrides settings
+
+version: '3.8'
+
+services:
+  shokobot:
+    # Rebuild image for development
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Mount source code for hot reload
+    # Note: Python packages are installed in the image, source code is overlaid
+    volumes:
+      # Mount source directories for hot reload
+      - ./cli:/app/cli
+      - ./services:/app/services
+      - ./models:/app/models
+      - ./utils:/app/utils
+      - ./prompts:/app/prompts
+      - ./ui:/app/ui
+      # Keep these from the image (don't mount)
+      # - .chroma, data, resources, input are already mounted in base compose
+
+    # Override command for development with debug mode
+    # Note: The server already listens on 0.0.0.0 by default
+    # Gradio doesn't support hot reload, but mounted volumes allow code changes
+    command: shokobot web --port 7860 --debug
+
+    # Development environment variables
+    environment:
+      - DEBUG=1
+      - LOG_LEVEL=DEBUG
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+
+    # Expose additional ports for debugging
+    ports:
+      - "7860:7860"
+      - "5678:5678"  # debugpy port (if using debugpy)
+
+    # Increase resource limits for development
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G

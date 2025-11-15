@@ -75,3 +75,9 @@ resources/debug/
 # Gradio
 gradio_cached_examples/
 flagged/
+
+# Docker
+docker-compose.override.yml
+*.tar.gz
+backups/
+ssl/
