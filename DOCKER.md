@@ -30,6 +30,14 @@ http://localhost:7860
 
 ## Configuration
 
+### Dependency Management
+
+The Docker image uses **Poetry** for dependency management:
+- Dependencies are defined in `pyproject.toml`
+- Locked versions in `poetry.lock` ensure reproducible builds
+- Only production dependencies are installed (no dev dependencies)
+- No need to manually update Dockerfile when dependencies change
+
 ### Environment Variables
 
 Required:
@@ -348,10 +356,15 @@ jobs:
 
 Current image size: ~500MB (slim base + dependencies)
 
+The Dockerfile uses:
+- Multi-stage build to separate build and runtime dependencies
+- Poetry for dependency management (reads from pyproject.toml and poetry.lock)
+- Python 3.13.9-slim base image
+- Only production dependencies (no dev dependencies)
+
 To reduce further:
-- Use `python:3.12-alpine` (adds complexity with build deps)
-- Multi-stage build (already implemented)
-- Remove unnecessary dependencies
+- Use `python:3.13-alpine` (adds complexity with build deps)
+- Remove unnecessary dependencies from pyproject.toml
 
 ### Optimize Runtime
 

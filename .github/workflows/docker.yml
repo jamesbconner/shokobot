@@ -74,9 +74,15 @@ jobs:
           echo "Testing image: $IMAGE_TAG"
 
           # Test that Python version is correct
+          echo "Testing Python version..."
           docker run --rm $IMAGE_TAG python --version
 
+          # Test that modules are importable
+          echo "Testing module imports..."
+          docker run --rm $IMAGE_TAG python -c "import cli; import services; import models; print('✓ All modules importable')"
+
           # Test that the CLI is available
+          echo "Testing CLI..."
           docker run --rm $IMAGE_TAG python -m cli.main --help
 
       - name: Run Trivy vulnerability scanner
