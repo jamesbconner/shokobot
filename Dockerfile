@@ -6,21 +6,13 @@ FROM python:3.13.9-slim AS builder
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_VERSION=1.8.3 \
-    POETRY_HOME=/opt/poetry \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
 # Set working directory
 WORKDIR /app
@@ -37,8 +29,9 @@ COPY prompts ./prompts
 COPY ui ./ui
 COPY README.md ./
 
-# Install dependencies and the package itself (no dev dependencies)
-RUN poetry install --only main --no-ansi
+# Install the package and its dependencies using pip
+# This works with PEP 621 format and respects poetry.lock via pip-compile
+RUN pip install --no-cache-dir .
 
 # Stage 2: Runtime
 FROM python:3.13.9-slim

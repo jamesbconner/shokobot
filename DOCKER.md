@@ -32,11 +32,12 @@ http://localhost:7860
 
 ### Dependency Management
 
-The Docker image uses **Poetry** for dependency management:
-- Dependencies are defined in `pyproject.toml`
-- Locked versions in `poetry.lock` ensure reproducible builds
-- Only production dependencies are installed (no dev dependencies)
+The Docker image uses **pip** to install from `pyproject.toml`:
+- Dependencies are defined in `pyproject.toml` (PEP 621 format)
+- The package and all dependencies are installed with `pip install .`
+- Only production dependencies are installed (dev dependencies excluded)
 - No need to manually update Dockerfile when dependencies change
+- Compatible with both Poetry and uv for local development
 
 ### Environment Variables
 
@@ -125,16 +126,20 @@ FROM python:3.13.9-slim
 
 WORKDIR /app
 
-# Install dependencies
-RUN pip install poetry
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy source
+# Copy project files
+COPY pyproject.toml poetry.lock ./
 COPY . .
 
+# Install package with dev dependencies
+RUN pip install -e ".[dev]"
+
 # Development mode
-CMD ["poetry", "run", "python", "-m", "cli.web", "--reload"]
+CMD ["shokobot", "web", "--debug"]
 ```
 
 ### Docker Compose Override
