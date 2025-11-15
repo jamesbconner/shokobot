@@ -384,7 +384,7 @@ make up
 make logs
 
 # Run commands
-docker-compose exec shokobot python -m cli.main query -q "Best mecha anime"
+docker-compose exec shokobot shokobot query -q "Best mecha anime"
 
 # Ingest data
 make ingest FILE=data/anime.json

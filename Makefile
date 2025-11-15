@@ -62,7 +62,7 @@ ingest:
 		echo "Usage: make ingest FILE=data/anime.json"; \
 		exit 1; \
 	fi
-	docker-compose exec shokobot python -m cli.main ingest $(FILE)
+	docker-compose exec shokobot shokobot ingest $(FILE)
 
 # Clean up
 clean:

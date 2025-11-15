@@ -103,16 +103,16 @@ docker-compose logs --tail=100 shokobot
 
 ```bash
 # Run CLI commands
-docker-compose exec shokobot python -m cli.main --help
+docker-compose exec shokobot shokobot --help
 
 # Ingest data
-docker-compose exec shokobot python -m cli.main ingest data/anime.json
+docker-compose exec shokobot shokobot ingest data/anime.json
 
 # Interactive shell
 docker-compose exec shokobot bash
 
 # Run REPL
-docker-compose exec shokobot python -m cli.main repl
+docker-compose exec shokobot shokobot repl
 ```
 
 ## Advanced Configuration

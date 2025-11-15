@@ -18,7 +18,7 @@ services:
       - /app/.venv  # Exclude venv from mount
 
     # Override command for development
-    command: python -m cli.web --host 0.0.0.0 --port 7860 --reload
+    command: shokobot web --host 0.0.0.0 --port 7860 --reload
 
     # Development environment variables
     environment:
