@@ -100,6 +100,20 @@ docker-compose logs -f shokobot
 docker-compose logs --tail=100 shokobot
 ```
 
+### View Image Metadata
+
+The Docker image includes OCI-compliant labels with build information:
+
+```bash
+# View all image labels
+docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels'
+
+# View specific metadata
+docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels."org.opencontainers.image.version"'
+docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels."org.opencontainers.image.revision"'
+docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels."org.opencontainers.image.created"'
+```
+
 ### Execute Commands
 
 ```bash
@@ -145,19 +159,52 @@ CMD ["shokobot", "web", "--debug"]
 
 ### Docker Compose Override
 
-Create `docker-compose.override.yml` for local customization:
+For local development customization, create `docker-compose.override.yml` from the example:
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+# Edit as needed for your local setup
+```
+
+This file is automatically loaded by docker-compose and is git-ignored. 
+
+The example override mounts source code directories for hot reload during development:
 
 ```yaml
 version: '3.8'
 
 services:
   shokobot:
-    build:
-      dockerfile: Dockerfile.dev
     volumes:
-      - .:/app  # Mount source for hot reload
+      # Mount source directories for live code updates
+      - ./cli:/app/cli
+      - ./services:/app/services
+      - ./models:/app/models
+      - ./utils:/app/utils
+      - ./prompts:/app/prompts
+      - ./ui:/app/ui
     environment:
       - DEBUG=1
+      - LOG_LEVEL=DEBUG
+```
+
+**How it works:**
+- The base image has all Python packages installed
+- Source code directories are mounted over the image's code
+- Changes to Python files are reflected immediately (no rebuild needed)
+- Dependencies remain in the image (no need for local venv)
+
+Then start in development mode:
+
+```bash
+make dev
+# or
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+```
+
+**Note:** For dependency changes, rebuild the image:
+```bash
+docker-compose build
 ```
 
 ### Resource Limits
@@ -238,26 +285,42 @@ docker inspect --format='{{json .State.Health}}' shokobot | jq
 
 ### Backup and Restore
 
+> **Note:** Docker Compose automatically prefixes volume names with the project name (directory name by default). For example, if your project directory is `ShokoBot`, volumes will be named `shokobot_chroma_data` and `shokobot_mcp_cache`. Use `docker volume ls` to see the actual volume names.
+
 **Backup volumes**:
 ```bash
-# Backup ChromaDB
-docker run --rm -v shokobot_chroma_data:/data -v $(pwd):/backup \
+# First, find the actual volume names (Docker Compose prefixes with project name)
+docker volume ls | grep chroma_data
+docker volume ls | grep mcp_cache
+
+# Backup ChromaDB (replace <project>_chroma_data with actual volume name)
+VOLUME_NAME=$(docker volume ls --format '{{.Name}}' | grep chroma_data)
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar czf /backup/chroma_backup.tar.gz -C /data .
 
 # Backup MCP cache
-docker run --rm -v shokobot_mcp_cache:/data -v $(pwd):/backup \
+VOLUME_NAME=$(docker volume ls --format '{{.Name}}' | grep mcp_cache)
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar czf /backup/mcp_backup.tar.gz -C /data .
+
+# Or use the Makefile command (automatically finds the correct volume)
+make backup
 ```
 
 **Restore volumes**:
 ```bash
-# Restore ChromaDB
-docker run --rm -v shokobot_chroma_data:/data -v $(pwd):/backup \
+# Restore ChromaDB (replace <project>_chroma_data with actual volume name)
+VOLUME_NAME=$(docker volume ls --format '{{.Name}}' | grep chroma_data)
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar xzf /backup/chroma_backup.tar.gz -C /data
 
 # Restore MCP cache
-docker run --rm -v shokobot_mcp_cache:/data -v $(pwd):/backup \
+VOLUME_NAME=$(docker volume ls --format '{{.Name}}' | grep mcp_cache)
+docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar xzf /backup/mcp_backup.tar.gz -C /data
+
+# Or use the Makefile command (automatically finds the correct volume)
+make restore BACKUP=backups/chroma_20240101_120000.tar.gz
 ```
 
 ## Troubleshooting
@@ -273,6 +336,9 @@ docker-compose ps
 
 # Inspect container
 docker inspect shokobot
+
+# View image metadata and labels
+docker inspect ghcr.io/jamesbconner/shokobot:latest | jq '.[0].Config.Labels'
 ```
 
 ### Permission issues

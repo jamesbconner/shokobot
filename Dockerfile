@@ -36,6 +36,22 @@ RUN pip install --no-cache-dir .
 # Stage 2: Runtime
 FROM python:3.13.9-slim
 
+# Build arguments for metadata
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+# OCI labels for image metadata
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.authors="James Conner" \
+      org.opencontainers.image.url="https://github.com/jamesbconner/shokobot" \
+      org.opencontainers.image.source="https://github.com/jamesbconner/shokobot" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.title="ShokoBot" \
+      org.opencontainers.image.description="RAG-based anime recommendation system using LangChain and ChromaDB" \
+      org.opencontainers.image.licenses="MIT"
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

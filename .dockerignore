@@ -58,10 +58,12 @@ data/
 *.db
 *.sqlite
 
-# Environment
+# Environment - CRITICAL: Exclude all .env files to prevent secret leakage
+.env
 .env.example
 .env.local
 .env.*.local
+*.env
 
 # Logs
 *.log

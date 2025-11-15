@@ -19,7 +19,7 @@ help:
 	@echo "make up-nginx    - Start with nginx reverse proxy"
 	@echo ""
 	@echo "Development:"
-	@echo "make dev         - Start in development mode"
+	@echo "make dev         - Start in development mode (requires docker-compose.override.yml)"
 	@echo "make format      - Format code"
 	@echo "make lint        - Run linters"
 
@@ -74,6 +74,12 @@ rebuild: clean build up
 
 # Development mode (with hot reload)
 dev:
+	@if [ ! -f docker-compose.override.yml ]; then \
+		echo "Error: docker-compose.override.yml not found"; \
+		echo "Create it from the example:"; \
+		echo "  cp docker-compose.override.yml.example docker-compose.override.yml"; \
+		exit 1; \
+	fi
 	docker-compose -f docker-compose.yml -f docker-compose.override.yml up
 
 # Format code
@@ -97,7 +103,13 @@ stats:
 backup:
 	@mkdir -p backups
 	@echo "Backing up ChromaDB..."
-	@docker run --rm -v shokobot_chroma_data:/data -v $(PWD)/backups:/backup \
+	@VOLUME_NAME=$$(docker volume ls --format '{{.Name}}' | grep chroma_data | head -n1); \
+	if [ -z "$$VOLUME_NAME" ]; then \
+		echo "Error: ChromaDB volume not found. Run 'docker volume ls' to see available volumes."; \
+		exit 1; \
+	fi; \
+	echo "Backing up volume: $$VOLUME_NAME"; \
+	docker run --rm -v $$VOLUME_NAME:/data -v $(PWD)/backups:/backup \
 		alpine tar czf /backup/chroma_$(shell date +%Y%m%d_%H%M%S).tar.gz -C /data .
 	@echo "Backup complete!"
 
@@ -108,6 +120,12 @@ restore:
 		exit 1; \
 	fi
 	@echo "Restoring from $(BACKUP)..."
-	@docker run --rm -v shokobot_chroma_data:/data -v $(PWD)/backups:/backup \
+	@VOLUME_NAME=$$(docker volume ls --format '{{.Name}}' | grep chroma_data | head -n1); \
+	if [ -z "$$VOLUME_NAME" ]; then \
+		echo "Error: ChromaDB volume not found. Run 'docker volume ls' to see available volumes."; \
+		exit 1; \
+	fi; \
+	echo "Restoring to volume: $$VOLUME_NAME"; \
+	docker run --rm -v $$VOLUME_NAME:/data -v $(PWD)/backups:/backup \
 		alpine tar xzf /backup/$(notdir $(BACKUP)) -C /data
 	@echo "Restore complete!"
