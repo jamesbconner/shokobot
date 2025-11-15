@@ -378,30 +378,36 @@ ShokoBot includes full Docker support for easy deployment:
 
 ```bash
 # Quick start
-make up
+make docker-up
 
 # View logs
-make logs
+make docker-logs
 
 # Run commands
 docker-compose exec shokobot shokobot query -q "Best mecha anime"
 
 # Ingest data
-make ingest FILE=input/shoko_tvshows.json
+make docker-ingest FILE=input/shoko_tvshows.json
 
 # Stop services
-make down
+make docker-down
 ```
 
-**Available Make commands:**
-- `make build` - Build Docker image
-- `make up` - Start services
-- `make down` - Stop services
-- `make logs` - View logs
-- `make shell` - Open shell in container
-- `make test` - Run tests
-- `make backup` - Backup vector database
-- `make clean` - Remove containers and volumes
+**Available Docker Make commands:**
+- `make docker-build` - Build Docker image
+- `make docker-up` - Start services
+- `make docker-down` - Stop services
+- `make docker-logs` - View logs
+- `make docker-shell` - Open shell in container
+- `make docker-test` - Run tests
+- `make docker-backup` - Backup vector database
+- `make docker-clean` - Remove containers and volumes
+
+**For local development (non-Docker):**
+- `make install-dev` - Install dependencies
+- `make test` - Run tests locally
+- `make format` - Format code
+- `make lint` - Lint code
 
 See [DOCKER.md](DOCKER.md) for comprehensive Docker deployment guide including:
 - Production deployment with Nginx

@@ -197,7 +197,7 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 # Edit as needed for your local setup
 ```
 
-This file is automatically loaded by docker-compose and is git-ignored. 
+This file is automatically loaded by docker-compose and is git-ignored.
 
 The example override mounts source code directories for hot reload during development:
 
@@ -228,7 +228,7 @@ services:
 Then start in development mode:
 
 ```bash
-make dev
+make docker-dev
 # or
 docker-compose -f docker-compose.yml -f docker-compose.override.yml up
 ```
@@ -342,7 +342,7 @@ docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar czf /backup/mcp_backup.tar.gz -C /data .
 
 # Or use the Makefile command (automatically finds the correct volume)
-make backup
+make docker-backup
 ```
 
 **Restore volumes**:
@@ -358,19 +358,19 @@ docker run --rm -v $VOLUME_NAME:/data -v $(pwd):/backup \
   alpine tar xzf /backup/mcp_backup.tar.gz -C /data
 
 # Or use the Makefile command (automatically finds the correct volume)
-make restore BACKUP=backups/chroma_20240101_120000.tar.gz
+make docker-restore BACKUP=backups/chroma_20240101_120000.tar.gz
 ```
 
 ## Common Issues
 
 ### Development Mode Setup
 
-If `make dev` fails with "file not found":
+If `make docker-dev` fails with "file not found":
 ```bash
 # Create the override file from the example
 cp docker-compose.override.yml.example docker-compose.override.yml
 # Then try again
-make dev
+make docker-dev
 ```
 
 ### Volume Naming
@@ -381,8 +381,8 @@ Docker Compose prefixes volume names with the project directory name. If backup/
 docker volume ls | grep chroma
 
 # Use the Makefile commands which auto-detect volumes
-make backup
-make restore BACKUP=backups/chroma_20240101_120000.tar.gz
+make docker-backup
+make docker-restore BACKUP=backups/chroma_20240101_120000.tar.gz
 ```
 
 ### CLI Command Errors
