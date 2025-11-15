@@ -8,20 +8,20 @@ services:
     image: shokobot:latest
     container_name: shokobot
     restart: unless-stopped
-    
+
     # Environment variables
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PYTHONUNBUFFERED=1
-    
+
     # Load additional env vars from .env file
     env_file:
       - .env
-    
+
     # Port mapping
     ports:
       - "7860:7860"
-    
+
     # Volume mounts
     volumes:
       # Persistent data directory
@@ -32,7 +32,7 @@ services:
       - ./config.json:/app/config.json:ro
       # MCP cache (optional)
       - mcp_cache:/app/data/mcp_cache
-    
+
     # Resource limits (adjust as needed)
     deploy:
       resources:
@@ -42,7 +42,7 @@ services:
         reservations:
           cpus: '1'
           memory: 2G
-    
+
     # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7860/"]
@@ -50,14 +50,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    
+
     # Logging
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    
+
     # Network
     networks:
       - shokobot-network

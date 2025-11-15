@@ -11,26 +11,26 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder  # Use builder stage for dev tools
-    
+
     # Mount source code for hot reload
     volumes:
       - .:/app
       - /app/.venv  # Exclude venv from mount
-    
+
     # Override command for development
     command: python -m cli.web --host 0.0.0.0 --port 7860 --reload
-    
+
     # Development environment variables
     environment:
       - DEBUG=1
       - LOG_LEVEL=DEBUG
       - PYTHONDONTWRITEBYTECODE=1
-    
+
     # Expose additional ports for debugging
     ports:
       - "7860:7860"
       - "5678:5678"  # debugpy port
-    
+
     # Remove resource limits for development
     deploy:
       resources:
