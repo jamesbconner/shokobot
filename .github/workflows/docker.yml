@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Docker image for scanning (amd64 only)
         if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
@@ -80,7 +80,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Build and push multi-platform Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           # Only build multi-platform for pushes, single platform for PRs (faster)
